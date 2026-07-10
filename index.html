@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bamboo Chicken - Crispy & Juicy, Taste the Bamboo Magic!</title>
+  <meta name="description" content="Order delicious food online from Bamboo Chicken. Savor our crispy golden spiced chicken, traditional sadza meals, flame-grilled burgers, and signature specials. Fast delivery and pickup across Zimbabwe.">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Background Decorative Grid Accent -->
+  <div class="bg-grid-accent"></div>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar" id="navbar">
+    <a href="#" class="nav-brand">
+      <!-- Modern custom BC Letter Logo framed by elegant bamboo shoots -->
+      <svg class="nav-logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <!-- Bamboo stalks framing on the left -->
+        <rect x="15" y="15" width="7" height="70" rx="3.5" fill="#8AA853" transform="rotate(-15, 15, 15)"/>
+        <path d="M 11,35 C 5,30 3,20 12,18 C 10,25 10,30 11,35 Z" fill="#5F7D30"/>
+        
+        <!-- Bamboo stalks framing on the right -->
+        <rect x="78" y="15" width="7" height="70" rx="3.5" fill="#A4C26C" transform="rotate(15, 78, 15)"/>
+        <path d="M 82,35 C 88,30 90,20 81,18 C 83,25 83,30 82,35 Z" fill="#6A853B"/>
+
+        <!-- Central modern brand squircle badge with bright gold background -->
+        <rect x="25" y="25" width="50" height="50" rx="15" fill="#FDB813"/>
+        <!-- Inner orange highlight ring -->
+        <rect x="28" y="28" width="44" height="44" rx="12" fill="none" stroke="#FF5A00" stroke-width="2.5" opacity="0.8"/>
+        
+        <!-- Strong, premium human-designed BC typography -->
+        <text x="50" y="59" font-family="'Outfit', 'Plus Jakarta Sans', sans-serif" font-size="28" font-weight="900" fill="#121214" text-anchor="middle" letter-spacing="-1px">BC</text>
+      </svg>
+      <h1>
+        <span class="brand-text">Bamboo <span class="brand-accent">Chicken</span></span>
+        <span class="brand-sub">Digital Menu</span>
+      </h1>
+    </a>
+
+    <!-- Desktop Search bar -->
+    <div class="search-container-header">
+      <svg class="search-icon-inside" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="search-input-header" class="search-input-header" placeholder="Search delicious food...">
+    </div>
+
+    <!-- Navigation Action buttons -->
+    <div class="nav-actions">
+      <!-- Interactive cart button -->
+      <button class="nav-btn" id="cart-btn" aria-label="Cart" title="Open Your Bucket">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-bag"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span class="cart-badge" style="display: none;">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <!-- Decorative transparent background vectors -->
+    <div class="hero-visuals">
+      <!-- Simple bamboo stalk decoration on left -->
+      <svg class="hero-svg-bamboo" viewBox="0 0 100 100" fill="currentColor" color="#FDB813">
+        <rect x="40" y="0" width="12" height="100" rx="3"/>
+        <line x1="40" y1="30" x2="52" y2="30" stroke="#FFF" stroke-width="3"/>
+        <line x1="40" y1="70" x2="52" y2="70" stroke="#FFF" stroke-width="3"/>
+      </svg>
+      <!-- Simple bamboo stalk decoration on right -->
+      <svg class="hero-svg-bamboo" viewBox="0 0 100 100" fill="currentColor" color="#FF5A00" style="transform: scaleX(-1) rotate(10deg);">
+        <rect x="44" y="0" width="12" height="100" rx="3"/>
+        <line x1="44" y1="20" x2="56" y2="20" stroke="#FFF" stroke-width="3"/>
+        <line x1="44" y1="60" x2="56" y2="60" stroke="#FFF" stroke-width="3"/>
+      </svg>
+    </div>
+
+    <div class="hero-content">
+      <span class="hero-badge">🍗 Crispy &amp; Juicy Magic</span>
+      <h2>Welcome to Bamboo Chicken!</h2>
+      <p class="hero-tagline">Crispy &amp; Juicy, Taste the Bamboo Magic!</p>
+      <a href="#menu-section" class="btn-primary" id="order-now-btn">
+        <span>Explore Menu</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-down"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- Mobile Only Search Bar wrapper -->
+  <div class="mobile-search-bar">
+    <div class="search-input-mobile-wrapper">
+      <svg class="search-icon-mobile" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="search-input-mobile" class="search-input-mobile" placeholder="Search delicious food...">
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <main class="main-container" id="menu-section">
+    
+    <!-- Menu Section Header -->
+    <div class="section-header">
+      <h3>The Bamboo Menu</h3>
+      <p>Premium ingredients, locally sourced poultry, and seasoned to absolute perfection.</p>
+    </div>
+
+    <!-- Sticky Horizontal Scrolling Categories -->
+    <nav class="categories-wrapper" id="categories-wrapper">
+      <div class="categories-container" id="categories-container">
+        <!-- Category Pills injected dynamically by JS -->
+      </div>
+    </nav>
+
+    <!-- Search Status Info Banner -->
+    <div class="results-info" id="search-info-banner" style="display: none;">
+      <span id="results-count">0 items found</span>
+      <button class="clear-search-btn" id="clear-search-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-circle"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+        <span>Clear search</span>
+      </button>
+    </div>
+
+    <!-- Active Menu Items Grid -->
+    <div class="menu-grid" id="menu-grid">
+      <!-- Menu Cards dynamically loaded and animated here -->
+    </div>
+
+    <!-- Search / Filter Empty State -->
+    <div class="empty-state" id="empty-state">
+      <svg class="empty-state-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search-x"><path d="m13.5 8.5-5 5"/><path d="m8.5 8.5 5 5"/><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <h5>No delicious matches found!</h5>
+      <p>We couldn't find any menu items fitting your search or selected category. Try checking your spelling or selecting another filter!</p>
+      <button class="btn-reset-search" id="reset-search-btn">Show All Items</button>
+    </div>
+
+  </main>
+
+  <!-- Interactive Overlaid Detail Modal -->
+  <div class="modal-overlay" id="detail-modal">
+    <div class="modal-window">
+      <!-- Header Image -->
+      <div class="modal-header-image">
+        <button class="modal-close-btn" id="modal-close-btn" aria-label="Close details dialog">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+        <img class="modal-img" id="modal-img" src="" alt="" referrerPolicy="no-referrer">
+      </div>
+      <!-- Detailed Content -->
+      <div class="modal-content">
+        <div class="modal-title-row">
+          <h4 id="modal-title">Item Name</h4>
+          <span class="modal-price-tag" id="modal-price">$0.00</span>
+        </div>
+        <span class="modal-category" id="modal-category">Category</span>
+        <p class="modal-description" id="modal-description">Detailed item descriptions go here explaining ingredients, spices, and sizing options.</p>
+
+        <!-- Dynamic Customizable options container -->
+        <div class="modal-options-section" id="modal-options-section" style="display: none;">
+          <h5 class="modal-options-title" id="modal-options-title">Customise Your Item</h5>
+          <div id="modal-options-container">
+            <!-- Checkboxes, radio selectors injected dynamically depending on item -->
+          </div>
+        </div>
+      </div>
+      <!-- Detail view modal has no ordering options in Phase 2 -->
+    </div>
+  </div>
+
+  <!-- Shopping Cart Slide-out Sidebar & Overlay -->
+  <div class="cart-overlay" id="cart-overlay"></div>
+  <aside class="cart-sidebar" id="cart-sidebar">
+    <div class="cart-sidebar-header">
+      <div class="cart-sidebar-title" style="display: flex; align-items: center; gap: 8px;">
+        <span class="cart-sidebar-icon">🛒</span>
+        <h3>Your Bucket</h3>
+      </div>
+      <button class="cart-sidebar-close" id="cart-sidebar-close" aria-label="Close Cart">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Scrollable Items View -->
+    <div class="cart-sidebar-view cart-sidebar-body active" id="cart-view-items" style="display: flex; flex-direction: column; overflow-y: hidden;">
+      <div id="cart-sidebar-body-inner" style="flex-grow: 1; overflow-y: auto; padding-right: 4px; display: flex; flex-direction: column; gap: 20px;">
+        <!-- Injected Dynamically by JS -->
+      </div>
+      
+      <!-- Items Summary & Proceed Button -->
+      <div class="cart-sidebar-footer" id="cart-items-footer" style="margin-top: auto; border-radius: var(--radius-md);">
+        <div class="cart-summary-line">
+          <span class="summary-label">Total Items:</span>
+          <span class="summary-value" id="cart-summary-qty">0</span>
+        </div>
+        <div class="cart-summary-line">
+          <span class="summary-label">Subtotal:</span>
+          <span class="summary-value" id="cart-summary-subtotal">$0.00</span>
+        </div>
+        <div class="cart-summary-line grand-total-line">
+          <span class="summary-label">Grand Total:</span>
+          <span class="summary-value" id="cart-summary-grand">$0.00</span>
+        </div>
+        <button class="btn-checkout" id="btn-proceed-to-checkout" onclick="openCheckoutModal()">
+          <span>Proceed to Order Details</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Beautiful Dedicated Spacious Checkout Modal -->
+  <div class="modal-overlay" id="checkout-modal">
+    <div class="modal-window" style="max-width: 650px;">
+      <!-- Modal Header -->
+      <div class="modal-content" style="padding: 24px 30px 10px; border-bottom: 1px solid var(--color-gray-light); flex-grow: 0;">
+        <div class="modal-title-row" style="margin-bottom: 8px; align-items: center;">
+          <h4 style="font-size: 1.6rem; display: flex; align-items: center; gap: 10px; margin: 0;">
+            <span>🎋</span> Order Details &amp; Fulfillment
+          </h4>
+          <button class="modal-close-btn" id="checkout-modal-close" aria-label="Close checkout modal" style="position: static; flex-shrink: 0;" onclick="closeCheckoutModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <p style="color: var(--color-gray); font-size: 0.9rem; margin-bottom: 14px;">
+          Fill in your details for quick delivery or collection in Harare. We'll generate a professional WhatsApp order message for you!
+        </p>
+      </div>
+
+      <!-- Checkout Form -->
+      <div class="modal-content" style="padding: 24px 30px; overflow-y: auto; flex-grow: 1;">
+        <form class="checkout-form" id="checkout-form" onsubmit="return false;">
+          <!-- Order Method Toggle -->
+          <div class="form-group">
+            <label class="form-label">Fulfillment Method</label>
+            <div class="order-method-toggle">
+              <button type="button" class="order-method-btn active" id="method-btn-delivery" onclick="setOrderMethod('delivery')">
+                🚚 Delivery (+$3.00)
+              </button>
+              <button type="button" class="order-method-btn" id="method-btn-collection" onclick="setOrderMethod('collection')">
+                🛍️ Branch Collection
+              </button>
+            </div>
+          </div>
+
+          <!-- Name and WhatsApp Phone Inputs -->
+          <div style="display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 4px;" id="checkout-grid-details">
+            <div class="form-group">
+              <label class="form-label" for="checkout-name">Your Name</label>
+              <input type="text" id="checkout-name" class="form-control" placeholder="e.g. John Doe" required>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="checkout-phone">WhatsApp Phone Number</label>
+              <input type="tel" id="checkout-phone" class="form-control" placeholder="e.g. 0773532790 or 0789951127" required>
+            </div>
+          </div>
+
+          <!-- Conditional Address Field (shown for delivery) -->
+          <div class="form-group" id="group-delivery-address">
+            <label class="form-label" for="checkout-address">Delivery Address (Harare CBD)</label>
+            <textarea id="checkout-address" class="form-control" placeholder="e.g. 77 Kwame Nkrumah Ave, Between First St &amp; Sam Nujoma St, Harare CBD" required rows="2"></textarea>
+          </div>
+
+          <!-- Conditional Branch Field (shown for collection) -->
+          <div class="form-group" id="group-collection-branch" style="display: none;">
+            <label class="form-label">Collection Branch Address</label>
+            <div style="background-color: rgba(253, 184, 19, 0.05); border: 1px solid rgba(253, 184, 19, 0.2); padding: 14px 18px; border-radius: var(--radius-md); display: flex; align-items: start; gap: 12px;">
+              <span style="font-size: 1.4rem; line-height: 1;">📍</span>
+              <div>
+                <h5 style="margin: 0 0 4px 0; font-size: 1rem; font-weight: 700; color: var(--color-dark); font-family: var(--font-display);">Roadport Main Branch</h5>
+                <p style="margin: 0 0 6px 0; font-size: 0.85rem; color: var(--color-gray); line-height: 1.4;">Along Fifth Road, 50 meters from Roadport, Harare</p>
+                <span style="display: inline-block; font-size: 0.75rem; background-color: var(--color-primary); color: var(--color-dark); font-weight: 700; padding: 2px 6px; border-radius: var(--radius-sm);">Only Collection Location</span>
+              </div>
+            </div>
+            <input type="hidden" id="checkout-branch" value="Roadport (Along Fifth Road, 50m from Roadport, Harare)">
+          </div>
+
+          <div class="form-group" id="group-collection-time" style="display: none;">
+            <label class="form-label" for="checkout-pickup-time">Est. Pickup Time</label>
+            <input type="text" id="checkout-pickup-time" class="form-control" placeholder="e.g. 12:45 PM or as soon as possible">
+          </div>
+
+          <!-- Cash Payment Note Badge (Cash on delivery & Cash on collection) -->
+          <div class="cash-payment-info-banner" style="display: flex; align-items: center; gap: 12px; background-color: rgba(253, 184, 19, 0.08); border: 1px solid rgba(253, 184, 19, 0.3); padding: 12px 16px; border-radius: var(--radius-md); margin-top: 4px; margin-bottom: 4px;">
+            <span style="font-size: 1.4rem;">💵</span>
+            <div style="font-size: 0.85rem; color: var(--color-dark); line-height: 1.4;">
+              <strong style="font-family: var(--font-display); font-weight: 700; color: var(--color-dark);">USD Cash Payment Only:</strong> Pay physically upon delivery or branch collection.
+            </div>
+          </div>
+
+          <!-- Special Instructions -->
+          <div class="form-group">
+            <label class="form-label" for="checkout-notes">Special Instructions (Optional)</label>
+            <textarea id="checkout-notes" class="form-control" placeholder="e.g. Extra hot pepper sauce, or ring upon arrival..." rows="2"></textarea>
+          </div>
+
+          <!-- Order total summary Box inside form -->
+          <div class="checkout-summary-box" style="margin-top: 8px;">
+            <div class="checkout-summary-line">
+              <span>Total Items:</span>
+              <span id="checkout-summary-qty">0</span>
+            </div>
+            <div class="checkout-summary-line">
+              <span>Delivery Fee:</span>
+              <span id="checkout-summary-delivery">$3.00</span>
+            </div>
+            <div class="checkout-summary-line" style="border-top: 1px dashed rgba(253, 184, 19, 0.5); padding-top: 8px; margin-top: 8px; font-weight: 700; color: var(--color-dark); font-size: 1rem;">
+              <span>Grand Total:</span>
+              <span id="checkout-summary-grand" style="color: var(--color-secondary); font-weight: 800; font-size: 1.2rem;">$0.00</span>
+            </div>
+          </div>
+
+          <!-- Checkout Actions -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 20px;" id="checkout-actions-container">
+            <button type="button" class="btn-checkout-back" onclick="closeCheckoutModal()" style="margin-top: 0; padding: 14px 24px;">
+              <span>Back to Bucket</span>
+            </button>
+            <button type="button" class="btn-checkout" id="btn-submit-order" onclick="submitOrderToWhatsApp()" style="margin-top: 0; padding: 14px 24px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+              <span>Send WhatsApp Order</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Overlay -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Footer Section -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-logo">
+        <h1>Bamboo <span class="brand-accent">Chicken</span></h1>
+        <p class="footer-tagline">Crispy &amp; Juicy, Taste the Bamboo Magic! Bringing family-friendly premium fast food directly to your neighborhood.</p>
+      </div>
+      <div class="footer-section">
+        <h5>Quick Links</h5>
+        <ul class="footer-links">
+          <li><a href="#menu-section">🍳 Breakfast Choices</a></li>
+          <li><a href="#menu-section">🍗 Crispy Chicken</a></li>
+          <li><a href="#menu-section">🍔 Burgers &amp; Wraps</a></li>
+          <li><a href="#menu-section">🍚 Traditional Meals</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h5>Store Details</h5>
+        <div class="footer-info">
+          <span>📍 Along Fifth Road, 50m from Roadport, Harare</span>
+          <span>✉️ eatbamboochicken@gmail.com</span>
+          <span>📞 0773 532 790 | 0789 951 127</span>
+          <span>⏰ Open Daily: 08:00 AM - 10:00 PM</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Bamboo Chicken. All Rights Reserved. Crafted with <span class="brand-heart">♥</span> for fast food lovers.</p>
+    </div>
+  </footer>
+
+  <script src="/js/app.js" defer></script>
+</body>
+</html>
