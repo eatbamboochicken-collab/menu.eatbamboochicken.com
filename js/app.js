@@ -1058,9 +1058,9 @@ window.submitOrderToWhatsApp = async function() {
     submitBtn.style.opacity = "0.7";
   }
 
-  // Send complete order as JSON to POST https://bamboo-orders-api.warstreet.workers.dev/orders
+  // Send complete order as JSON to POST https://bamboo-orders-api.warstreett.workers.dev/orders
   try {
-    const response = await fetch("https://bamboo-orders-api.warstreet.workers.dev/orders", {
+    const response = await fetch("https://bamboo-orders-api.warstreett.workers.dev/orders", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

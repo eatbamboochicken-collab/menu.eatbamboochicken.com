@@ -1,9 +1,9 @@
 /**
  * Bamboo Chicken POS - Cashier Dashboard Engine
- * Connects to live Cloudflare Worker API: https://bamboo-orders-api.warstreet.workers.dev/orders
+ * Connects to live Cloudflare Worker API: https://bamboo-orders-api.warstreett.workers.dev/orders
  */
 
-const API_URL = "https://bamboo-orders-api.warstreet.workers.dev/orders";
+const API_URL = "https://bamboo-orders-api.warstreett.workers.dev/orders";
 
 // Live Orders Dataset (replaces dummy data)
 let orders = [];
