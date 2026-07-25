@@ -6,75 +6,140 @@
 
 // Global Menu Database
 const MENU_DATA = [
+  // ⭐ Value Combos
+  {
+    id: "classic-meal",
+    category: "value-combos",
+    name: "Classic Meal",
+    price: 5.00,
+    description: "🍔 Burger • 🍗 1 Piece Chicken • 🍟 Small Chips • 🥤 FREE 50c Drink",
+    comboIncludes: ["Burger", "1 Piece Chicken", "Small Chips", "FREE 50c Drink"],
+    image: "https://images.unsplash.com/photo-1513185158878-8d8c2a2a3da3?auto=format&fit=crop&w=600&q=80",
+    details: "Burger, 1 piece chicken, small chips and a free 50c drink."
+  },
+  {
+    id: "bamboo-duo",
+    category: "value-combos",
+    name: "Bamboo Duo",
+    price: 4.00,
+    description: "🍢 2 Bamboo Chicken • 🍟 Chips • 🥤 FREE 50c Drink",
+    comboIncludes: ["2 Bamboo Chicken", "Chips", "FREE 50c Drink"],
+    image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80",
+    details: "2 Bamboo Chicken sticks, chips and a free 50c drink."
+  },
+  {
+    id: "wrap-combo",
+    category: "value-combos",
+    name: "Wrap Combo",
+    price: 4.00,
+    description: "🌯 Chicken Wrap • 🍟 Medium Chips • 💧 FREE Water",
+    comboIncludes: ["Chicken Wrap", "Medium Chips", "FREE Water"],
+    image: "https://images.unsplash.com/photo-1626700051175-6518c4793f4f?auto=format&fit=crop&w=600&q=80",
+    details: "Chicken wrap, medium chips and free bottled water."
+  },
+  {
+    id: "shawarma-feast",
+    category: "value-combos",
+    name: "Shawarma Feast",
+    price: 6.00,
+    description: "🌯 Shawarma • 🍗 2 Chicken Pieces • 🥤 FREE Tall Drink",
+    comboIncludes: ["Shawarma", "2 Chicken Pieces", "FREE Tall Drink"],
+    image: "https://images.unsplash.com/photo-1561651823-34feb02250e4?auto=format&fit=crop&w=600&q=80",
+    details: "Shawarma, 2 chicken pieces and a free tall drink."
+  },
+  {
+    id: "bamboo-value",
+    category: "value-combos",
+    name: "Bamboo Value",
+    price: 3.50,
+    description: "🥟 Bamboo Pie • 🍢 Bamboo Chicken • 🍟 Small Chips • 💧 FREE Water",
+    comboIncludes: ["Bamboo Pie", "Bamboo Chicken", "Small Chips", "FREE Water"],
+    image: "https://images.unsplash.com/photo-1601561951601-141fea956550?auto=format&fit=crop&w=600&q=80",
+    details: "Bamboo pie, Bamboo Chicken stick, small chips and free bottled water."
+  },
+  {
+    id: "fillet-combo",
+    category: "value-combos",
+    name: "Fillet Combo",
+    price: 3.00,
+    description: "🍗 Chicken Fillet • 🍟 Small Chips • 🥤 FREE Drink",
+    comboIncludes: ["Chicken Fillet", "Small Chips", "FREE Drink"],
+    image: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?auto=format&fit=crop&w=600&q=80",
+    details: "Chicken fillet, small chips and a free drink."
+  },
+
   // 🍳 Breakfast
   {
     id: "egg-sandwich",
     category: "breakfast",
     name: "Egg Sandwich",
     price: 1.00,
-    description: "Fluffy seasoned egg and fresh garnish between two toasted slices of house-baked bread.",
+    description: "Fried egg and lettuce on toasted bread.",
+    comboIncludes: ["Fried Egg", "Fresh Lettuce", "Toasted Bread"],
     image: "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=600&q=80",
-    details: "Wake up to magic! A beautifully fried egg, fresh crispy lettuce, and a touch of our signature house sauce on buttered, golden toast. Perfect, simple, and satisfying."
+    details: "Fried egg and lettuce on toasted bread."
   },
   {
     id: "polony-sandwich",
     category: "breakfast",
     name: "Polony Sandwich",
     price: 1.00,
-    description: "Savory, thinly sliced polony toasted sandwich with melted cheese and fresh greens.",
+    description: "Sliced polony and cheese on toasted bread.",
+    comboIncludes: ["Sliced Polony", "Cheese", "Toasted Bread"],
     image: "https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=600&q=80",
-    details: "A classic favorite! Slices of savory prime polony lightly seared, layered with custom condiments on freshly sliced white sandwich bread and toasted to perfection."
+    details: "Sliced polony and cheese on toasted bread."
   },
 
   // 🍗 Signature Chicken
   {
-    id: "bamboo-stick-chicken",
+    id: "bamboo-chicken",
     category: "signature-chicken",
-    name: "Bamboo Stick Chicken",
+    name: "Bamboo Chicken",
     price: 1.50,
-    description: "Succulent, grilled chicken pieces threaded on bamboo skewers. Served without chips.",
+    description: "Chicken served on a bamboo stick.",
+    comboIncludes: ["Grilled Bamboo Chicken Stick"],
     image: "https://images.unsplash.com/photo-1529042410759-befb1204b468?auto=format&fit=crop&w=600&q=80",
-    details: "Our true namesake dish! Fresh chicken pieces marinated in our secret Bamboo spice blend, threaded onto traditional bamboo skewers and flame-grilled for that perfect juicy bite. Served without chips.",
-    customizable: true,
-    optionType: "add-chips",
-    optionLabel: "Add Small Chips (+$0.50)",
-    optionPrice: 0.50
+    details: "Chicken served on a bamboo stick."
   },
   {
     id: "one-piecer",
     category: "signature-chicken",
     name: "1 Piecer",
     price: 2.00,
-    description: "1 piece of legendary crispy fried chicken. Includes chips.",
+    description: "1 piece of fried chicken served with chips.",
+    comboIncludes: ["1 Piece Fried Chicken", "Small Chips"],
     image: "https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?auto=format&fit=crop&w=600&q=80",
-    details: "One huge piece of our golden, double-breaded crispy fried chicken. Crispy on the outside, incredibly juicy on the inside. Served with a piping hot side of golden chips."
+    details: "1 piece of fried chicken served with chips."
   },
   {
     id: "two-piecer",
     category: "signature-chicken",
     name: "2 Piecer",
     price: 3.50,
-    description: "2 pieces of legendary crispy fried chicken. Includes chips.",
+    description: "2 pieces of fried chicken served with chips.",
+    comboIncludes: ["2 Pieces Fried Chicken", "Small Chips"],
     image: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=600&q=80",
-    details: "Double the pleasure! Two pieces of our signature golden crispy chicken, served fresh and piping hot with our freshly seasoned chips."
+    details: "2 pieces of fried chicken served with chips."
   },
   {
     id: "three-piecer",
     category: "signature-chicken",
     name: "3 Piecer",
     price: 4.50,
-    description: "3 pieces of legendary crispy fried chicken. Includes chips.",
+    description: "3 pieces of fried chicken served with chips.",
+    comboIncludes: ["3 Pieces Fried Chicken", "Small Chips"],
     image: "https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=600&q=80",
-    details: "The ultimate individual feast! Three pieces of crispy-and-juicy fried chicken. Prepared with the bamboo magic spice. Accompanied by a generous serving of seasoned chips."
+    details: "3 pieces of fried chicken served with chips."
   },
   {
     id: "eight-piece-bucket",
     category: "signature-chicken",
     name: "8 Piece Bucket",
     price: 9.00,
-    description: "A sharing bucket containing 8 premium pieces of signature chicken. Chicken only.",
+    description: "8 pieces of fried chicken. Chicken only.",
+    comboIncludes: ["8 Pieces Fried Chicken"],
     image: "https://images.unsplash.com/photo-1606755962773-d324e0a13086?auto=format&fit=crop&w=600&q=80",
-    details: "Gather the family or crew! An 8-piece bucket of delicious, crispy fried chicken, hand-breaded and pressure-cooked to seal in the juices. Chicken only (no chips)."
+    details: "An 8-piece bucket of fried chicken. Chicken only (no chips)."
   },
 
   // 🍚 Rice Meals
@@ -83,18 +148,20 @@ const MENU_DATA = [
     category: "rice-meals",
     name: "Fried Rice Meal",
     price: 3.00,
-    description: "Fragrant wok-fried rice, crispy chicken nuggets, and cool, creamy coleslaw.",
+    description: "Fried rice served with chicken nuggets and coleslaw.",
+    comboIncludes: ["Fried Rice", "Chicken Nuggets", "Coleslaw"],
     image: "https://images.unsplash.com/photo-1603133872878-685f586b641d?auto=format&fit=crop&w=600&q=80",
-    details: "A perfect fusion meal. Fragrant fried rice wok-tossed with local herbs and vegetables, paired with 5 premium golden chicken nuggets and a side of fresh, creamy house coleslaw."
+    details: "Fried rice served with chicken nuggets and coleslaw."
   },
   {
     id: "sadza-meal",
     category: "rice-meals",
     name: "Sadza Meal",
     price: 3.00,
-    description: "Traditional premium Sadza meal with delicious choice of rich Chicken or Beef stew.",
+    description: "Sadza served with your choice of chicken or beef stew.",
+    comboIncludes: ["Hot Fluffy Sadza", "Stew Choice (Chicken or Beef)"],
     image: "https://images.unsplash.com/photo-1541832676-9b763b0239ab?auto=format&fit=crop&w=600&q=80",
-    details: "Comfort food at its finest. Fluffy, steaming hot traditional Sadza served alongside a rich, slow-simmered savory gravy and leafy greens. Customise with your choice of protein.",
+    details: "Sadza served with your choice of chicken or beef stew.",
     customizable: true,
     optionType: "select-meat",
     optionLabel: "Choose Meat Option",
@@ -107,45 +174,50 @@ const MENU_DATA = [
     category: "burgers-wraps",
     name: "Chicken Burger",
     price: 3.00,
-    description: "Classic golden chicken patty, custom sauces, lettuce, and warm toasted sesame buns.",
+    description: "Chicken patty with lettuce and mayonnaise on a bun.",
+    comboIncludes: ["Chicken Patty", "Lettuce", "Mayonnaise", "Burger Bun"],
     image: "https://images.unsplash.com/photo-1625813506062-0aeb1d7a094b?auto=format&fit=crop&w=600&q=80",
-    details: "A crowd pleaser! Crispy golden chicken breast patty topped with cool shredded lettuce, fresh tomato, and our classic mayonnaise on a toasted sesame seed bun."
+    details: "Chicken patty with lettuce and mayonnaise on a bun."
   },
   {
     id: "boss-burger",
     category: "burgers-wraps",
     name: "Boss Burger",
     price: 5.50,
-    description: "Huge double fillet burger with layers of cheese, specialty sauces, and fresh salad.",
+    description: "Double chicken fillet burger with cheese, lettuce and sauce.",
+    comboIncludes: ["2 Chicken Fillets", "Cheese", "Lettuce", "Boss Sauce", "Burger Bun"],
     image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80",
-    details: "Be the Boss! Two premium crispy chicken breast fillets stacked high with double melted cheddar cheese, fresh sliced onions, crispy lettuce, sliced gherkins, and our secret premium Boss sauce."
+    details: "Double chicken fillet burger with cheese, lettuce and sauce."
   },
   {
     id: "chicken-wrap",
     category: "burgers-wraps",
     name: "Chicken Wrap",
     price: 3.00,
-    description: "Crispy chicken strips, ripe tomatoes, fresh lettuce, and dressing in a warm tortilla.",
+    description: "Chicken strips, lettuce, tomatoes and dressing wrapped in a tortilla.",
+    comboIncludes: ["Chicken Strips", "Lettuce & Tomatoes", "Dressing", "Tortilla Wrap"],
     image: "https://images.unsplash.com/photo-1626700051175-6518c4793f4f?auto=format&fit=crop&w=600&q=80",
-    details: "Vibrant and easy eating! Crispy tenders rolled together with crunchy green lettuce, juicy diced tomatoes, and a drizzle of cool garlic ranch dressing, all wrapped snug in a grilled flour tortilla."
+    details: "Chicken strips, lettuce, tomatoes and dressing wrapped in a tortilla."
   },
   {
     id: "chicken-fillet",
     category: "burgers-wraps",
     name: "Chicken Fillet",
     price: 3.00,
-    description: "Premium grilled chicken breast fillet marinated in local aromatics and lemon herbs.",
+    description: "Chicken breast fillet.",
+    comboIncludes: ["Grilled Chicken Breast Fillet"],
     image: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?auto=format&fit=crop&w=600&q=80",
-    details: "Pure tender breast fillet, grilled flawlessly on our iron grid plate. Infused with freshly picked local lemon herbs, garlic, and wild spices. A high-protein, flavorful choice."
+    details: "Chicken breast fillet."
   },
   {
     id: "shawarma",
     category: "burgers-wraps",
     name: "Shawarma",
     price: 3.00,
-    description: "Traditional spit-roasted chicken shawarma wrapped in warm pita with garlic spread.",
+    description: "Sliced chicken wrapped in pita bread with garlic sauce.",
+    comboIncludes: ["Sliced Roasted Chicken", "Garlic Sauce", "Pita Bread"],
     image: "https://images.unsplash.com/photo-1642353381622-c80f08960fa2?auto=format&fit=crop&w=600&q=80",
-    details: "Authentic street food vibe! Fine shavings of seasoned chicken slow-roasted on a vertical rotisserie, wrapped in Lebanese pita bread with thick toum garlic paste, crunchy pickles, and parsley onion mix."
+    details: "Sliced chicken wrapped in pita bread with garlic sauce."
   },
 
   // 🎋 Bamboo Specials
@@ -154,27 +226,30 @@ const MENU_DATA = [
     category: "bamboo-specials",
     name: "Bamboo Pie",
     price: 1.50,
-    description: "Flaky puff pastry stuffed with shredded chicken and rich creamy mushroom sauce.",
+    description: "A savoury baked pie.",
+    comboIncludes: ["Chicken & Mushroom Baked Pie"],
     image: "https://images.unsplash.com/photo-1601561951601-141fea956550?auto=format&fit=crop&w=600&q=80",
-    details: "Baked golden-brown every single morning. A rich, buttery, flaky puff pastry shell encasing a generous, savory filling of tender shredded chicken and hot creamed forest mushrooms."
+    details: "A savoury baked pie filled with chicken and mushroom."
   },
   {
     id: "chicken-bones",
     category: "bamboo-specials",
     name: "Chicken Bones",
     price: 1.50,
-    description: "Our famous crispy, crunchy roasted seasoned wings and riblets.",
+    description: "Seasoned chicken wing pieces and riblets.",
+    comboIncludes: ["Seasoned Wing Pieces & Riblets"],
     image: "https://images.unsplash.com/photo-1585325701165-351af916e5ec?auto=format&fit=crop&w=600&q=80",
-    details: "A local legend! Savory roasted chicken frame parts and wing riblets tossed in a highly addictive sticky sweet and smoky barbecue spice dry rub. Deeply flavorful and incredibly crunchy."
+    details: "Seasoned chicken wing pieces and riblets."
   },
   {
     id: "garden-salad",
     category: "bamboo-specials",
     name: "Garden Salad",
     price: 1.50,
-    description: "Crispy romaine, cucumbers, fresh cherry tomatoes, and local vinaigrette.",
+    description: "Mixed greens, cucumbers and tomatoes with dressing.",
+    comboIncludes: ["Mixed Greens", "Cucumbers & Tomatoes", "Salad Dressing"],
     image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80",
-    details: "A light, healthy, and colorful addition to any meal. Crisp cucumbers, crunchy shredded carrots, sweet red cherry tomatoes, and mixed greens, paired with our house herb vinaigrette."
+    details: "Mixed greens, cucumbers and tomatoes with dressing."
   },
 
   // 🍟 Chips
@@ -183,18 +258,20 @@ const MENU_DATA = [
     category: "chips",
     name: "Small Chips",
     price: 1.00,
-    description: "A small serving of golden-brown french fries seasoned with signature spice.",
+    description: "A small portion of seasoned potato chips.",
+    comboIncludes: ["Small Portion Seasoned Chips"],
     image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=600&q=80",
-    details: "Premium cut Idaho potatoes, fried to a brilliant golden crisp on the outside, fluffy on the inside. Tossed in our secret signature spiced seasoning dust."
+    details: "A small portion of seasoned potato chips."
   },
   {
     id: "mega-chips",
     category: "chips",
     name: "Mega Chips",
     price: 2.00,
-    description: "A massive sharing box of hot golden fries with double magic seasoning dusting.",
+    description: "A large portion of seasoned potato chips.",
+    comboIncludes: ["Large Portion Seasoned Chips"],
     image: "https://images.unsplash.com/photo-1541532713592-79a0317b6b77?auto=format&fit=crop&w=600&q=80",
-    details: "For the absolute chips lover! A gigantic bucket of our fresh, sizzling hot french fries, loaded up with double layers of our magical, salty seasoned spice mix."
+    details: "A large portion of seasoned potato chips."
   }
 ];
 
@@ -203,7 +280,9 @@ let currentCategory = "all";
 let searchQuery = "";
 let cart = JSON.parse(localStorage.getItem("bamboo_cart")) || [];
 let selectedProduct = null;
+let modalCurrentQty = 1;
 let currentOrderMethod = "delivery"; // 'delivery' or 'collection'
+let currentPaymentMethod = "Cash";
 
 // DOM Element Selectors
 const navbar = document.getElementById("navbar");
@@ -262,23 +341,67 @@ document.addEventListener("DOMContentLoaded", () => {
   renderMenu();
   syncCartUI();
   setupEventListeners();
+  
+  // Keep dynamic restaurant open/closed status indicator fresh
+  if (typeof window.updateRestaurantStatus === "function") {
+    window.updateRestaurantStatus();
+    setInterval(window.updateRestaurantStatus, 30000);
+  }
 });
 
-// Scroll Listener for Navbar Elevation
+// Scroll Listener for Navbar Elevation, Depth Lag and Smooth Shift
+let lastScrollY = window.scrollY;
+let scrollLagTimeout = null;
+
 function setupNavbarScroll() {
+  const navbar = document.getElementById("navbar");
+  if (!navbar) return;
+  const brandOrange = navbar.querySelector(".brand-orange");
+
   window.addEventListener("scroll", () => {
-    if (window.scrollY > 20) {
+    const currentScrollY = window.scrollY;
+    
+    // Dynamic Elevation shadow at 30px threshold
+    if (currentScrollY > 30) {
       navbar.classList.add("scrolled");
     } else {
       navbar.classList.remove("scrolled");
     }
-  });
+    
+    // Scroll depth effect: orange "CHICKEN" text lags by ~1px during scroll before catching up
+    if (brandOrange && Math.abs(currentScrollY - lastScrollY) > 2) {
+      brandOrange.classList.add("scroll-lag");
+      clearTimeout(scrollLagTimeout);
+      scrollLagTimeout = setTimeout(() => {
+        brandOrange.classList.remove("scroll-lag");
+      }, 120);
+    }
+    
+    // Scroll behavior:
+    // Scrolling DOWN: header moves upward slightly (~6px) to maximize menu space
+    // Scrolling UP: header smoothly returns to normal position over 300ms
+    const isSearchActive = document.getElementById("header-search-expandable")?.classList.contains("active");
+    const isNavActive = document.getElementById("mobile-nav-dropdown")?.classList.contains("active");
+    
+    if (currentScrollY > 50 && !isSearchActive && !isNavActive) {
+      if (currentScrollY > lastScrollY + 4) {
+        navbar.classList.add("header-scrolled-down");
+      } else if (currentScrollY < lastScrollY - 4) {
+        navbar.classList.remove("header-scrolled-down");
+      }
+    } else {
+      navbar.classList.remove("header-scrolled-down");
+    }
+    
+    lastScrollY = currentScrollY;
+  }, { passive: true });
 }
 
 // Generate the horizontal scrollable Category Pill buttons
 function generateCategoryPills() {
   const categories = [
     { id: "all", name: "All Magic", icon: "✨" },
+    { id: "value-combos", name: "Value Combos", icon: "⭐" },
     { id: "breakfast", name: "Breakfast", icon: "🍳" },
     { id: "signature-chicken", name: "Signature Chicken", icon: "🍗" },
     { id: "burgers-wraps", name: "Burgers & Wraps", icon: "🍔" },
@@ -336,8 +459,10 @@ function renderMenu() {
 
   // Filter Data
   const filteredData = MENU_DATA.filter(item => {
-    // Category check
-    const matchesCategory = (currentCategory === "all" || item.category === currentCategory);
+    // Category check: "all" displays everything except value-combos
+    const matchesCategory = currentCategory === "all" 
+      ? item.category !== "value-combos" 
+      : item.category === currentCategory;
     
     // Search query check
     const cleanSearch = searchQuery.toLowerCase().trim();
@@ -363,7 +488,7 @@ function renderMenu() {
     emptyState.style.display = "none";
   }
 
-  // Generate and Append Cards with micro fade-in delay (Stagger animation effect)
+  // Generate and Append Cards with micro fade-in delay
   filteredData.forEach((item, index) => {
     const card = document.createElement("div");
     card.classList.add("menu-card");
@@ -374,17 +499,7 @@ function renderMenu() {
 
     // Check if the item has quick choices we want to display directly on the card
     let quickOptionsHtml = "";
-    if (item.id === "bamboo-stick-chicken") {
-      quickOptionsHtml = `
-        <div class="card-quick-options" onclick="event.stopPropagation()">
-          <label class="option-checkbox-label" for="card-opt-${item.id}">
-            <input type="checkbox" id="card-opt-${item.id}" class="option-checkbox-input" onchange="toggleCardOption('${item.id}', this.checked)">
-            <span>Add Small Chips</span>
-          </label>
-          <span class="option-total-display" id="card-opt-price-${item.id}">Total: $1.50</span>
-        </div>
-      `;
-    } else if (item.id === "sadza-meal") {
+    if (item.id === "sadza-meal") {
       quickOptionsHtml = `
         <div class="card-quick-options" onclick="event.stopPropagation()">
           <select id="card-sel-${item.id}" class="sadza-dropdown" onchange="changeSadzaMeatChoice('${item.id}', this.value)">
@@ -399,24 +514,37 @@ function renderMenu() {
       <div class="menu-card-image-wrapper">
         <div class="image-placeholder"></div>
         <img class="menu-card-image" src="${item.image}" alt="${item.name}" referrerPolicy="no-referrer" onload="this.previousElementSibling.style.display='none'">
-        <span class="card-category-badge">${categoryLabel}</span>
-        <span class="card-price-badge" id="card-badge-price-${item.id}">$${item.price.toFixed(2)}</span>
+        <span class="card-category-badge" style="display: none;">${categoryLabel}</span>
       </div>
-      <div class="menu-card-details">
-        <h4>${item.name}</h4>
-        <p class="menu-card-description">${item.description}</p>
-        ${quickOptionsHtml}
-        <div class="card-actions-row">
-          <button class="btn-card-secondary" onclick="openDetailsModal('${item.id}')">
-            <span>Details</span>
-          </button>
-          <button class="btn-card-primary" onclick="addToCart('${item.id}')">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-cart"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
-            <span>Add to Bucket</span>
+      <div class="menu-card-content">
+        <div class="menu-card-info">
+          <h4>${item.name}</h4>
+          <p class="menu-card-description">${item.description}</p>
+          ${item.freeBadge ? `<div class="free-item-badge">${item.freeBadge}</div>` : ''}
+          ${quickOptionsHtml}
+          <span class="menu-card-price" id="card-badge-price-${item.id}">$${item.price.toFixed(2)}</span>
+        </div>
+        <div class="menu-card-actions">
+          <div class="card-qty-selector">
+            <button class="card-qty-btn" onclick="event.stopPropagation(); changeCardQty('${item.id}', -1)">−</button>
+            <span class="card-qty-val" id="card-qty-val-${item.id}">1</span>
+            <button class="card-qty-btn" onclick="event.stopPropagation(); changeCardQty('${item.id}', 1)">+</button>
+          </div>
+          <button class="btn-card-primary-yellow" onclick="event.stopPropagation(); addCardToCart('${item.id}')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-cart" style="stroke: var(--color-dark);"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+            <span>ADD TO CART</span>
           </button>
         </div>
       </div>
     `;
+
+    card.addEventListener("click", (e) => {
+      // Prevent modal opening when clicking interactive elements
+      if (e.target.closest(".card-qty-selector") || e.target.closest(".btn-card-primary-yellow") || e.target.closest(".card-quick-options") || e.target.tagName === "SELECT" || e.target.tagName === "INPUT" || e.target.tagName === "OPTION") {
+        return;
+      }
+      openDetailsModal(item.id);
+    });
 
     // Append card
     menuGrid.appendChild(card);
@@ -429,7 +557,17 @@ function renderMenu() {
   });
 }
 
-// Interactive toggle helper for Bamboo Stick Chicken on Main Card
+// Dynamic calculation function for Bamboo Chicken
+window.calculateBambooChickenPrice = function(isChecked) {
+  const item = MENU_DATA.find(i => i.id === "bamboo-chicken");
+  if (!item) return 1.50;
+  
+  const basePrice = item.price;
+  const addOnPrice = (isChecked && item.optionPrice) ? item.optionPrice : 0;
+  return basePrice + addOnPrice;
+};
+
+// Interactive toggle helper for Bamboo Chicken on Main Card
 window.toggleCardOption = function(itemId, isChecked) {
   const item = MENU_DATA.find(i => i.id === itemId);
   if (!item) return;
@@ -437,7 +575,9 @@ window.toggleCardOption = function(itemId, isChecked) {
   const badgePrice = document.getElementById(`card-badge-price-${itemId}`);
   const totalDisplay = document.getElementById(`card-opt-price-${itemId}`);
   
-  const finalPrice = isChecked ? (item.price + item.optionPrice) : item.price;
+  const finalPrice = itemId === "bamboo-chicken"
+    ? window.calculateBambooChickenPrice(isChecked)
+    : (isChecked ? (item.price + (item.optionPrice || 0)) : item.price);
   
   if (badgePrice) {
     badgePrice.textContent = `$${finalPrice.toFixed(2)}`;
@@ -456,32 +596,70 @@ window.changeSadzaMeatChoice = function(itemId, value) {
 // Search Logic
 function handleSearch(query) {
   searchQuery = query;
-  // Keep inputs synchronized
-  if (searchInputHeader.value !== query) {
-    searchInputHeader.value = query;
-  }
-  if (searchInputMobile.value !== query) {
-    searchInputMobile.value = query;
+  const headerInput = document.getElementById("search-input-header");
+  if (headerInput && headerInput.value !== query) {
+    headerInput.value = query;
   }
   renderMenu();
 }
 
+window.toggleHeaderSearch = function() {
+  const expandable = document.getElementById("header-search-expandable");
+  const toggleBtn = document.getElementById("search-toggle-btn");
+  const searchInput = document.getElementById("search-input-header");
+  
+  if (!expandable) return;
+  const isOpening = !expandable.classList.contains("active");
+  expandable.classList.toggle("active");
+  
+  if (toggleBtn) {
+    toggleBtn.classList.toggle("active", isOpening);
+  }
+  
+  if (isOpening && searchInput) {
+    setTimeout(() => searchInput.focus(), 150);
+  }
+};
+
+window.closeHeaderSearch = function() {
+  const expandable = document.getElementById("header-search-expandable");
+  const toggleBtn = document.getElementById("search-toggle-btn");
+  const searchInput = document.getElementById("search-input-header");
+  
+  if (expandable) expandable.classList.remove("active");
+  if (toggleBtn) toggleBtn.classList.remove("active");
+  if (searchInput && searchInput.value !== "") {
+    handleSearch("");
+  }
+};
+
+window.toggleMobileNavMenu = function() {
+  const dropdown = document.getElementById("mobile-nav-dropdown");
+  const hamburgerBtn = document.getElementById("hamburger-menu-btn");
+  
+  if (!dropdown) return;
+  dropdown.classList.toggle("active");
+  if (hamburgerBtn) {
+    hamburgerBtn.classList.toggle("active");
+  }
+};
+
 // Setup Event Listeners
 function setupEventListeners() {
-  // Search Box - Desktop header
-  searchInputHeader.addEventListener("input", (e) => {
-    handleSearch(e.target.value);
-  });
-
-  // Search Box - Mobile view
-  searchInputMobile.addEventListener("input", (e) => {
-    handleSearch(e.target.value);
-  });
+  // Search Box in header
+  const searchInputHeaderEl = document.getElementById("search-input-header");
+  if (searchInputHeaderEl) {
+    searchInputHeaderEl.addEventListener("input", (e) => {
+      handleSearch(e.target.value);
+    });
+  }
 
   // Clear Search text
-  clearSearchBtn.addEventListener("click", () => {
-    handleSearch("");
-  });
+  if (clearSearchBtn) {
+    clearSearchBtn.addEventListener("click", () => {
+      handleSearch("");
+    });
+  }
 
   // Reset Search from empty state
   resetSearchBtn.addEventListener("click", () => {
@@ -559,14 +737,84 @@ window.openDetailsModal = function(productId) {
   if (!product) return;
 
   selectedProduct = product;
+  modalCurrentQty = 1;
   
-  // Set basic content
-  modalImg.src = product.image;
-  modalImg.alt = product.name;
-  modalTitle.textContent = product.name;
-  modalCategory.textContent = product.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-  modalDescription.textContent = product.details || product.description;
-  modalPrice.textContent = `$${product.price.toFixed(2)}`;
+  // Elements
+  const modalImgEl = document.getElementById("modal-img");
+  const modalFloatingPriceEl = document.getElementById("modal-floating-price");
+  const modalCategoryEl = document.getElementById("modal-category");
+  const modalTitleEl = document.getElementById("modal-title");
+  const includedContainer = document.getElementById("included-items-container");
+  const modalDescEl = document.getElementById("modal-description");
+  const modalOptSection = document.getElementById("modal-options-section");
+  const modalOptContainer = document.getElementById("modal-options-container");
+  const modalQtyValEl = document.getElementById("modal-qty-val");
+  const modalTotalPriceEl = document.getElementById("modal-total-price");
+
+  if (modalImgEl) {
+    modalImgEl.src = product.image;
+    modalImgEl.alt = product.name;
+  }
+  if (modalFloatingPriceEl) {
+    modalFloatingPriceEl.textContent = `$${product.price.toFixed(2)}`;
+  }
+  if (modalCategoryEl) {
+    modalCategoryEl.textContent = getCategoryPill(product.category);
+  }
+  if (modalTitleEl) {
+    modalTitleEl.textContent = product.name;
+  }
+
+  // Populate What's Included
+  if (includedContainer) {
+    includedContainer.innerHTML = "";
+    const itemsList = product.comboIncludes || product.includes || [product.description];
+    itemsList.forEach(itemStr => {
+      const row = document.createElement("div");
+      row.className = "included-item-row";
+      
+      const emoji = getItemEmoji(itemStr);
+      const hasEmoji = /^[\u{1F300}-\u{1F9FF}|\u{2600}-\u{26FF}|\u{2700}-\u{27BF}]/u.test(itemStr);
+      if (hasEmoji) {
+        row.innerHTML = `<span class="included-item-text">${itemStr}</span>`;
+      } else {
+        row.innerHTML = `<span class="included-item-icon">${emoji}</span><span class="included-item-text">${itemStr}</span>`;
+      }
+      includedContainer.appendChild(row);
+    });
+  }
+
+  // Description
+  if (modalDescEl) {
+    if (product.details && !product.comboIncludes) {
+      modalDescEl.textContent = product.details;
+      modalDescEl.style.display = "block";
+    } else {
+      modalDescEl.style.display = "none";
+    }
+  }
+
+  // Dynamic Options (e.g. Sadza Meal Meat Option)
+  if (modalOptSection && modalOptContainer) {
+    if (product.customizable && product.options) {
+      modalOptSection.style.display = "block";
+      modalOptContainer.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--color-bg); padding: 12px 14px; border-radius: var(--radius-md); border: 1px solid var(--color-gray-light);">
+          <label for="modal-sel-${product.id}" style="font-weight: 700; font-size: 0.9rem; color: var(--color-dark); font-family: var(--font-body);">${product.optionLabel || 'Option'}:</label>
+          <select id="modal-sel-${product.id}" class="sadza-dropdown" style="padding: 6px 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--color-gray-light); font-weight: 700; font-family: var(--font-body); background-color: var(--color-light); color: var(--color-dark); font-size: 0.88rem;">
+            ${product.options.map(opt => `<option value="${opt}">${opt === 'Chicken' ? '🍖 Chicken Stew' : '🥩 Beef Stew'}</option>`).join('')}
+          </select>
+        </div>
+      `;
+    } else {
+      modalOptSection.style.display = "none";
+      modalOptContainer.innerHTML = "";
+    }
+  }
+
+  // Sticky footer reset
+  if (modalQtyValEl) modalQtyValEl.textContent = "1";
+  if (modalTotalPriceEl) modalTotalPriceEl.textContent = `$${product.price.toFixed(2)}`;
 
   // Reveal Modal
   detailModal.classList.add("active");
@@ -580,6 +828,58 @@ function closeDetailsModal() {
     document.body.style.overflow = "";
   }
   selectedProduct = null;
+}
+
+window.updateModalQty = function(delta) {
+  if (!selectedProduct) return;
+  modalCurrentQty = Math.max(1, modalCurrentQty + delta);
+  
+  const modalQtyValEl = document.getElementById("modal-qty-val");
+  const modalTotalPriceEl = document.getElementById("modal-total-price");
+  
+  if (modalQtyValEl) modalQtyValEl.textContent = modalCurrentQty;
+  if (modalTotalPriceEl) {
+    const total = selectedProduct.price * modalCurrentQty;
+    modalTotalPriceEl.textContent = `$${total.toFixed(2)}`;
+  }
+};
+
+window.confirmModalAddToCart = function() {
+  if (!selectedProduct) return;
+  addToCart(selectedProduct.id, modalCurrentQty);
+  showToast(`🛒 Added ${modalCurrentQty}x ${selectedProduct.name} to your bucket!`);
+  closeDetailsModal();
+};
+
+function getCategoryPill(category) {
+  switch (category) {
+    case "value-combos": return "⭐ VALUE COMBO";
+    case "breakfast": return "🍳 BREAKFAST";
+    case "signature-chicken": return "🍗 SIGNATURE CHICKEN";
+    case "rice-meals": return "🍚 RICE MEALS";
+    case "burgers-wraps": return "🍔 BURGERS & WRAPS";
+    case "bamboo-specials": return "🎋 BAMBOO SPECIALS";
+    case "chips": return "🍟 CHIPS";
+    default: return `✨ ${category.toUpperCase().replace("-", " ")}`;
+  }
+}
+
+function getItemEmoji(name) {
+  const n = name.toLowerCase();
+  if (n.includes("burger")) return "🍔";
+  if (n.includes("wrap") || n.includes("shawarma")) return "🌯";
+  if (n.includes("bamboo chicken") || n.includes("bamboo stick")) return "🍢";
+  if (n.includes("bamboo pie") || n.includes("pie")) return "🥟";
+  if (n.includes("fillet")) return "🍗";
+  if (n.includes("piece") || n.includes("chicken") || n.includes("bucket") || n.includes("riblet")) return "🍗";
+  if (n.includes("chips") || n.includes("fries")) return "🍟";
+  if (n.includes("water")) return "💧";
+  if (n.includes("drink")) return "🥤";
+  if (n.includes("egg") || n.includes("sandwich") || n.includes("polony")) return "🥪";
+  if (n.includes("sadza") || n.includes("stew")) return "🍲";
+  if (n.includes("rice")) return "🍚";
+  if (n.includes("salad") || n.includes("greens") || n.includes("coleslaw") || n.includes("cucumbers")) return "🥗";
+  return "✨";
 }
 
 /* ==========================================================================
@@ -687,7 +987,7 @@ function updateCheckoutSummaries() {
   }
 }
 
-window.submitOrderToWhatsApp = function() {
+window.submitOrderToWhatsApp = async function() {
   const nameInput = document.getElementById("checkout-name");
   const phoneInput = document.getElementById("checkout-phone");
   const addressInput = document.getElementById("checkout-address");
@@ -727,9 +1027,67 @@ window.submitOrderToWhatsApp = function() {
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const deliveryFee = currentOrderMethod === "delivery" ? 3.00 : 0.00;
   const grandTotal = subtotal + deliveryFee;
-  const paymentMethod = currentOrderMethod === "delivery" ? "Cash on Delivery" : "Cash on Collection";
+  const paymentMethodStr = currentPaymentMethod;
   const specialNotes = notesInput && notesInput.value.trim() ? notesInput.value.trim() : "";
   const specialNotesPart = specialNotes ? `\n📝 *SPECIAL INSTRUCTIONS:*\n${specialNotes}\n` : "";
+
+  // Prepare complete JSON payload for Cloudflare Worker API
+  const apiPayload = {
+    customer_name: customerName,
+    phone: customerPhone,
+    items: cart.map(item => ({
+      name: item.name,
+      qty: item.quantity,
+      quantity: item.quantity,
+      price: item.price,
+      options: item.customization || ""
+    })),
+    total: parseFloat(grandTotal.toFixed(2)),
+    notes: specialNotes || (currentOrderMethod === "delivery" ? `Delivery: ${addressInput ? addressInput.value.trim() : ''}` : `Pickup at ${branchSelect ? branchSelect.value : ''}`),
+    payment_method: paymentMethodStr,
+    type: currentOrderMethod,
+    order_status: "new",
+    status: "new"
+  };
+
+  const submitBtn = document.querySelector("#checkout-modal .btn-submit-whatsapp") || document.getElementById("btn-submit-whatsapp");
+  let originalBtnText = "";
+  if (submitBtn) {
+    originalBtnText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = "0.7";
+  }
+
+  // Send complete order as JSON to POST https://bamboo-orders-api.warstreet.workers.dev/orders
+  try {
+    const response = await fetch("https://bamboo-orders-api.warstreet.workers.dev/orders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(apiPayload)
+    });
+
+    if (!response.ok) {
+      throw new Error(`API error: status ${response.status}`);
+    }
+  } catch (error) {
+    console.error("Failed to save order to Cloudflare Worker API:", error);
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = "1";
+      submitBtn.innerHTML = originalBtnText;
+    }
+    showToast("Unable to submit order. Please try again.");
+    return; // Do NOT open WhatsApp if the order was not saved
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.style.opacity = "1";
+    submitBtn.innerHTML = originalBtnText;
+  }
   
   // Format items ordered
   let itemsFormattedList = "";
@@ -746,7 +1104,7 @@ window.submitOrderToWhatsApp = function() {
 • *Phone:* ${customerPhone}
 • *Type:* ${currentOrderMethod.toUpperCase()}
 ${orderDetailsPart}
-• *Payment Method:* ${paymentMethod} (USD Cash Only)
+• *Payment Method:* ${paymentMethodStr}
 
 🛒 *ITEMS ORDERED:*
 ${itemsFormattedList}
@@ -771,19 +1129,8 @@ _Order submitted via Bamboo Chicken Digital Menu_ 🍗✨`;
   anchor.click();
   document.body.removeChild(anchor);
   
-  // Clear cart, notify success & close checkout modal
-  cart = [];
-  saveCartAndSync();
-  closeCheckoutModal();
-  
-  // Reset form fields
-  if (nameInput) nameInput.value = "";
-  if (phoneInput) phoneInput.value = "";
-  if (addressInput) addressInput.value = "";
-  if (timeInput) timeInput.value = "";
-  if (notesInput) notesInput.value = "";
-  
-  showToast("🍗 Order confirmed! WhatsApp is opening to complete your message...");
+  // Show order success receipt screen within checkout modal
+  showOrderSuccessScreen();
 };
 
 window.syncCartUI = function() {
@@ -798,6 +1145,37 @@ window.syncCartUI = function() {
       badge.style.display = "none";
     }
   });
+
+  // Update Floating Cart Button values
+  const floatingCartQty = document.getElementById("floating-cart-qty");
+  const floatingCartTotal = document.getElementById("floating-cart-total");
+  const floatingCartBtn = document.getElementById("floating-cart");
+  const subtotalSum = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  if (floatingCartQty) floatingCartQty.textContent = totalQuantity;
+  if (floatingCartTotal) floatingCartTotal.textContent = `$${subtotalSum.toFixed(2)}`;
+  if (floatingCartBtn) {
+    if (totalQuantity > 0) {
+      floatingCartBtn.style.display = "flex";
+      // Add bounce animation
+      floatingCartBtn.classList.remove("bounce-cart");
+      void floatingCartBtn.offsetWidth; // force reflow
+      floatingCartBtn.classList.add("bounce-cart");
+    } else {
+      floatingCartBtn.style.display = "none";
+    }
+  }
+
+  // Update bottom nav cart badge
+  const bottomCartBadge = document.getElementById("bottom-cart-badge");
+  if (bottomCartBadge) {
+    bottomCartBadge.textContent = totalQuantity;
+    if (totalQuantity > 0) {
+      bottomCartBadge.style.display = "block";
+    } else {
+      bottomCartBadge.style.display = "none";
+    }
+  }
 
   // Clear sidebar content
   cartSidebarBodyInner.innerHTML = "";
@@ -901,17 +1279,7 @@ window.addToCart = function(itemId, customQty = 1) {
   let customizationDetails = "";
 
   // Check card-specific options if they exist
-  if (itemId === "bamboo-stick-chicken") {
-    const checkbox = document.getElementById(`card-opt-${itemId}`);
-    if (checkbox && checkbox.checked) {
-      cartItemId = `${itemId}-chips`;
-      displayName = `${item.name} (+ Chips)`;
-      finalPrice = item.price + item.optionPrice;
-      customizationDetails = "Includes Small Chips";
-    } else {
-      customizationDetails = "Without chips";
-    }
-  } else if (itemId === "sadza-meal") {
+  if (itemId === "sadza-meal") {
     const select = document.getElementById(`card-sel-${itemId}`);
     const chosenMeat = select ? select.value : "Chicken";
     cartItemId = `${itemId}-${chosenMeat.toLowerCase()}`;
@@ -964,3 +1332,160 @@ function showToast(message) {
     toast.remove();
   }, 4000);
 }
+
+/* ==========================================================================
+   Premium Interface Controllers & Animations
+   ========================================================================== */
+
+window.changeCardQty = function(itemId, delta) {
+  const qtySpan = document.getElementById(`card-qty-val-${itemId}`);
+  if (qtySpan) {
+    let currentVal = parseInt(qtySpan.textContent) || 1;
+    currentVal += delta;
+    if (currentVal < 1) currentVal = 1;
+    qtySpan.textContent = currentVal;
+  }
+};
+
+window.addCardToCart = function(itemId) {
+  const qtySpan = document.getElementById(`card-qty-val-${itemId}`);
+  const qty = qtySpan ? (parseInt(qtySpan.textContent) || 1) : 1;
+
+  // Find product details
+  const item = MENU_DATA.find(i => i.id === itemId);
+  if (!item) return;
+
+  // Add item to cart state
+  addToCart(itemId, qty);
+  
+  // Reset card quantity value to 1 for next tap
+  if (qtySpan) qtySpan.textContent = "1";
+  
+  // Trigger modern premium flying visual animation
+  animateFlyToCart(itemId);
+};
+
+window.animateFlyToCart = function(itemId) {
+  const card = document.getElementById(`menu-card-${itemId}`);
+  const targetCart = document.getElementById("floating-cart") || document.getElementById("cart-btn");
+  if (!card || !targetCart) return;
+
+  const img = card.querySelector(".menu-card-image");
+  if (!img) return;
+
+  // Clone image for visual path projection
+  const flyer = img.cloneNode();
+  flyer.style.position = "fixed";
+  flyer.style.zIndex = "10000";
+  flyer.style.width = `${img.offsetWidth}px`;
+  flyer.style.height = `${img.offsetHeight}px`;
+  flyer.style.borderRadius = "var(--radius-md)";
+  flyer.style.objectFit = "cover";
+  flyer.style.pointerEvents = "none";
+  flyer.style.transition = "all 0.8s cubic-bezier(0.19, 1, 0.22, 1)";
+
+  const imgRect = img.getBoundingClientRect();
+  flyer.style.top = `${imgRect.top}px`;
+  flyer.style.left = `${imgRect.left}px`;
+
+  document.body.appendChild(flyer);
+
+  const cartRect = targetCart.getBoundingClientRect();
+  void flyer.offsetWidth; // Force hardware reflow
+
+  // Transform coordinates toward floating cart button
+  flyer.style.top = `${cartRect.top + (targetCart.offsetHeight / 2) - 15}px`;
+  flyer.style.left = `${cartRect.left + (targetCart.offsetWidth / 2) - 15}px`;
+  flyer.style.width = "30px";
+  flyer.style.height = "30px";
+  flyer.style.opacity = "0.2";
+  flyer.style.transform = "rotate(360deg)";
+
+  setTimeout(() => {
+    flyer.remove();
+  }, 800);
+};
+
+window.setPaymentMethod = function(method) {
+  currentPaymentMethod = method;
+  
+  // Match checkmarks and styles with payment selections
+  const options = document.querySelectorAll(".payment-option");
+  options.forEach(opt => {
+    const pill = opt.querySelector(".payment-pill");
+    const radio = opt.querySelector("input[type='radio']");
+    if (pill) {
+      if (radio && radio.value === method) {
+        pill.classList.add("active");
+        radio.checked = true;
+      } else {
+        pill.classList.remove("active");
+      }
+    }
+  });
+};
+
+window.showOrderSuccessScreen = function() {
+  const checkoutFormContainer = document.getElementById("checkout-form-container");
+  const checkoutSuccessContainer = document.getElementById("checkout-success-container");
+  
+  if (checkoutFormContainer && checkoutSuccessContainer) {
+    const successOrderItemsList = document.getElementById("success-order-items-list");
+    const successOrderTotalValue = document.getElementById("success-order-total-value");
+    const successOrderIdLabel = document.getElementById("success-order-id-label");
+    
+    if (successOrderIdLabel) {
+      const orderNum = Math.floor(Math.random() * 900) + 100;
+      successOrderIdLabel.textContent = `Order #${orderNum}`;
+    }
+    
+    if (successOrderItemsList) {
+      let itemsHtml = "";
+      cart.forEach(item => {
+        itemsHtml += `
+          <div style="display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 6px;">
+            <span style="color: var(--color-gray);"><strong style="color: var(--color-dark);">${item.quantity}x</strong> ${item.name}</span>
+            <span style="font-weight: 600; color: var(--color-dark);">$${(item.price * item.quantity).toFixed(2)}</span>
+          </div>
+        `;
+      });
+      successOrderItemsList.innerHTML = itemsHtml;
+    }
+    
+    if (successOrderTotalValue) {
+      const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const deliveryFee = currentOrderMethod === "delivery" ? 3.00 : 0.00;
+      const grandTotal = subtotal + deliveryFee;
+      successOrderTotalValue.textContent = `$${grandTotal.toFixed(2)}`;
+    }
+    
+    checkoutFormContainer.style.display = "none";
+    checkoutSuccessContainer.style.display = "flex";
+  }
+};
+
+window.closeCheckoutSuccessAndReset = function() {
+  cart = [];
+  saveCartAndSync();
+  closeCheckoutModal();
+  
+  const checkoutFormContainer = document.getElementById("checkout-form-container");
+  const checkoutSuccessContainer = document.getElementById("checkout-success-container");
+  if (checkoutFormContainer && checkoutSuccessContainer) {
+    checkoutFormContainer.style.display = "flex";
+    checkoutSuccessContainer.style.display = "none";
+  }
+  
+  // Reset form values cleanly
+  const nameInput = document.getElementById("checkout-name");
+  const phoneInput = document.getElementById("checkout-phone");
+  const addressInput = document.getElementById("checkout-address");
+  const timeInput = document.getElementById("checkout-pickup-time");
+  const notesInput = document.getElementById("checkout-notes");
+  
+  if (nameInput) nameInput.value = "";
+  if (phoneInput) phoneInput.value = "";
+  if (addressInput) addressInput.value = "";
+  if (timeInput) timeInput.value = "";
+  if (notesInput) notesInput.value = "";
+};
