@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bamboo Chicken - Crispy & Juicy, Taste the Bamboo Magic!</title>
+  <meta name="description" content="Order delicious food online from Bamboo Chicken. Savor our crispy golden spiced chicken, traditional sadza meals, flame-grilled burgers, and signature specials. Fast delivery and pickup across Zimbabwe.">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Background Decorative Grid Accent -->
+  <div class="bg-grid-accent"></div>
+
+  <!-- Top Navigation Bar (Refined Soft Charcoal Sticky Header) -->
+  <header class="navbar" id="navbar">
+    <div class="navbar-main-row">
+      <!-- Left: Brand Title & Live Opening Status -->
+      <div class="nav-brand-container">
+        <a href="#" class="nav-brand">
+          <h1 class="brand-title">
+            BAMBOO <span class="brand-orange">CHICKEN</span>
+          </h1>
+        </a>
+        <div id="restaurant-status-text" class="header-status-badge">
+          <!-- Evaluated dynamically by script below -->
+        </div>
+      </div>
+
+      <!-- Right: Search Icon & Hamburger Menu Buttons -->
+      <div class="header-actions">
+        <!-- 🔍 Search Toggle Button -->
+        <button type="button" class="hdr-icon-btn" id="search-toggle-btn" aria-label="Search menu" onclick="toggleHeaderSearch()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
+
+        <!-- ☰ Hamburger Menu Button -->
+        <button type="button" class="hdr-icon-btn" id="hamburger-menu-btn" aria-label="Open menu" onclick="toggleMobileNavMenu()">
+          <svg class="hamburger-icon-svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line class="line-top" x1="4" x2="20" y1="6" y2="6"/><line class="line-mid" x1="4" x2="20" y1="12" y2="12"/><line class="line-bot" x1="4" x2="20" y1="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Expandable Search Field (Animated inside the header) -->
+    <div class="header-search-expandable" id="header-search-expandable">
+      <div class="header-search-input-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="hdr-search-icon"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="search-input-header" class="hdr-search-input" placeholder="Search delicious food..." autocomplete="off">
+        <button type="button" class="hdr-search-close-btn" id="hdr-search-close-btn" onclick="closeHeaderSearch()" aria-label="Close search">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <script>
+      (function() {
+        function updateStatus() {
+          const el = document.getElementById("restaurant-status-text");
+          const contactDot = document.getElementById("contact-status-dot");
+          const contactText = document.getElementById("contact-status-text");
+          
+          const now = new Date();
+          const hour = now.getHours();
+          const min = now.getMinutes();
+          const minutes = hour * 60 + min;
+          const openMins = 7 * 60; // 07:00
+          const closeMins = 20 * 60 + 30; // 20:30
+          
+          const isOpen = (minutes >= openMins && minutes < closeMins);
+          const newStatusHtml = isOpen 
+            ? '<span class="status-dot-indicator">🟢</span> OPEN • Until 20:30' 
+            : '<span class="status-dot-indicator">🔴</span> CLOSED • Opens 07:00';
+          
+          if (el) {
+            const currentStatusKey = isOpen ? "open" : "closed";
+            if (el.dataset.status && el.dataset.status !== currentStatusKey) {
+              el.dataset.status = currentStatusKey;
+              el.classList.add("status-updating");
+              setTimeout(() => {
+                el.innerHTML = newStatusHtml;
+                el.classList.remove("status-updating");
+              }, 180);
+            } else {
+              el.dataset.status = currentStatusKey;
+              el.innerHTML = newStatusHtml;
+            }
+          }
+          if (contactDot) {
+            contactDot.textContent = isOpen ? "🟢" : "🔴";
+          }
+          if (contactText) {
+            contactText.textContent = isOpen ? "OPEN NOW • Until 20:30" : "CLOSED • Opens 07:00";
+          }
+        }
+        updateStatus();
+        window.updateRestaurantStatus = updateStatus;
+      })();
+    </script>
+
+    <!-- Dropdown Navigation Overlay (Hamburger Trigger) -->
+    <div id="mobile-nav-dropdown" class="header-nav-dropdown">
+      <a href="#" onclick="toggleMobileNavMenu(); window.scrollTo({ top: 0, behavior: 'smooth' });">Home</a>
+      <a href="#menu-section" onclick="toggleMobileNavMenu();">Our Menu</a>
+      <a href="javascript:void(0)" onclick="toggleMobileNavMenu(); openCart();">Your Cart</a>
+      <a href="javascript:void(0)" onclick="toggleMobileNavMenu(); openAboutModal();">About Us</a>
+      <a href="javascript:void(0)" onclick="toggleMobileNavMenu(); openContactModal();">Contact Us</a>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-container" id="menu-section" style="background-color: #FFFFFF; padding-top: 10px;">
+
+    <!-- Sticky Horizontal Scrolling Categories -->
+    <nav class="categories-wrapper" id="categories-wrapper" style="background-color: #FFFFFF;">
+      <div class="categories-container" id="categories-container">
+        <!-- Category Pills injected dynamically by JS -->
+      </div>
+    </nav>
+
+    <!-- Search Status Info Banner -->
+    <div class="results-info" id="search-info-banner" style="display: none;">
+      <span id="results-count">0 items found</span>
+      <button class="clear-search-btn" id="clear-search-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-circle"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+        <span>Clear search</span>
+      </button>
+    </div>
+
+    <!-- Active Menu Items Grid -->
+    <div class="menu-grid" id="menu-grid">
+      <!-- Menu Cards dynamically loaded and animated here -->
+    </div>
+
+    <!-- Search / Filter Empty State -->
+    <div class="empty-state" id="empty-state">
+      <svg class="empty-state-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search-x"><path d="m13.5 8.5-5 5"/><path d="m8.5 8.5 5 5"/><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <h5>No delicious matches found!</h5>
+      <p>We couldn't find any menu items fitting your search or selected category. Try checking your spelling or selecting another filter!</p>
+      <button class="btn-reset-search" id="reset-search-btn">Show All Items</button>
+    </div>
+
+  </main>
+
+  <!-- Refined Product Detail Modal -->
+  <div class="modal-overlay" id="detail-modal">
+    <div class="modal-window product-detail-modal">
+      <!-- Hero Header Image with Floating Price & Close Button -->
+      <div class="modal-header-image">
+        <button class="modal-close-btn" id="modal-close-btn" aria-label="Close details dialog">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+        <span class="modal-floating-price" id="modal-floating-price">$0.00</span>
+        <img class="modal-img" id="modal-img" src="" alt="" referrerPolicy="no-referrer">
+      </div>
+
+      <!-- Scrollable Content Body -->
+      <div class="modal-content">
+        <!-- Category Pill -->
+        <div style="margin-bottom: 6px;">
+          <span class="modal-category-pill" id="modal-category">⭐ VALUE COMBO</span>
+        </div>
+
+        <!-- Prominent Meal Title -->
+        <h3 class="modal-meal-title" id="modal-title">Meal Name</h3>
+
+        <!-- What's Included Section -->
+        <div class="whats-included-section" id="whats-included-section">
+          <h5 class="whats-included-title">
+            <span>📋</span> What's Included
+          </h5>
+          <div class="included-items-container" id="included-items-container">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Factual Description -->
+        <p class="modal-factual-desc" id="modal-description" style="margin-top: 10px; margin-bottom: 6px; font-size: 0.88rem; color: var(--color-gray); line-height: 1.5; font-family: var(--font-body); display: none;"></p>
+
+        <!-- Dynamic Customizable Options -->
+        <div class="modal-options-section" id="modal-options-section" style="display: none; margin-top: 10px; padding-top: 12px;">
+          <h5 class="modal-options-title" id="modal-options-title" style="font-size: 0.95rem; font-weight: 700; margin-bottom: 8px;">Customise Your Meal</h5>
+          <div id="modal-options-container">
+            <!-- Options injected dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Sticky Bottom Action Footer -->
+      <div class="modal-sticky-footer">
+        <!-- Quantity Control -->
+        <div class="modal-qty-ctrl">
+          <button type="button" class="modal-qty-btn" onclick="updateModalQty(-1)" aria-label="Decrease Quantity">−</button>
+          <span class="modal-qty-val" id="modal-qty-val">1</span>
+          <button type="button" class="modal-qty-btn" onclick="updateModalQty(1)" aria-label="Increase Quantity">+</button>
+        </div>
+
+        <!-- Primary Add To Cart Button -->
+        <button type="button" class="btn-modal-add-cart" id="btn-modal-add-cart" onclick="confirmModalAddToCart()">
+          <span style="display: flex; align-items: center; gap: 8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-cart"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+            <span>ADD TO CART</span>
+          </span>
+          <span class="modal-total-badge" id="modal-total-price">$0.00</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shopping Cart Slide-out Sidebar & Overlay -->
+  <div class="cart-overlay" id="cart-overlay"></div>
+  <aside class="cart-sidebar" id="cart-sidebar">
+    <div class="cart-sidebar-header">
+      <div class="cart-sidebar-title" style="display: flex; align-items: center; gap: 8px;">
+        <span class="cart-sidebar-icon">🛒</span>
+        <h3>Your Bucket</h3>
+      </div>
+      <button class="cart-sidebar-close" id="cart-sidebar-close" aria-label="Close Cart">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Scrollable Items View -->
+    <div class="cart-sidebar-view cart-sidebar-body active" id="cart-view-items" style="display: flex; flex-direction: column; overflow-y: hidden;">
+      <div id="cart-sidebar-body-inner" style="flex-grow: 1; overflow-y: auto; padding-right: 4px; display: flex; flex-direction: column; gap: 20px;">
+        <!-- Injected Dynamically by JS -->
+      </div>
+      
+      <!-- Items Summary & Proceed Button -->
+      <div class="cart-sidebar-footer" id="cart-items-footer" style="margin-top: auto; border-radius: var(--radius-md);">
+        <div class="cart-summary-line">
+          <span class="summary-label">Total Items:</span>
+          <span class="summary-value" id="cart-summary-qty">0</span>
+        </div>
+        <div class="cart-summary-line">
+          <span class="summary-label">Subtotal:</span>
+          <span class="summary-value" id="cart-summary-subtotal">$0.00</span>
+        </div>
+        <div class="cart-summary-line grand-total-line">
+          <span class="summary-label">Grand Total:</span>
+          <span class="summary-value" id="cart-summary-grand">$0.00</span>
+        </div>
+        <button class="btn-checkout" id="btn-proceed-to-checkout" onclick="openCheckoutModal()">
+          <span>Proceed to Order Details</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Beautiful Dedicated Spacious Checkout Modal -->
+  <div class="modal-overlay" id="checkout-modal">
+    <div class="modal-window" style="max-width: 650px;">
+      
+      <!-- Checkout Form Wrapper Container -->
+      <div id="checkout-form-container" style="display: flex; flex-direction: column; width: 100%; height: 100%;">
+        <!-- Modal Header -->
+        <div class="modal-content" style="padding: 24px 30px 10px; border-bottom: 1px solid var(--color-gray-light); flex-grow: 0;">
+          <div class="modal-title-row" style="margin-bottom: 8px; align-items: center;">
+            <h4 style="font-size: 1.6rem; display: flex; align-items: center; gap: 10px; margin: 0;">
+              <span>🎋</span> Order Details &amp; Fulfillment
+            </h4>
+            <button class="modal-close-btn" id="checkout-modal-close" aria-label="Close checkout modal" style="position: static; flex-shrink: 0;" onclick="closeCheckoutModal()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </div>
+          <p style="color: var(--color-gray); font-size: 0.9rem; margin-bottom: 14px;">
+            Fill in your details for quick delivery or collection in Harare. We'll generate a professional WhatsApp order message for you!
+          </p>
+        </div>
+
+        <!-- Checkout Form -->
+        <div class="modal-content" style="padding: 24px 30px; overflow-y: auto; flex-grow: 1;">
+          <form class="checkout-form" id="checkout-form" onsubmit="return false;">
+            <!-- Order Method Toggle -->
+            <div class="form-group">
+              <label class="form-label">Fulfillment Method</label>
+              <div class="order-method-toggle">
+                <button type="button" class="order-method-btn active" id="method-btn-delivery" onclick="setOrderMethod('delivery')">
+                  🚚 Delivery (+$3.00)
+                </button>
+                <button type="button" class="order-method-btn" id="method-btn-collection" onclick="setOrderMethod('collection')">
+                  🛍️ Branch Collection
+                </button>
+              </div>
+            </div>
+
+            <!-- Name and WhatsApp Phone Inputs -->
+            <div style="display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 4px;" id="checkout-grid-details">
+              <div class="form-group">
+                <label class="form-label" for="checkout-name">Your Name</label>
+                <input type="text" id="checkout-name" class="form-control" placeholder="e.g. John Doe" required>
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label" for="checkout-phone">WhatsApp Phone Number</label>
+                <input type="tel" id="checkout-phone" class="form-control" placeholder="e.g. 0773532790 or 0789951127" required>
+              </div>
+            </div>
+
+            <!-- Conditional Address Field (shown for delivery) -->
+            <div class="form-group" id="group-delivery-address">
+              <label class="form-label" for="checkout-address">Delivery Address (Harare CBD)</label>
+              <textarea id="checkout-address" class="form-control" placeholder="e.g. 77 Kwame Nkrumah Ave, Between First St &amp; Sam Nujoma St, Harare CBD" required rows="2"></textarea>
+            </div>
+
+            <!-- Conditional Branch Field (shown for collection) -->
+            <div class="form-group" id="group-collection-branch" style="display: none;">
+              <label class="form-label">Collection Branch Address</label>
+              <div style="background-color: rgba(253, 184, 19, 0.05); border: 1px solid rgba(253, 184, 19, 0.2); padding: 14px 18px; border-radius: var(--radius-md); display: flex; align-items: start; gap: 12px;">
+                <span style="font-size: 1.4rem; line-height: 1;">📍</span>
+                <div>
+                  <h5 style="margin: 0 0 4px 0; font-size: 1rem; font-weight: 700; color: var(--color-dark); font-family: var(--font-display);">Roadport Main Branch</h5>
+                  <p style="margin: 0 0 6px 0; font-size: 0.85rem; color: var(--color-gray); line-height: 1.4;">Along Fifth Road, 50 meters from Roadport, Harare</p>
+                  <span style="display: inline-block; font-size: 0.75rem; background-color: var(--color-primary); color: var(--color-dark); font-weight: 700; padding: 2px 6px; border-radius: var(--radius-sm);">Only Collection Location</span>
+                </div>
+              </div>
+              <input type="hidden" id="checkout-branch" value="Roadport (Along Fifth Road, 50m from Roadport, Harare)">
+            </div>
+
+            <div class="form-group" id="group-collection-time" style="display: none;">
+              <label class="form-label" for="checkout-pickup-time">Est. Pickup Time</label>
+              <input type="text" id="checkout-pickup-time" class="form-control" placeholder="e.g. 12:45 PM or as soon as possible">
+            </div>
+
+            <!-- Payment Method Selector -->
+            <div class="form-group" style="margin-top: 4px;">
+              <label class="form-label">Payment Method</label>
+              <div class="payment-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px;">
+                <label class="payment-option">
+                  <input type="radio" name="payment-method" value="Cash" checked onchange="setPaymentMethod('Cash')" style="display: none;">
+                  <span class="payment-pill active" id="pay-Cash">💵 Cash</span>
+                </label>
+                <label class="payment-option">
+                  <input type="radio" name="payment-method" value="EcoCash" onchange="setPaymentMethod('EcoCash')" style="display: none;">
+                  <span class="payment-pill" id="pay-EcoCash">📱 EcoCash</span>
+                </label>
+                <label class="payment-option">
+                  <input type="radio" name="payment-method" value="InnBucks" onchange="setPaymentMethod('InnBucks')" style="display: none;">
+                  <span class="payment-pill" id="pay-InnBucks">🦌 InnBucks</span>
+                </label>
+                <label class="payment-option">
+                  <input type="radio" name="payment-method" value="Mukuru" onchange="setPaymentMethod('Mukuru')" style="display: none;">
+                  <span class="payment-pill" id="pay-Mukuru">🐦 Mukuru</span>
+                </label>
+                <label class="payment-option">
+                  <input type="radio" name="payment-method" value="Bank Transfer" onchange="setPaymentMethod('Bank Transfer')" style="display: none;">
+                  <span class="payment-pill" id="pay-Bank">🏛️ Transfer</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Special Instructions -->
+            <div class="form-group" style="margin-top: 4px;">
+              <label class="form-label" for="checkout-notes">Special Instructions (Optional)</label>
+              <textarea id="checkout-notes" class="form-control" placeholder="e.g. Extra hot pepper sauce, or ring upon arrival..." rows="2"></textarea>
+            </div>
+
+            <!-- Order total summary Box inside form -->
+            <div class="checkout-summary-box" style="margin-top: 8px;">
+              <div class="checkout-summary-line">
+                <span>Total Items:</span>
+                <span id="checkout-summary-qty">0</span>
+              </div>
+              <div class="checkout-summary-line">
+                <span>Delivery Fee:</span>
+                <span id="checkout-summary-delivery">$3.00</span>
+              </div>
+              <div class="checkout-summary-line" style="border-top: 1px dashed rgba(253, 184, 19, 0.5); padding-top: 8px; margin-top: 8px; font-weight: 700; color: var(--color-dark); font-size: 1rem;">
+                <span>Grand Total:</span>
+                <span id="checkout-summary-grand" style="color: var(--color-secondary); font-weight: 800; font-size: 1.2rem;">$0.00</span>
+              </div>
+            </div>
+
+            <!-- Checkout Actions -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 20px;" id="checkout-actions-container">
+              <button type="button" class="btn-checkout-back" onclick="closeCheckoutModal()" style="margin-top: 0; padding: 14px 24px;">
+                <span>Back to Bucket</span>
+              </button>
+              <button type="button" class="btn-checkout" id="btn-submit-order" onclick="submitOrderToWhatsApp()" style="margin-top: 0; padding: 14px 24px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+                <span>Send WhatsApp Order</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Success Screen Container (Hidden by default) -->
+      <div id="checkout-success-container" style="display: none; flex-direction: column; padding: 40px 30px; text-align: center; width: 100%; overflow-y: auto;">
+        <div style="font-size: 4rem; margin-bottom: 20px; line-height: 1;">✅</div>
+        <h3 style="font-size: 1.8rem; font-family: var(--font-display); font-weight: 800; margin-bottom: 8px; color: var(--color-dark);">Order Submitted</h3>
+        <p style="color: var(--color-gray); font-size: 0.95rem; line-height: 1.5; max-width: 450px; margin: 0 auto 24px;">
+          Thank you for choosing Bamboo Chicken.
+          <br>We'll begin preparing your order shortly.
+        </p>
+        
+        <div style="background-color: var(--color-accent-cream); border: 1px solid rgba(253, 184, 19, 0.3); border-radius: var(--radius-md); padding: 18px; max-width: 400px; margin: 0 auto 24px; text-align: left;" id="success-box">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px dashed rgba(253, 184, 19, 0.4); padding-bottom: 8px;">
+            <span style="font-family: var(--font-display); font-weight: 800; font-size: 1rem; color: var(--color-dark);" id="success-order-id-label">Order #254</span>
+            <span style="font-size: 0.8rem; background-color: var(--color-primary); color: var(--color-dark); padding: 2px 8px; border-radius: var(--radius-sm); font-weight: 700;">PENDING</span>
+          </div>
+          
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;" id="success-order-items-list">
+            <!-- Populated dynamically -->
+          </div>
+          
+          <div style="border-top: 1px dashed rgba(253, 184, 19, 0.4); padding-top: 10px; display: flex; justify-content: space-between; font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; color: var(--color-dark);">
+            <span>Total:</span>
+            <span style="color: var(--color-secondary); font-size: 1.25rem;" id="success-order-total-value">$0.00</span>
+          </div>
+        </div>
+        
+        <p style="font-size: 0.85rem; color: var(--color-gray); font-style: italic; margin-bottom: 24px;">
+          We'll begin preparing your order shortly.
+        </p>
+        
+        <button class="btn-checkout" onclick="closeCheckoutSuccessAndReset()" style="max-width: 220px; margin: 0 auto;">
+          <span>Done</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- About Slide-out Sidebar & Overlay -->
+  <div class="cart-overlay" id="about-overlay" onclick="closeAboutModal()"></div>
+  <aside class="cart-sidebar" id="about-sidebar">
+    <div class="cart-sidebar-header">
+      <div class="cart-sidebar-title" style="display: flex; align-items: center; gap: 8px;">
+        <span class="cart-sidebar-icon" style="font-size: 1.3rem;">ℹ️</span>
+        <h3 style="font-family: var(--font-display); font-weight: 800; font-size: 1.4rem; color: var(--color-dark); margin: 0; letter-spacing: -0.5px;">About Bamboo Chicken</h3>
+      </div>
+      <button class="cart-sidebar-close" onclick="closeAboutModal()" aria-label="Close About">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    
+    <div class="cart-sidebar-body" style="padding: 24px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto;">
+      <div class="about-image-wrapper" style="position: relative; border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-sm); height: 180px; background-color: #EFEFEF; flex-shrink: 0;">
+        <img src="https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=800&q=80" alt="Fresh Bamboo Chicken" style="width: 100%; height: 100%; object-fit: cover;" referrerPolicy="no-referrer">
+      </div>
+      
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <h4 style="font-family: var(--font-display); font-weight: 800; font-size: 1.2rem; color: var(--color-dark); margin: 0;">Welcome to Bamboo Chicken.</h4>
+        <p style="color: var(--color-gray); font-size: 0.9rem; line-height: 1.6; margin: 0;">
+          Bamboo Chicken is a fast-food restaurant serving freshly prepared meals for individuals, families and friends.
+        </p>
+        <p style="color: var(--color-gray); font-size: 0.9rem; line-height: 1.6; margin: 0;">
+          Our menu includes Bamboo Chicken, burgers, wraps, traditional meals, breakfast, snacks, drinks and value combos, prepared to order and served throughout the day.
+        </p>
+        <p style="color: var(--color-gray); font-size: 0.9rem; line-height: 1.6; margin: 0;">
+          Whether you're stopping by for a quick bite or a complete meal, we're committed to providing convenient service and great value.
+        </p>
+        <p style="color: var(--color-gray); font-size: 0.9rem; line-height: 1.6; margin: 0;">
+          Thank you for choosing Bamboo Chicken.
+        </p>
+        <p style="color: var(--color-secondary); font-family: var(--font-body); font-weight: 700; font-size: 0.92rem; margin: 4px 0 0 0;">
+          Crispy &amp; Juicy, Taste the Bamboo Magic!
+        </p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Contact Slide-out Sidebar & Overlay -->
+  <div class="cart-overlay" id="contact-overlay" onclick="closeContactModal()"></div>
+  <aside class="cart-sidebar" id="contact-sidebar">
+    <div class="cart-sidebar-header">
+      <div class="cart-sidebar-title" style="display: flex; align-items: center; gap: 8px;">
+        <span class="cart-sidebar-icon" style="font-size: 1.3rem;">📞</span>
+        <h3 style="font-family: var(--font-display); font-weight: 800; font-size: 1.4rem; color: var(--color-dark); margin: 0; letter-spacing: -0.5px;">Contact</h3>
+      </div>
+      <button class="cart-sidebar-close" onclick="closeContactModal()" aria-label="Close Contact">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    
+    <div class="cart-sidebar-body" style="padding: 20px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto;">
+      
+      <!-- Live Business Status -->
+      <div class="contact-status-card">
+        <span class="contact-status-dot" id="contact-status-dot">🟢</span>
+        <span class="contact-status-text" id="contact-status-text">OPEN NOW • Until 20:30</span>
+      </div>
+
+      <!-- Location & Email Info List (NO Phone numbers section displayed) -->
+      <div class="contact-info-list">
+        <!-- Location -->
+        <a href="https://maps.google.com/?q=Along+Fifth+Road,+50m+from+Roadport,+Harare" target="_blank" rel="noopener noreferrer" class="contact-info-item">
+          <div class="contact-info-icon">📍</div>
+          <div class="contact-info-text">
+            <h5>Location</h5>
+            <p>Along Fifth Road, 50m from Roadport, Harare</p>
+          </div>
+        </a>
+        
+        <!-- Email -->
+        <a href="mailto:eatbamboochicken@gmail.com" class="contact-info-item">
+          <div class="contact-info-icon">✉️</div>
+          <div class="contact-info-text">
+            <h5>Email</h5>
+            <p>eatbamboochicken@gmail.com</p>
+          </div>
+        </a>
+      </div>
+      
+      <!-- Quick Action Buttons -->
+      <div class="contact-actions-list">
+        <h5 class="contact-actions-heading">Quick Actions</h5>
+        
+        <a href="tel:0789951127" class="btn-contact-quick btn-contact-call">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <span>Call Now</span>
+        </a>
+        
+        <a href="https://wa.me/263789951127" target="_blank" rel="noopener noreferrer" class="btn-contact-quick btn-contact-whatsapp">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          <span>WhatsApp</span>
+        </a>
+        
+        <a href="https://maps.google.com/?q=Along+Fifth+Road,+50m+from+Roadport,+Harare" target="_blank" rel="noopener noreferrer" class="btn-contact-quick btn-contact-maps">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span>Open in Google Maps</span>
+        </a>
+        
+        <a href="mailto:eatbamboochicken@gmail.com" class="btn-contact-quick btn-contact-email">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          <span>Email Us</span>
+        </a>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- Premium Floating Cart Button -->
+  <button class="floating-cart" id="floating-cart" onclick="openCart()" aria-label="Open your bucket">
+    <!-- Cart Icon -->
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-dark)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-cart"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+    <!-- Total Price Tag -->
+    <span id="floating-cart-total" style="font-family: var(--font-display); font-weight: 800; font-size: 0.8rem; color: var(--color-dark); margin-top: 2px;">$0.00</span>
+    <!-- Item Count Notification Badge -->
+    <span id="floating-cart-qty" style="position: absolute; top: -4px; right: -4px; background-color: #E11D48; color: white; font-family: var(--font-display); font-weight: 800; font-size: 0.75rem; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.2); border: 1.5px solid white;">0</span>
+  </button>
+
+  <!-- Fixed Bottom Navigation Bar -->
+  <nav class="bottom-nav" style="position: fixed; bottom: 0; left: 0; right: 0; height: 65px; background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-top: 1px solid var(--color-gray-light); z-index: 1000; display: flex; justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.05);">
+    <a href="#" class="bottom-nav-item active" onclick="setActiveBottomNav(this, 'home')" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: var(--color-gray); font-size: 0.75rem; font-weight: 700; width: 20%; font-family: var(--font-body); transition: color var(--transition-fast);">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-home"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>HOME</span>
+    </a>
+    <a href="#menu-section" class="bottom-nav-item" onclick="setActiveBottomNav(this, 'menu')" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: var(--color-gray); font-size: 0.75rem; font-weight: 700; width: 20%; font-family: var(--font-body); transition: color var(--transition-fast);">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-drumstick"><path d="M15.4 12.3a8.8 8.8 0 0 0-4.7-4.7 5.4 5.4 0 0 0-6.7 6.7 8.8 8.8 0 0 0 4.7 4.7 5.4 5.4 0 0 0 6.7-6.7M16 11l5-5M18 14c1.1-1.1 2.9-1.1 4 0s1.1 2.9 0 4-2.9 1.1-4 0-1.1-2.9 0-4M14 18c1.1-1.1 2.9-1.1 4 0s1.1 2.9 0 4-2.9 1.1-4 0-1.1-2.9 0-4"/></svg>
+      <span>MENU</span>
+    </a>
+    <a href="javascript:void(0)" class="bottom-nav-item" onclick="setActiveBottomNav(this, 'cart'); openCart();" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: var(--color-gray); font-size: 0.75rem; font-weight: 700; width: 20%; font-family: var(--font-body); transition: color var(--transition-fast); position: relative;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-cart"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+      <span class="bottom-nav-cart-badge" id="bottom-cart-badge" style="position: absolute; top: -4px; right: 18px; background-color: #E11D48; color: white; font-size: 0.65rem; font-weight: 800; padding: 2px 5px; border-radius: 50%; min-width: 16px; text-align: center; display: none;">0</span>
+      <span>CART</span>
+    </a>
+    <a href="javascript:void(0)" class="bottom-nav-item" onclick="setActiveBottomNav(this, 'about')" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: var(--color-gray); font-size: 0.75rem; font-weight: 700; width: 20%; font-family: var(--font-body); transition: color var(--transition-fast);">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      <span>ABOUT</span>
+    </a>
+    <a href="javascript:void(0)" class="bottom-nav-item" onclick="setActiveBottomNav(this, 'contact')" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: var(--color-gray); font-size: 0.75rem; font-weight: 700; width: 20%; font-family: var(--font-body); transition: color var(--transition-fast);">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-phone"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      <span>CONTACT</span>
+    </a>
+  </nav>
+
+  <!-- Navigation active state helper scripts -->
+  <script>
+    let lastActivePage = 'home';
+
+    function setActiveBottomNav(element, page) {
+      if (page === 'home' || page === 'menu') {
+        lastActivePage = page;
+        // Remove active from all bottom nav items
+        const items = document.querySelectorAll('.bottom-nav-item');
+        items.forEach(item => item.classList.remove('active'));
+        element.classList.add('active');
+      }
+      
+      if (page === 'home') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (page === 'menu') {
+        const target = document.getElementById('menu-section');
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+      } else if (page === 'about') {
+        openAboutModal();
+      } else if (page === 'contact') {
+        openContactModal();
+      }
+    }
+
+    function openAboutModal() {
+      if (window.closeCart) window.closeCart();
+      closeContactModal();
+      
+      const aboutSidebar = document.getElementById("about-sidebar");
+      const aboutOverlay = document.getElementById("about-overlay");
+      if (aboutSidebar && aboutOverlay) {
+        aboutSidebar.classList.add("active");
+        aboutOverlay.classList.add("active");
+        document.body.style.overflow = "hidden";
+        
+        // Highlight About tab
+        const items = document.querySelectorAll('.bottom-nav-item');
+        items.forEach(item => item.classList.remove('active'));
+        const aboutTab = Array.from(items).find(item => item.textContent.includes('ABOUT'));
+        if (aboutTab) aboutTab.classList.add('active');
+      }
+    }
+
+    function closeAboutModal() {
+      const aboutSidebar = document.getElementById("about-sidebar");
+      const aboutOverlay = document.getElementById("about-overlay");
+      if (aboutSidebar && aboutOverlay) {
+        aboutSidebar.classList.remove("active");
+        aboutOverlay.classList.remove("active");
+        document.body.style.overflow = "";
+        
+        // Revert active tab
+        const items = document.querySelectorAll('.bottom-nav-item');
+        items.forEach(item => item.classList.remove('active'));
+        const activeText = lastActivePage === 'home' ? 'HOME' : 'MENU';
+        const targetTab = Array.from(items).find(item => item.textContent.includes(activeText));
+        if (targetTab) targetTab.classList.add('active');
+      }
+    }
+
+    function openContactModal() {
+      if (window.closeCart) window.closeCart();
+      closeAboutModal();
+      
+      const contactSidebar = document.getElementById("contact-sidebar");
+      const contactOverlay = document.getElementById("contact-overlay");
+      if (contactSidebar && contactOverlay) {
+        contactSidebar.classList.add("active");
+        contactOverlay.classList.add("active");
+        document.body.style.overflow = "hidden";
+        
+        // Highlight Contact tab
+        const items = document.querySelectorAll('.bottom-nav-item');
+        items.forEach(item => item.classList.remove('active'));
+        const contactTab = Array.from(items).find(item => item.textContent.includes('CONTACT'));
+        if (contactTab) contactTab.classList.add('active');
+      }
+    }
+
+    function closeContactModal() {
+      const contactSidebar = document.getElementById("contact-sidebar");
+      const contactOverlay = document.getElementById("contact-overlay");
+      if (contactSidebar && contactOverlay) {
+        contactSidebar.classList.remove("active");
+        contactOverlay.classList.remove("active");
+        document.body.style.overflow = "";
+        
+        // Revert active tab
+        const items = document.querySelectorAll('.bottom-nav-item');
+        items.forEach(item => item.classList.remove('active'));
+        const activeText = lastActivePage === 'home' ? 'HOME' : 'MENU';
+        const targetTab = Array.from(items).find(item => item.textContent.includes(activeText));
+        if (targetTab) targetTab.classList.add('active');
+      }
+    }
+
+    // Bind to window so they are globally accessible
+    window.openAboutModal = openAboutModal;
+    window.closeAboutModal = closeAboutModal;
+    window.openContactModal = openContactModal;
+    window.closeContactModal = closeContactModal;
+
+    // Handle Escape Key for modular sidebars
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeAboutModal();
+        closeContactModal();
+      }
+    });
+
+    function toggleMobileNavMenu() {
+      const menu = document.getElementById('mobile-nav-dropdown');
+      if (menu) {
+        if (menu.style.display === 'none' || menu.style.display === '') {
+          menu.style.display = 'flex';
+        } else {
+          menu.style.display = 'none';
+        }
+      }
+    }
+  </script>
+
+  <!-- Toast Notification Overlay -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="/js/app.js" defer></script>
+</body>
+</html>
