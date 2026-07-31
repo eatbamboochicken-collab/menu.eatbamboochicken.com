@@ -1,0 +1,556 @@
+/* 
+ * Bamboo Chicken — Dedicated Kitchen Display System (KDS)
+ * Optimized for mounted kitchen tablets, touchscreens, and overhead displays.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+:root {
+  --kds-bg: #0C0D10;
+  --kds-card-bg: #16171D;
+  --kds-card-border: rgba(255, 255, 255, 0.12);
+  --kds-header-bg: #121318;
+  --kds-orange: #FF5A00;
+  --kds-green: #10B981;
+  --kds-amber: #F59E0B;
+  --kds-red: #EF4444;
+  --kds-blue: #3B82F6;
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--kds-bg);
+  color: #F9FAFB;
+  min-height: 100vh;
+  overflow-x: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Header Bar */
+.kds-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--kds-header-bg);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.12);
+  padding: 12px 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.kds-header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.kds-brand-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #FFF;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.kds-brand-title span.orange {
+  color: var(--kds-orange);
+}
+
+.kds-nav-link {
+  color: #9CA3AF;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.2s;
+}
+
+.kds-nav-link:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #FFF;
+}
+
+/* Controls & Search */
+.kds-controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.kds-search-box {
+  position: relative;
+  width: 260px;
+}
+
+.kds-search-input {
+  width: 100%;
+  background: #1F2028;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 10px 14px 10px 36px;
+  color: #FFF;
+  font-size: 0.95rem;
+  font-weight: 600;
+  outline: none;
+}
+
+.kds-search-input:focus {
+  border-color: var(--kds-orange);
+}
+
+.kds-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9CA3AF;
+  pointer-events: none;
+}
+
+.kds-btn-sound {
+  background: rgba(255, 90, 0, 0.15);
+  border: 2px solid var(--kds-orange);
+  color: var(--kds-orange);
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.kds-btn-sound.muted {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #9CA3AF;
+}
+
+.kds-clock-badge {
+  background: #1F2028;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-family: monospace;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #10B981;
+}
+
+/* Summary Bar */
+.kds-summary-bar {
+  display: flex;
+  background: #13141A;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 10px 20px;
+  gap: 16px;
+  overflow-x: auto;
+}
+
+.kds-stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #1B1C24;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.kds-stat-count {
+  background: #2D2E3A;
+  padding: 2px 8px;
+  border-radius: 12px;
+  color: #FFF;
+  font-weight: 800;
+}
+
+/* 4 Columns Grid */
+.kds-board-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(320px, 1fr));
+  gap: 16px;
+  padding: 16px;
+  height: calc(100vh - 125px);
+  overflow: hidden;
+}
+
+@media (max-width: 1280px) {
+  .kds-board-grid {
+    grid-template-columns: repeat(2, 1fr);
+    height: auto;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .kds-board-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* KDS Column */
+.kds-column {
+  background: #121319;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.kds-column-header {
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  font-family: var(--font-display);
+}
+
+.kds-column-header.col-new {
+  background: linear-gradient(130deg, rgba(245, 158, 11, 0.25) 0%, rgba(18, 19, 25, 0) 100%);
+  border-bottom-color: #F59E0B;
+}
+
+.kds-column-header.col-accepted {
+  background: linear-gradient(130deg, rgba(59, 130, 246, 0.25) 0%, rgba(18, 19, 25, 0) 100%);
+  border-bottom-color: #3B82F6;
+}
+
+.kds-column-header.col-preparing {
+  background: linear-gradient(130deg, rgba(255, 90, 0, 0.25) 0%, rgba(18, 19, 25, 0) 100%);
+  border-bottom-color: #FF5A00;
+}
+
+.kds-column-header.col-ready {
+  background: linear-gradient(130deg, rgba(16, 185, 129, 0.25) 0%, rgba(18, 19, 25, 0) 100%);
+  border-bottom-color: #10B981;
+}
+
+.kds-column-title {
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #FFF;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kds-badge-count {
+  font-size: 1.1rem;
+  font-weight: 800;
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #FFF;
+}
+
+/* Cards List */
+.kds-cards-list {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.kds-empty-state {
+  text-align: center;
+  padding: 40px 16px;
+  color: #6B7280;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: 2px dashed rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  margin-top: 10px;
+}
+
+/* ORDER CARD */
+.kds-card {
+  background: var(--kds-card-bg);
+  border: 2px solid var(--kds-card-border);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+  transition: transform 0.15s ease, border-color 0.2s ease;
+  position: relative;
+}
+
+/* Color Coding by Elapsed Time */
+.kds-card.time-green {
+  border-left: 6px solid #10B981;
+}
+
+.kds-card.time-orange {
+  border-left: 6px solid #F59E0B;
+}
+
+.kds-card.time-red {
+  border-left: 6px solid #EF4444;
+}
+
+.kds-card.time-overdue {
+  border: 2px solid #EF4444 !important;
+  border-left: 8px solid #EF4444 !important;
+  animation: kds-pulse-red 1.2s infinite ease-in-out;
+}
+
+@keyframes kds-pulse-red {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+/* Card Header */
+.kds-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.kds-order-id {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #FFFFFF;
+  line-height: 1.1;
+}
+
+.kds-type-pill {
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.kds-type-pickup {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60A5FA;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.kds-type-delivery {
+  background: rgba(255, 90, 0, 0.2);
+  color: #FF7A30;
+  border: 1px solid rgba(255, 90, 0, 0.4);
+}
+
+/* Live Elapsed Counter Badge */
+.kds-timer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.kds-timer-badge.green {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.kds-timer-badge.orange {
+  background: rgba(245, 158, 11, 0.2);
+  color: #FBBF24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.kds-timer-badge.red {
+  background: rgba(239, 68, 68, 0.25);
+  color: #F87171;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+}
+
+.kds-timer-badge.overdue {
+  background: #EF4444;
+  color: #FFF;
+  border: 1px solid #DC2626;
+  animation: pulse 1s infinite alternate;
+}
+
+/* Customer Row */
+.kds-customer-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #D1D5DB;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+  padding-bottom: 8px;
+}
+
+.kds-customer-name {
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #FFF;
+}
+
+.kds-payment-tag {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.kds-paid {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10B981;
+}
+
+.kds-unpaid {
+  background: rgba(245, 158, 11, 0.2);
+  color: #FBBF24;
+}
+
+/* Items List */
+.kds-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.kds-item-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #FFF;
+}
+
+.kds-item-qty {
+  background: #282936;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #FF5A00;
+  font-size: 1.2rem;
+  font-weight: 900;
+  padding: 2px 10px;
+  border-radius: 8px;
+  min-width: 42px;
+  text-align: center;
+}
+
+.kds-item-details {
+  flex: 1;
+}
+
+.kds-item-name {
+  color: #FFFFFF;
+  line-height: 1.25;
+}
+
+.kds-item-options {
+  font-size: 0.85rem;
+  color: #FBBF24;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* Kitchen Notes */
+.kds-notes-box {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #FCD34D;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+/* Kitchen Action Button */
+.kds-action-btn {
+  width: 100%;
+  min-height: 52px;
+  border: none;
+  border-radius: 12px;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.15s active;
+}
+
+.kds-action-btn:active {
+  transform: scale(0.97);
+}
+
+.kds-btn-accept {
+  background: #F59E0B;
+  color: #000;
+}
+
+.kds-btn-accept:hover {
+  background: #D97706;
+}
+
+.kds-btn-prep {
+  background: #FF5A00;
+  color: #FFF;
+}
+
+.kds-btn-prep:hover {
+  background: #E04F00;
+}
+
+.kds-btn-ready {
+  background: #10B981;
+  color: #FFF;
+}
+
+.kds-btn-ready:hover {
+  background: #059669;
+}
+
+.kds-btn-done {
+  background: #374151;
+  color: #9CA3AF;
+  cursor: default;
+}
