@@ -14,7 +14,7 @@ const MENU_DATA = [
     price: 5.00,
     description: "🍔 Burger • 🍗 1 Piece Chicken • 🍟 Small Chips • 🥤 FREE 50c Drink",
     comboIncludes: ["Burger", "1 Piece Chicken", "Small Chips", "FREE 50c Drink"],
-    image: "https://images.unsplash.com/photo-1513185158878-8d8c2a2a3da3?auto=format&fit=crop&w=600&q=80",
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Chicken%20burger.jpg",
     details: "Burger, 1 piece chicken, small chips and a free 50c drink."
   },
   {
@@ -24,7 +24,7 @@ const MENU_DATA = [
     price: 4.00,
     description: "🍢 2 Bamboo Chicken • 🍟 Chips • 🥤 FREE 50c Drink",
     comboIncludes: ["2 Bamboo Chicken", "Chips", "FREE 50c Drink"],
-    image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80",
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Bamboo%20chicken.jpg",
     details: "2 Bamboo Chicken sticks, chips and a free 50c drink."
   },
   {
@@ -34,7 +34,7 @@ const MENU_DATA = [
     price: 4.00,
     description: "🌯 Chicken Wrap • 🍟 Medium Chips • 💧 FREE Water",
     comboIncludes: ["Chicken Wrap", "Medium Chips", "FREE Water"],
-    image: "https://images.unsplash.com/photo-1626700051175-6518c4793f4f?auto=format&fit=crop&w=600&q=80",
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Chicken%20wrape.jpeg",
     details: "Chicken wrap, medium chips and free bottled water."
   },
   {
@@ -44,7 +44,7 @@ const MENU_DATA = [
     price: 6.00,
     description: "🌯 Shawarma • 🍗 2 Chicken Pieces • 🥤 FREE Tall Drink",
     comboIncludes: ["Shawarma", "2 Chicken Pieces", "FREE Tall Drink"],
-    image: "https://images.unsplash.com/photo-1561651823-34feb02250e4?auto=format&fit=crop&w=600&q=80",
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/2%20piecer.jpg",
     details: "Shawarma, 2 chicken pieces and a free tall drink."
   },
   {
@@ -54,7 +54,7 @@ const MENU_DATA = [
     price: 3.50,
     description: "🥟 Bamboo Pie • 🍢 Bamboo Chicken • 🍟 Small Chips • 💧 FREE Water",
     comboIncludes: ["Bamboo Pie", "Bamboo Chicken", "Small Chips", "FREE Water"],
-    image: "https://images.unsplash.com/photo-1601561951601-141fea956550?auto=format&fit=crop&w=600&q=80",
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/bamboo_pie_3.webp",
     details: "Bamboo pie, Bamboo Chicken stick, small chips and free bottled water."
   },
   {
@@ -64,7 +64,7 @@ const MENU_DATA = [
     price: 3.00,
     description: "🍗 Chicken Fillet • 🍟 Small Chips • 🥤 FREE Drink",
     comboIncludes: ["Chicken Fillet", "Small Chips", "FREE Drink"],
-    image: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?auto=format&fit=crop&w=600&q=80",
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Chicken%20fillet.jpg",
     details: "Chicken fillet, small chips and a free drink."
   },
 
@@ -86,86 +86,102 @@ const MENU_DATA = [
     price: 1.00,
     description: "Sliced polony and cheese on toasted bread.",
     comboIncludes: ["Sliced Polony", "Cheese", "Toasted Bread"],
-    image: "https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=600&q=80",
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Polony%20sandwich.jpg",
     details: "Sliced polony and cheese on toasted bread."
   },
 
-  // 🍗 Signature Chicken
+  // 🍗 Bamboo Specials / Fried Chicken
   {
     id: "bamboo-chicken",
-    category: "signature-chicken",
+    category: "bamboo-specials",
     name: "Bamboo Chicken",
     price: 1.50,
     description: "Chicken served on a bamboo stick.",
     comboIncludes: ["Grilled Bamboo Chicken Stick"],
-    image: "https://images.unsplash.com/photo-1529042410759-befb1204b468?auto=format&fit=crop&w=600&q=80",
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Bamboo%20chicken.jpg",
     details: "Chicken served on a bamboo stick."
   },
   {
     id: "one-piecer",
-    category: "signature-chicken",
+    category: "bamboo-specials",
     name: "1 Piecer",
     price: 2.00,
     description: "1 piece of fried chicken served with chips.",
     comboIncludes: ["1 Piece Fried Chicken", "Small Chips"],
-    image: "https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?auto=format&fit=crop&w=600&q=80",
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/1%20piecer.jpg",
     details: "1 piece of fried chicken served with chips."
   },
   {
     id: "two-piecer",
-    category: "signature-chicken",
+    category: "bamboo-specials",
     name: "2 Piecer",
     price: 3.50,
     description: "2 pieces of fried chicken served with chips.",
     comboIncludes: ["2 Pieces Fried Chicken", "Small Chips"],
-    image: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=600&q=80",
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/2%20piecer.jpg",
     details: "2 pieces of fried chicken served with chips."
   },
   {
     id: "three-piecer",
-    category: "signature-chicken",
+    category: "bamboo-specials",
     name: "3 Piecer",
     price: 4.50,
     description: "3 pieces of fried chicken served with chips.",
     comboIncludes: ["3 Pieces Fried Chicken", "Small Chips"],
-    image: "https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=600&q=80",
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/3%20piecer.jpg",
     details: "3 pieces of fried chicken served with chips."
   },
   {
     id: "eight-piece-bucket",
-    category: "signature-chicken",
+    category: "bamboo-specials",
     name: "8 Piece Bucket",
     price: 9.00,
     description: "8 pieces of fried chicken. Chicken only.",
     comboIncludes: ["8 Pieces Fried Chicken"],
-    image: "https://images.unsplash.com/photo-1606755962773-d324e0a13086?auto=format&fit=crop&w=600&q=80",
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/8%20piecer%20bucket.jpg",
     details: "An 8-piece bucket of fried chicken. Chicken only (no chips)."
   },
 
-  // 🍚 Rice Meals
+  // 🍱 Lunch & Dinner Specials
   {
     id: "fried-rice-meal",
-    category: "rice-meals",
+    category: "lunch-specials",
     name: "Fried Rice Meal",
     price: 3.00,
     description: "Fried rice served with chicken nuggets and coleslaw.",
     comboIncludes: ["Fried Rice", "Chicken Nuggets", "Coleslaw"],
-    image: "https://images.unsplash.com/photo-1603133872878-685f586b641d?auto=format&fit=crop&w=600&q=80",
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Fried%20rice.jpg",
     details: "Fried rice served with chicken nuggets and coleslaw."
   },
   {
-    id: "sadza-meal",
-    category: "rice-meals",
-    name: "Sadza Meal",
+    id: "sadza-chicken",
+    category: "lunch-specials",
+    name: "Sadza & Chicken",
     price: 3.00,
-    description: "Sadza served with your choice of chicken or beef stew.",
-    comboIncludes: ["Hot Fluffy Sadza", "Stew Choice (Chicken or Beef)"],
-    image: "https://images.unsplash.com/photo-1541832676-9b763b0239ab?auto=format&fit=crop&w=600&q=80",
-    details: "Sadza served with your choice of chicken or beef stew.",
-    customizable: true,
-    optionType: "select-meat",
-    optionLabel: "Choose Meat Option",
-    options: ["Chicken", "Beef"]
+    description: "Sadza served with chicken stew and fresh vegetables.",
+    comboIncludes: ["Hot Fluffy Sadza", "Chicken Stew", "Fresh Vegetables"],
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Sadza%20and%20chicken.jpg",
+    details: "Sadza served with chicken stew and fresh vegetables."
+  },
+  {
+    id: "sadza-beef",
+    category: "lunch-specials",
+    name: "Sadza & Beef",
+    price: 3.00,
+    description: "Sadza served with beef stew and fresh vegetables.",
+    comboIncludes: ["Hot Fluffy Sadza", "Beef Stew", "Fresh Vegetables"],
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/bamboo_sadza_beef.webp",
+    details: "Sadza served with beef stew and fresh vegetables."
+  },
+  {
+    id: "sadza-chicken-backbone",
+    category: "lunch-specials",
+    name: "Sadza & Big Chicken Backbone",
+    price: 2.00,
+    description: "Sadza served with a big chicken backbone and fresh vegetables.",
+    comboIncludes: ["Hot Fluffy Sadza", "Big Chicken Backbone", "Fresh Vegetables"],
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Sadza%20and%20chicken.jpg",
+    details: "Sadza served with a big chicken backbone and fresh vegetables."
   },
 
   // 🍔 Burgers & Wraps
@@ -176,7 +192,7 @@ const MENU_DATA = [
     price: 3.00,
     description: "Chicken patty with lettuce and mayonnaise on a bun.",
     comboIncludes: ["Chicken Patty", "Lettuce", "Mayonnaise", "Burger Bun"],
-    image: "https://images.unsplash.com/photo-1625813506062-0aeb1d7a094b?auto=format&fit=crop&w=600&q=80",
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Chicken%20burger.jpg",
     details: "Chicken patty with lettuce and mayonnaise on a bun."
   },
   {
@@ -186,7 +202,7 @@ const MENU_DATA = [
     price: 5.50,
     description: "Double chicken fillet burger with cheese, lettuce and sauce.",
     comboIncludes: ["2 Chicken Fillets", "Cheese", "Lettuce", "Boss Sauce", "Burger Bun"],
-    image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80",
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Boss%20burger.jpg",
     details: "Double chicken fillet burger with cheese, lettuce and sauce."
   },
   {
@@ -196,7 +212,7 @@ const MENU_DATA = [
     price: 3.00,
     description: "Chicken strips, lettuce, tomatoes and dressing wrapped in a tortilla.",
     comboIncludes: ["Chicken Strips", "Lettuce & Tomatoes", "Dressing", "Tortilla Wrap"],
-    image: "https://images.unsplash.com/photo-1626700051175-6518c4793f4f?auto=format&fit=crop&w=600&q=80",
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Chicken%20wrape.jpeg",
     details: "Chicken strips, lettuce, tomatoes and dressing wrapped in a tortilla."
   },
   {
@@ -206,7 +222,7 @@ const MENU_DATA = [
     price: 3.00,
     description: "Chicken breast fillet.",
     comboIncludes: ["Grilled Chicken Breast Fillet"],
-    image: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?auto=format&fit=crop&w=600&q=80",
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Chicken%20fillet.jpg",
     details: "Chicken breast fillet."
   },
   {
@@ -216,7 +232,7 @@ const MENU_DATA = [
     price: 3.00,
     description: "Sliced chicken wrapped in pita bread with garlic sauce.",
     comboIncludes: ["Sliced Roasted Chicken", "Garlic Sauce", "Pita Bread"],
-    image: "https://images.unsplash.com/photo-1642353381622-c80f08960fa2?auto=format&fit=crop&w=600&q=80",
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Chicken%20wrape.jpeg",
     details: "Sliced chicken wrapped in pita bread with garlic sauce."
   },
 
@@ -228,7 +244,7 @@ const MENU_DATA = [
     price: 1.50,
     description: "A savoury baked pie.",
     comboIncludes: ["Chicken & Mushroom Baked Pie"],
-    image: "https://images.unsplash.com/photo-1601561951601-141fea956550?auto=format&fit=crop&w=600&q=80",
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/bamboo_pie_3.webp",
     details: "A savoury baked pie filled with chicken and mushroom."
   },
   {
@@ -260,7 +276,7 @@ const MENU_DATA = [
     price: 1.00,
     description: "A small portion of seasoned potato chips.",
     comboIncludes: ["Small Portion Seasoned Chips"],
-    image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=600&q=80",
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Snall%20chips.jpg",
     details: "A small portion of seasoned potato chips."
   },
   {
@@ -270,7 +286,7 @@ const MENU_DATA = [
     price: 2.00,
     description: "A large portion of seasoned potato chips.",
     comboIncludes: ["Large Portion Seasoned Chips"],
-    image: "https://images.unsplash.com/photo-1541532713592-79a0317b6b77?auto=format&fit=crop&w=600&q=80",
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Mega%20chips.jpeg",
     details: "A large portion of seasoned potato chips."
   }
 ];
@@ -334,10 +350,28 @@ const checkoutSummaryGrand = document.getElementById("checkout-summary-grand");
 const toastContainer = document.getElementById("toast-container");
 const cartBadges = document.querySelectorAll(".cart-badge");
 
+let unavailableMenuItems = [];
+
+async function fetchMenuAvailability() {
+  try {
+    const res = await fetch("/inventory/availability");
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.unavailable_items)) {
+        unavailableMenuItems = data.unavailable_items.map(name => name.toLowerCase());
+        renderMenu();
+      }
+    }
+  } catch (err) {
+    console.warn("Could not fetch inventory availability:", err);
+  }
+}
+
 // Initialize Application
 document.addEventListener("DOMContentLoaded", () => {
   setupNavbarScroll();
   generateCategoryPills();
+  fetchMenuAvailability();
   renderMenu();
   syncCartUI();
   setupEventListeners();
@@ -403,9 +437,8 @@ function generateCategoryPills() {
     { id: "all", name: "All Magic", icon: "✨" },
     { id: "value-combos", name: "Value Combos", icon: "⭐" },
     { id: "breakfast", name: "Breakfast", icon: "🍳" },
-    { id: "signature-chicken", name: "Signature Chicken", icon: "🍗" },
     { id: "burgers-wraps", name: "Burgers & Wraps", icon: "🍔" },
-    { id: "rice-meals", name: "Rice Meals", icon: "🍚" },
+    { id: "lunch-specials", name: "Lunch & Dinner Specials", icon: "🍱" },
     { id: "bamboo-specials", name: "Bamboo Specials", icon: "🎋" },
     { id: "chips", name: "Chips", icon: "🍟" }
   ];
@@ -459,6 +492,11 @@ function renderMenu() {
 
   // Filter Data
   const filteredData = MENU_DATA.filter(item => {
+    // Hide out-of-stock items if ingredients are 0
+    if (unavailableMenuItems.includes(item.name.toLowerCase())) {
+      return false;
+    }
+
     // Category check: "all" displays everything except value-combos
     const matchesCategory = currentCategory === "all" 
       ? item.category !== "value-combos" 
@@ -499,16 +537,6 @@ function renderMenu() {
 
     // Check if the item has quick choices we want to display directly on the card
     let quickOptionsHtml = "";
-    if (item.id === "sadza-meal") {
-      quickOptionsHtml = `
-        <div class="card-quick-options" onclick="event.stopPropagation()">
-          <select id="card-sel-${item.id}" class="sadza-dropdown" onchange="changeSadzaMeatChoice('${item.id}', this.value)">
-            <option value="Chicken">🍖 Stew: Chicken</option>
-            <option value="Beef">🥩 Stew: Beef</option>
-          </select>
-        </div>
-      `;
-    }
 
     card.innerHTML = `
       <div class="menu-card-image-wrapper">
@@ -589,7 +617,13 @@ window.toggleCardOption = function(itemId, isChecked) {
 
 // Interactive choice for Sadza on Main Card (shows custom action feedback)
 window.changeSadzaMeatChoice = function(itemId, value) {
-  // Save preference locally if needed, but primarily showcases active interactive state
+  const item = MENU_DATA.find(i => i.id === itemId);
+  if (item && item.optionImages && item.optionImages[value]) {
+    const cardImg = document.querySelector(`#menu-card-${itemId} .menu-card-image`);
+    if (cardImg) {
+      cardImg.src = item.optionImages[value];
+    }
+  }
   showToast(`🍗 Choice saved: Sadza Meal with ${value}!`);
 };
 
@@ -855,8 +889,7 @@ function getCategoryPill(category) {
   switch (category) {
     case "value-combos": return "⭐ VALUE COMBO";
     case "breakfast": return "🍳 BREAKFAST";
-    case "signature-chicken": return "🍗 SIGNATURE CHICKEN";
-    case "rice-meals": return "🍚 RICE MEALS";
+    case "lunch-specials": return "🍱 LUNCH & DINNER SPECIALS";
     case "burgers-wraps": return "🍔 BURGERS & WRAPS";
     case "bamboo-specials": return "🎋 BAMBOO SPECIALS";
     case "chips": return "🍟 CHIPS";
@@ -901,9 +934,155 @@ window.closeCart = function() {
   }
 };
 
+let currentCheckoutStep = 1;
+
 window.saveCartAndSync = function() {
   localStorage.setItem("bamboo_cart", JSON.stringify(cart));
   syncCartUI();
+};
+
+/* Multi-Step Checkout Wizard Logic */
+window.goToCheckoutStep = function(targetStep) {
+  if (targetStep === 2) {
+    if (cart.length === 0) {
+      showToast("⚠️ Your bucket is empty! Add some delicious food first.");
+      return;
+    }
+  } else if (targetStep === 3) {
+    // Validate Step 2 fields before proceeding to Step 3
+    const nameInput = document.getElementById("checkout-name");
+    const phoneInput = document.getElementById("checkout-phone");
+    const addressInput = document.getElementById("checkout-address");
+
+    const nameVal = nameInput ? nameInput.value.trim() : "";
+    const phoneVal = phoneInput ? phoneInput.value.trim() : "";
+    const addressVal = addressInput ? addressInput.value.trim() : "";
+
+    if (!nameVal) {
+      showToast("⚠️ Please enter your Full Name.");
+      if (nameInput) nameInput.focus();
+      return;
+    }
+    if (!phoneVal) {
+      showToast("⚠️ Please enter your WhatsApp Phone Number.");
+      if (phoneInput) phoneInput.focus();
+      return;
+    }
+    if (currentOrderMethod === "delivery" && !addressVal) {
+      showToast("⚠️ Please enter your Delivery Address.");
+      if (addressInput) addressInput.focus();
+      return;
+    }
+
+    // Auto-save customer info locally
+    localStorage.setItem("bamboo_customer_name", nameVal);
+    localStorage.setItem("bamboo_customer_phone", phoneVal);
+    if (addressVal) localStorage.setItem("bamboo_customer_address", addressVal);
+  }
+
+  currentCheckoutStep = targetStep;
+
+  // Update step progress indicator node states
+  for (let i = 1; i <= 3; i++) {
+    const node = document.getElementById(`step-node-${i}`);
+    if (node) {
+      node.classList.remove("active", "completed");
+      if (i === targetStep) {
+        node.classList.add("active");
+      } else if (i < targetStep) {
+        node.classList.add("completed");
+      }
+    }
+  }
+
+  const line1 = document.getElementById("step-line-1");
+  const line2 = document.getElementById("step-line-2");
+  if (line1) line1.classList.toggle("completed", targetStep >= 2);
+  if (line2) line2.classList.toggle("completed", targetStep >= 3);
+
+  // Switch visible step pane
+  for (let i = 1; i <= 3; i++) {
+    const pane = document.getElementById(`wizard-step-${i}`);
+    if (pane) {
+      const isActive = (i === targetStep);
+      pane.classList.toggle("active", isActive);
+      if (isActive) {
+        const content = pane.querySelector(".wizard-pane-content");
+        if (content) content.scrollTop = 0;
+      }
+    }
+  }
+
+  if (targetStep === 1) {
+    renderWizardCartItems();
+  } else if (targetStep === 2) {
+    if (typeof checkSavedLocationForPhone === "function") {
+      checkSavedLocationForPhone();
+    }
+  }
+
+  updateCheckoutSummaries();
+};
+
+window.renderWizardCartItems = function() {
+  const container = document.getElementById("checkout-cart-items-wizard");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  if (cart.length === 0) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 20px; color: var(--color-gray);">
+        <p style="margin: 0; font-size: 0.9rem;">Your bucket is empty.</p>
+      </div>
+    `;
+    return;
+  }
+
+  cart.forEach(item => {
+    const itemEl = document.createElement("div");
+    itemEl.className = "wizard-cart-item-card";
+
+    const customText = item.customization ? `<span class="wizard-item-custom">✨ ${item.customization}</span>` : "";
+
+    itemEl.innerHTML = `
+      <div class="wizard-item-info">
+        <h6 class="wizard-item-title">${item.name}</h6>
+        ${customText}
+        <span class="wizard-item-price">$${(item.price * item.quantity).toFixed(2)}</span>
+      </div>
+      <div class="wizard-item-actions">
+        <div class="cart-qty-ctrl">
+          <button type="button" class="cart-qty-btn" onclick="updateCartItemQtyFromWizard('${item.id}', -1)">−</button>
+          <span class="cart-qty-val">${item.quantity}</span>
+          <button type="button" class="cart-qty-btn" onclick="updateCartItemQtyFromWizard('${item.id}', 1)">+</button>
+        </div>
+        <button type="button" class="cart-item-remove-btn" onclick="removeCartItemFromWizard('${item.id}')" title="Remove item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x1="10" y1="11" y2="17"/><line x1="14" x1="14" y1="11" y2="17"/></svg>
+        </button>
+      </div>
+    `;
+
+    container.appendChild(itemEl);
+  });
+};
+
+window.updateCartItemQtyFromWizard = function(id, delta) {
+  updateCartItemQty(id, delta);
+  renderWizardCartItems();
+  updateCheckoutSummaries();
+  if (cart.length === 0) {
+    closeCheckoutModal();
+  }
+};
+
+window.removeCartItemFromWizard = function(id) {
+  removeCartItem(id);
+  renderWizardCartItems();
+  updateCheckoutSummaries();
+  if (cart.length === 0) {
+    closeCheckoutModal();
+  }
 };
 
 window.openCheckoutModal = function() {
@@ -914,15 +1093,29 @@ window.openCheckoutModal = function() {
   
   // Close the cart sidebar to avoid overlapping UI
   closeCart();
-  
+
+  // Load auto-saved details if present
+  const savedName = localStorage.getItem("bamboo_customer_name");
+  const savedPhone = localStorage.getItem("bamboo_customer_phone");
+  const savedAddress = localStorage.getItem("bamboo_customer_address");
+
+  const nameInput = document.getElementById("checkout-name");
+  const phoneInput = document.getElementById("checkout-phone");
+  const addressInput = document.getElementById("checkout-address");
+
+  if (nameInput && savedName && !nameInput.value) nameInput.value = savedName;
+  if (phoneInput && savedPhone && !phoneInput.value) phoneInput.value = savedPhone;
+  if (addressInput && savedAddress && !addressInput.value) addressInput.value = savedAddress;
+
   // Open Checkout Modal
   const checkoutModal = document.getElementById("checkout-modal");
   if (checkoutModal) {
     checkoutModal.classList.add("active");
     document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
   }
   
-  updateCheckoutSummaries();
+  goToCheckoutStep(1);
 };
 
 window.closeCheckoutModal = function() {
@@ -930,14 +1123,27 @@ window.closeCheckoutModal = function() {
   if (checkoutModal) {
     checkoutModal.classList.remove("active");
     document.body.style.overflow = "";
+    document.documentElement.style.overflow = "";
   }
 };
+
+// Automatically scroll focused field into view on mobile keyboard focus
+document.addEventListener("focusin", function(e) {
+  if (e.target && e.target.closest("#checkout-modal")) {
+    const el = e.target;
+    if (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT") {
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 250);
+    }
+  }
+});
 
 window.setOrderMethod = function(method) {
   currentOrderMethod = method;
   
-  const deliveryBtn = document.getElementById("method-btn-delivery");
-  const collectionBtn = document.getElementById("method-btn-collection");
+  const deliveryBtn = document.getElementById("type-btn-delivery");
+  const collectionBtn = document.getElementById("type-btn-collection");
   const deliveryGroup = document.getElementById("group-delivery-address");
   const branchGroup = document.getElementById("group-collection-branch");
   const timeGroup = document.getElementById("group-collection-time");
@@ -945,47 +1151,126 @@ window.setOrderMethod = function(method) {
   const addressInput = document.getElementById("checkout-address");
   
   if (method === "delivery") {
-    deliveryBtn.classList.add("active");
-    collectionBtn.classList.remove("active");
+    if (deliveryBtn) deliveryBtn.classList.add("active");
+    if (collectionBtn) collectionBtn.classList.remove("active");
     
-    deliveryGroup.style.display = "block";
-    addressInput.setAttribute("required", "required");
+    if (deliveryGroup) {
+      deliveryGroup.classList.remove("hidden");
+      deliveryGroup.style.display = "block";
+    }
+    if (addressInput) addressInput.setAttribute("required", "required");
     
-    branchGroup.style.display = "none";
-    timeGroup.style.display = "none";
+    if (branchGroup) branchGroup.style.display = "none";
+    if (timeGroup) timeGroup.style.display = "none";
   } else {
-    collectionBtn.classList.add("active");
-    deliveryBtn.classList.remove("active");
+    if (collectionBtn) collectionBtn.classList.add("active");
+    if (deliveryBtn) deliveryBtn.classList.remove("active");
     
-    deliveryGroup.style.display = "none";
-    addressInput.removeAttribute("required");
+    if (deliveryGroup) {
+      deliveryGroup.classList.add("hidden");
+      deliveryGroup.style.display = "none";
+    }
+    if (addressInput) addressInput.removeAttribute("required");
     
-    branchGroup.style.display = "block";
-    timeGroup.style.display = "block";
+    if (branchGroup) branchGroup.style.display = "block";
+    if (timeGroup) timeGroup.style.display = "block";
   }
   
   updateCheckoutSummaries();
 };
 
-function updateCheckoutSummaries() {
-  const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+window.setPaymentMethod = function(method) {
+  currentPaymentMethod = method;
   
+  const paymentMethods = ["EcoCash", "InnBucks", "Cash", "Swipe"];
+  paymentMethods.forEach(pm => {
+    const btn = document.getElementById(`pay-card-${pm}`);
+    if (btn) {
+      btn.classList.toggle("active", pm === method);
+    }
+  });
+};
+
+function updateCheckoutSummaries() {
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const deliveryFee = currentOrderMethod === "delivery" ? 3.00 : 0.00;
   const grandTotal = subtotal + deliveryFee;
-  
-  const modalQty = document.querySelector("#checkout-modal #checkout-summary-qty");
-  const modalDelivery = document.querySelector("#checkout-modal #checkout-summary-delivery");
-  const modalGrand = document.querySelector("#checkout-modal #checkout-summary-grand");
-  
-  if (modalQty) modalQty.textContent = totalQuantity;
-  if (modalDelivery) {
-    modalDelivery.textContent = deliveryFee > 0 ? `$${deliveryFee.toFixed(2)}` : "FREE";
-  }
-  if (modalGrand) {
-    modalGrand.textContent = `$${grandTotal.toFixed(2)}`;
-  }
+
+  const step1Subtotal = document.getElementById("step1-subtotal");
+  const step1Total = document.getElementById("step1-total");
+  const step3Subtotal = document.getElementById("step3-subtotal");
+  const step3Delivery = document.getElementById("step3-delivery");
+  const step3Total = document.getElementById("step3-total");
+
+  if (step1Subtotal) step1Subtotal.textContent = `$${subtotal.toFixed(2)}`;
+  if (step1Total) step1Total.textContent = `$${grandTotal.toFixed(2)}`;
+  if (step3Subtotal) step3Subtotal.textContent = `$${subtotal.toFixed(2)}`;
+  if (step3Delivery) step3Delivery.textContent = deliveryFee > 0 ? `$${deliveryFee.toFixed(2)}` : "FREE";
+  if (step3Total) step3Total.textContent = `$${grandTotal.toFixed(2)}`;
 }
+
+// Location state
+let capturedLocationData = null;
+let pendingOrderPayload = null;
+let savedCustomerLocation = null;
+
+// Check for saved location on step 2
+window.checkSavedLocationForPhone = async function() {
+  const phoneInput = document.getElementById("checkout-phone");
+  const phone = phoneInput ? phoneInput.value.trim() : "";
+  const banner = document.getElementById("saved-location-banner");
+  
+  if (!banner) return;
+
+  // Check localStorage first
+  const localSaved = localStorage.getItem("bamboo_saved_location");
+  if (localSaved) {
+    try {
+      savedCustomerLocation = JSON.parse(localSaved);
+      document.getElementById("saved-location-address-text").textContent = savedCustomerLocation.address || "Harare CBD Location";
+      banner.style.display = "block";
+      return;
+    } catch(e) {}
+  }
+
+  if (phone) {
+    try {
+      const res = await fetch(`/saved-locations?phone=${encodeURIComponent(phone)}`);
+      if (res.ok) {
+        const list = await res.json();
+        if (Array.isArray(list) && list.length > 0) {
+          savedCustomerLocation = list[0];
+          document.getElementById("saved-location-address-text").textContent = savedCustomerLocation.address;
+          banner.style.display = "block";
+          return;
+        }
+      }
+    } catch(e) {}
+  }
+
+  banner.style.display = "none";
+};
+
+window.applySavedLocation = function() {
+  if (savedCustomerLocation) {
+    const addrInput = document.getElementById("checkout-address");
+    if (addrInput && savedCustomerLocation.address) {
+      addrInput.value = savedCustomerLocation.address;
+    }
+    capturedLocationData = {
+      latitude: savedCustomerLocation.latitude,
+      longitude: savedCustomerLocation.longitude,
+      accuracy: 10
+    };
+    showToast("📍 Saved location applied!");
+    dismissSavedLocationBanner();
+  }
+};
+
+window.dismissSavedLocationBanner = function() {
+  const banner = document.getElementById("saved-location-banner");
+  if (banner) banner.style.display = "none";
+};
 
 window.submitOrderToWhatsApp = async function() {
   const nameInput = document.getElementById("checkout-name");
@@ -999,39 +1284,102 @@ window.submitOrderToWhatsApp = async function() {
   const customerPhone = phoneInput ? phoneInput.value.trim() : "";
   
   if (!customerName) {
-    showToast("⚠️ Please enter your name.");
+    showToast("⚠️ Please enter your Full Name.");
+    goToCheckoutStep(2);
     if (nameInput) nameInput.focus();
     return;
   }
   if (!customerPhone) {
-    showToast("⚠️ Please enter your WhatsApp number.");
+    showToast("⚠️ Please enter your WhatsApp Phone Number.");
+    goToCheckoutStep(2);
     if (phoneInput) phoneInput.focus();
     return;
   }
+
+  localStorage.setItem("bamboo_customer_name", customerName);
+  localStorage.setItem("bamboo_customer_phone", customerPhone);
   
   let orderDetailsPart = "";
   if (currentOrderMethod === "delivery") {
     const addressVal = addressInput ? addressInput.value.trim() : "";
     if (!addressVal) {
-      showToast("⚠️ Please enter your delivery address.");
+      showToast("⚠️ Please enter your Delivery Address.");
+      goToCheckoutStep(2);
       if (addressInput) addressInput.focus();
       return;
     }
+    localStorage.setItem("bamboo_customer_address", addressVal);
     orderDetailsPart = `• *Delivery Address:* ${addressVal}`;
   } else {
-    const branchVal = branchSelect ? branchSelect.value : "";
+    const branchVal = branchSelect ? branchSelect.value : "Roadport Main Branch";
     const timeVal = timeInput && timeInput.value.trim() ? timeInput.value.trim() : "As soon as possible";
     orderDetailsPart = `• *Collection Branch:* ${branchVal}\n• *Est. Pickup Time:* ${timeVal}`;
   }
-  
+
+  // Check if location permission prompt is needed before submitting
+  if (currentOrderMethod === "delivery" && !capturedLocationData) {
+    const modal = document.getElementById("location-permission-modal");
+    if (modal) {
+      modal.style.display = "flex";
+      return;
+    }
+  }
+
+  await executeFinalOrderSubmission();
+};
+
+window.confirmAllowLocation = function() {
+  const modal = document.getElementById("location-permission-modal");
+  if (modal) modal.style.display = "none";
+
+  if (navigator.geolocation) {
+    showToast("📍 Capturing your location...");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        capturedLocationData = {
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          accuracy: pos.coords.accuracy
+        };
+        executeFinalOrderSubmission();
+      },
+      (err) => {
+        console.warn("Location denied or unavailable:", err);
+        showToast("Using address manually...");
+        capturedLocationData = null;
+        executeFinalOrderSubmission();
+      },
+      { timeout: 7000, enableHighAccuracy: true }
+    );
+  } else {
+    capturedLocationData = null;
+    executeFinalOrderSubmission();
+  }
+};
+
+window.confirmSkipLocation = function() {
+  const modal = document.getElementById("location-permission-modal");
+  if (modal) modal.style.display = "none";
+  capturedLocationData = null;
+  executeFinalOrderSubmission();
+};
+
+async function executeFinalOrderSubmission() {
+  const nameInput = document.getElementById("checkout-name");
+  const phoneInput = document.getElementById("checkout-phone");
+  const addressInput = document.getElementById("checkout-address");
+  const branchSelect = document.getElementById("checkout-branch");
+  const timeInput = document.getElementById("checkout-pickup-time");
+  const notesInput = document.getElementById("checkout-notes");
+
+  const customerName = nameInput ? nameInput.value.trim() : "";
+  const customerPhone = phoneInput ? phoneInput.value.trim() : "";
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const deliveryFee = currentOrderMethod === "delivery" ? 3.00 : 0.00;
   const grandTotal = subtotal + deliveryFee;
   const paymentMethodStr = currentPaymentMethod;
   const specialNotes = notesInput && notesInput.value.trim() ? notesInput.value.trim() : "";
-  const specialNotesPart = specialNotes ? `\n📝 *SPECIAL INSTRUCTIONS:*\n${specialNotes}\n` : "";
 
-  // Prepare complete JSON payload for Cloudflare Worker API
   const apiPayload = {
     customer_name: customerName,
     phone: customerPhone,
@@ -1047,80 +1395,61 @@ window.submitOrderToWhatsApp = async function() {
     payment_method: paymentMethodStr,
     type: currentOrderMethod,
     order_status: "new",
-    status: "new"
+    status: "new",
+    customer_lat: capturedLocationData ? capturedLocationData.latitude : null,
+    customer_lng: capturedLocationData ? capturedLocationData.longitude : null,
+    location_accuracy: capturedLocationData ? capturedLocationData.accuracy : null
   };
 
-  const submitBtn = document.querySelector("#checkout-modal .btn-submit-whatsapp") || document.getElementById("btn-submit-whatsapp");
-  let originalBtnText = "";
-  if (submitBtn) {
-    originalBtnText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.style.opacity = "0.7";
-  }
+  const loadingOverlay = document.getElementById("checkout-loading-overlay");
+  if (loadingOverlay) loadingOverlay.style.display = "flex";
 
-  // Send complete order as JSON to POST https://bamboo-orders-api.warstreett.workers.dev/orders
+  let createdOrder = null;
+
   try {
-    const response = await fetch("https://bamboo-orders-api.warstreett.workers.dev/orders", {
+    const response = await fetch("/orders", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(apiPayload)
     });
 
-    if (!response.ok) {
-      throw new Error(`API error: status ${response.status}`);
+    if (response.ok) {
+      const data = await response.json();
+      createdOrder = data.order || data;
     }
   } catch (error) {
-    console.error("Failed to save order to Cloudflare Worker API:", error);
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.style.opacity = "1";
-      submitBtn.innerHTML = originalBtnText;
-    }
-    showToast("Unable to submit order. Please try again.");
-    return; // Do NOT open WhatsApp if the order was not saved
+    console.error("Failed to save order to API:", error);
   }
 
-  if (submitBtn) {
-    submitBtn.disabled = false;
-    submitBtn.style.opacity = "1";
-    submitBtn.innerHTML = originalBtnText;
-  }
-  
-  // Format items ordered
+  if (loadingOverlay) loadingOverlay.style.display = "none";
+
+  const orderId = createdOrder ? createdOrder.id : `BC-${Math.floor(1000 + Math.random() * 9000)}`;
+
+  // Format WhatsApp Message
   let itemsFormattedList = "";
   cart.forEach(item => {
     const customText = item.customization ? ` (${item.customization})` : "";
     itemsFormattedList += `${item.quantity}x ${item.name}${customText} - $${(item.price * item.quantity).toFixed(2)}\n`;
   });
-  
-  // Build professional WhatsApp message
-  const whatsappMessage = `🎋 *BAMBOO CHICKEN - NEW ORDER* 🎋
+
+  const whatsappMessage = `🎋 *BAMBOO CHICKEN - NEW ORDER (${orderId})* 🎋
 ----------------------------------------
 👤 *CUSTOMER DETAILS:*
 • *Name:* ${customerName}
 • *Phone:* ${customerPhone}
 • *Type:* ${currentOrderMethod.toUpperCase()}
-${orderDetailsPart}
-• *Payment Method:* ${paymentMethodStr}
+• *Payment:* ${paymentMethodStr}
 
 🛒 *ITEMS ORDERED:*
 ${itemsFormattedList}
 💵 *ORDER SUMMARY:*
-• *Subtotal:* $${subtotal.toFixed(2)}
-• *Delivery Fee:* ${deliveryFee > 0 ? `$${deliveryFee.toFixed(2)}` : "FREE"}
 • *Grand Total:* $${grandTotal.toFixed(2)}
-${specialNotesPart}
 ----------------------------------------
-_Order submitted via Bamboo Chicken Digital Menu_ 🍗✨`;
+📍 Track Order: ${window.location.origin}/track?id=${orderId} 🍗✨`;
 
-  // Encode URL
   const encodedText = encodeURIComponent(whatsappMessage);
   const whatsappUrl = `https://wa.me/263789951127?text=${encodedText}`;
-  
-  // Open WhatsApp in a safe, standard manner
+
   const anchor = document.createElement("a");
   anchor.href = whatsappUrl;
   anchor.target = "_blank";
@@ -1128,9 +1457,49 @@ _Order submitted via Bamboo Chicken Digital Menu_ 🍗✨`;
   document.body.appendChild(anchor);
   anchor.click();
   document.body.removeChild(anchor);
-  
-  // Show order success receipt screen within checkout modal
-  showOrderSuccessScreen();
+
+  cart = [];
+  saveCartAndSync();
+  closeCheckoutModal();
+
+  // If location permission was granted, prompt to save location
+  if (capturedLocationData) {
+    pendingOrderPayload = {
+      phone: customerPhone,
+      address: addressInput ? addressInput.value.trim() : "",
+      latitude: capturedLocationData.latitude,
+      longitude: capturedLocationData.longitude
+    };
+    const saveModal = document.getElementById("save-location-modal");
+    if (saveModal) saveModal.style.display = "flex";
+  } else {
+    showToast(`✅ Order ${orderId} submitted! Opening tracking...`);
+    setTimeout(() => {
+      window.open(`/track?id=${orderId}`, '_blank');
+    }, 1500);
+  }
+
+  capturedLocationData = null;
+}
+
+window.handleSaveLocationChoice = async function(shouldSave) {
+  const saveModal = document.getElementById("save-location-modal");
+  if (saveModal) saveModal.style.display = "none";
+
+  if (shouldSave && pendingOrderPayload) {
+    try {
+      localStorage.setItem("bamboo_saved_location", JSON.stringify(pendingOrderPayload));
+      await fetch("/saved-locations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(pendingOrderPayload)
+      });
+      showToast("💾 Delivery location saved for future orders!");
+    } catch(e) {}
+  }
+
+  pendingOrderPayload = null;
+  showToast("✅ Opening order tracking...");
 };
 
 window.syncCartUI = function() {
