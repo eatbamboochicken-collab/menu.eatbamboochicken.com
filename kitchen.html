@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Bamboo Chicken — Kitchen Display System (KDS)</title>
+  <link rel="stylesheet" href="/css/kitchen.css">
+</head>
+<body>
+
+  <!-- KDS Header -->
+  <header class="kds-header">
+    <div class="kds-header-container">
+      
+      <!-- Brand & Navigation -->
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div class="kds-brand-title">
+          <span>🎋 BAMBOO CHICKEN</span>
+          <span class="orange">KITCHEN DISPLAY</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <a href="/admin.html" class="kds-nav-link">💵 POS Admin</a>
+          <a href="/rider.html" class="kds-nav-link">🛵 Rider Portal</a>
+          <a href="/index.html" class="kds-nav-link">🛍️ Customer App</a>
+        </div>
+      </div>
+
+      <!-- Controls & Search -->
+      <div class="kds-controls">
+        <!-- Live Search -->
+        <div class="kds-search-box">
+          <span class="kds-search-icon">🔍</span>
+          <input type="text" id="kds-search-input" class="kds-search-input" placeholder="Search Order # / Name..." autocomplete="off">
+        </div>
+
+        <!-- Sound Alert Toggle -->
+        <button type="button" class="kds-btn-sound" id="kds-sound-btn" onclick="toggleSoundAlerts()">
+          <span id="kds-sound-icon">🔊</span>
+          <span id="kds-sound-label">Sound ON</span>
+        </button>
+
+        <!-- Digital Clock -->
+        <div class="kds-clock-badge" id="kds-clock">11:45:00 AM</div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Summary Stats Bar -->
+  <div class="kds-summary-bar">
+    <div class="kds-stat-pill">
+      <span>🔥 Active Kitchen Orders:</span>
+      <span class="kds-stat-count" id="stat-total-active">0</span>
+    </div>
+    <div class="kds-stat-pill">
+      <span style="color: #F59E0B;">⚡ New:</span>
+      <span class="kds-stat-count" id="stat-new">0</span>
+    </div>
+    <div class="kds-stat-pill">
+      <span style="color: #3B82F6;">👍 Accepted:</span>
+      <span class="kds-stat-count" id="stat-accepted">0</span>
+    </div>
+    <div class="kds-stat-pill">
+      <span style="color: #FF5A00;">👨‍🍳 Preparing:</span>
+      <span class="kds-stat-count" id="stat-preparing">0</span>
+    </div>
+    <div class="kds-stat-pill">
+      <span style="color: #10B981;">🔔 Ready:</span>
+      <span class="kds-stat-count" id="stat-ready">0</span>
+    </div>
+  </div>
+
+  <!-- 4 Column KDS Board -->
+  <main class="kds-board-grid">
+    
+    <!-- 1. NEW ORDERS COLUMN -->
+    <section class="kds-column">
+      <div class="kds-column-header col-new">
+        <div class="kds-column-title">
+          <span>⚡ NEW ORDERS</span>
+        </div>
+        <span class="kds-badge-count" id="count-new">0</span>
+      </div>
+      <div class="kds-cards-list" id="cards-new">
+        <div class="kds-empty-state">No new incoming orders</div>
+      </div>
+    </section>
+
+    <!-- 2. ACCEPTED ORDERS COLUMN -->
+    <section class="kds-column">
+      <div class="kds-column-header col-accepted">
+        <div class="kds-column-title">
+          <span>👍 ACCEPTED</span>
+        </div>
+        <span class="kds-badge-count" id="count-accepted">0</span>
+      </div>
+      <div class="kds-cards-list" id="cards-accepted">
+        <div class="kds-empty-state">No accepted orders waiting</div>
+      </div>
+    </section>
+
+    <!-- 3. PREPARING ORDERS COLUMN -->
+    <section class="kds-column">
+      <div class="kds-column-header col-preparing">
+        <div class="kds-column-title">
+          <span>🔥 PREPARING</span>
+        </div>
+        <span class="kds-badge-count" id="count-preparing">0</span>
+      </div>
+      <div class="kds-cards-list" id="cards-preparing">
+        <div class="kds-empty-state">No orders currently cooking</div>
+      </div>
+    </section>
+
+    <!-- 4. READY ORDERS COLUMN -->
+    <section class="kds-column">
+      <div class="kds-column-header col-ready">
+        <div class="kds-column-title">
+          <span>🔔 READY</span>
+        </div>
+        <span class="kds-badge-count" id="count-ready">0</span>
+      </div>
+      <div class="kds-cards-list" id="cards-ready">
+        <div class="kds-empty-state">No ready orders</div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="/js/kitchen.js"></script>
+</body>
+</html>

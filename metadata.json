@@ -1,10 +1,6 @@
-import {StrictMode} from 'react';
-import {createRoot} from 'react-dom/client';
-import App from './App.tsx';
-import './index.css';
-
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+{
+  "name": "Bamboo Chicken",
+  "description": "Interactive digital menu for Bamboo Chicken, a modern and bright fast-food restaurant with smooth transitions, live search, and categories.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

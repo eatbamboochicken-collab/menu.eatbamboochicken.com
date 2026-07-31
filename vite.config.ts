@@ -1,7 +1,8 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import {defineConfig} from 'vite';
+import { defineConfig } from 'vite';
+import worker from './worker.js';
 
 export default defineConfig(() => {
   return {
@@ -9,12 +10,70 @@ export default defineConfig(() => {
       react(),
       tailwindcss(),
       {
-        name: 'admin-route-rewrite',
+        name: 'bamboo-api-and-routes',
         configureServer(server: any) {
-          server.middlewares.use((req: any, res: any, next: any) => {
-            if (req.url === '/admin' || req.url === '/admin/' || req.url?.startsWith('/admin?')) {
-              req.url = '/admin.html';
+          server.middlewares.use(async (req: any, res: any, next: any) => {
+            const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+            
+            // Rewrite html routes
+            if (url.pathname === '/admin' || url.pathname === '/admin/' || url.pathname.startsWith('/admin?')) {
+              req.url = '/admin.html' + url.search;
+              return next();
             }
+            if (url.pathname === '/rider' || url.pathname === '/rider/' || url.pathname.startsWith('/rider?')) {
+              req.url = '/rider.html' + url.search;
+              return next();
+            }
+            if (url.pathname === '/kitchen' || url.pathname === '/kitchen/' || url.pathname.startsWith('/kitchen?')) {
+              req.url = '/kitchen.html' + url.search;
+              return next();
+            }
+            if (url.pathname === '/track' || url.pathname === '/track/' || url.pathname.startsWith('/track?')) {
+              req.url = '/track.html' + url.search;
+              return next();
+            }
+
+            // Intercept API routes and serve via worker.js
+            const apiRoutes = ['/orders', '/riders', '/rider-location', '/assign-rider', '/saved-locations', '/tracking', '/audit-logs'];
+            const isApi = apiRoutes.some(route => url.pathname === route || url.pathname.startsWith(route + '/'));
+
+            if (isApi) {
+              try {
+                let body = null;
+                if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
+                  const buffers = [];
+                  for await (const chunk of req) {
+                    buffers.push(chunk);
+                  }
+                  const rawBody = Buffer.concat(buffers).toString('utf-8');
+                  body = rawBody ? rawBody : null;
+                }
+
+                const workerReq = new Request(url.href, {
+                  method: req.method,
+                  headers: req.headers,
+                  body: body
+                });
+
+                const workerRes = await worker.fetch(workerReq, {});
+                
+                res.statusCode = workerRes.status;
+                workerRes.headers.forEach((val, key) => {
+                  res.setHeader(key, val);
+                });
+
+                const resText = await workerRes.text();
+                res.end(resText);
+                return;
+              } catch (err: any) {
+                console.error('Vite API Middleware error:', err);
+                res.statusCode = 500;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ error: err.message || 'Internal API Error' }));
+                return;
+              }
+            }
+
             next();
           });
         },
@@ -25,6 +84,9 @@ export default defineConfig(() => {
         input: {
           main: path.resolve(__dirname, 'index.html'),
           admin: path.resolve(__dirname, 'admin.html'),
+          kitchen: path.resolve(__dirname, 'kitchen.html'),
+          rider: path.resolve(__dirname, 'rider.html'),
+          track: path.resolve(__dirname, 'track.html'),
         },
       },
     },
@@ -34,10 +96,7 @@ export default defineConfig(() => {
       },
     },
     server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
-      // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
   };
