@@ -36,9 +36,13 @@ export default defineConfig(() => {
               req.url = '/track.html' + url.search;
               return next();
             }
+            if (url.pathname === '/system' || url.pathname === '/system/' || url.pathname.startsWith('/system?')) {
+              req.url = '/system.html' + url.search;
+              return next();
+            }
 
             // Intercept API routes and serve via worker.js
-            const apiRoutes = ['/orders', '/riders', '/rider-location', '/assign-rider', '/saved-locations', '/tracking', '/audit-logs', '/inventory', '/suppliers', '/reports', '/analytics'];
+            const apiRoutes = ['/orders', '/riders', '/rider-location', '/assign-rider', '/saved-locations', '/tracking', '/audit-logs', '/inventory', '/suppliers', '/reports', '/analytics', '/system-health', '/system/health'];
             const isApi = apiRoutes.some(route => url.pathname === route || url.pathname.startsWith(route + '/'));
 
             if (isApi) {
@@ -92,6 +96,7 @@ export default defineConfig(() => {
           kitchen: path.resolve(__dirname, 'kitchen.html'),
           rider: path.resolve(__dirname, 'rider.html'),
           track: path.resolve(__dirname, 'track.html'),
+          system: path.resolve(__dirname, 'system.html'),
         },
       },
     },
