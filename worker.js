@@ -371,14 +371,6 @@ let inMemoryAuditLogs = [
     role: "customer",
     user_name: "Tendai Mukandi",
     timestamp: new Date(Date.now() - 25 * 60000).toISOString()
-  },
-  {
-    id: "LOG-2",
-    order_id: "BC-1001",
-    action: "Kitchen Accepted",
-    role: "kitchen",
-    user_name: "Kitchen Terminal",
-    timestamp: new Date(Date.now() - 20 * 60000).toISOString()
   }
 ];
 
@@ -443,6 +435,19 @@ async function ensureTables(db) {
         timestamp TEXT
       );
     `).run();
+
+    // Seed initial riders if D1 table is empty
+    try {
+      const riderCheck = await db.prepare("SELECT COUNT(*) as count FROM riders").first();
+      if (riderCheck && Number(riderCheck.count) === 0) {
+        for (const r of inMemoryRiders) {
+          await db.prepare(`
+            INSERT INTO riders (id, name, phone, vehicle, status, current_lat, current_lng, last_active, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).bind(r.id, r.name, r.phone, r.vehicle, r.status, r.current_lat, r.current_lng, r.last_active, r.created_at).run();
+        }
+      }
+    } catch (e) {}
   } catch (err) {
     console.error("ensureTables notice:", err);
   }
@@ -643,6 +648,7 @@ export default {
               ).run();
             } catch (err) {
               console.error("D1 Order Insert Error:", err);
+              return jsonRes({ error: "Failed to persist order in database: " + err.message }, 500);
             }
           }
 
@@ -692,13 +698,6 @@ export default {
           }
 
           // Enforce role permission limits
-          if (reqRole === "kitchen") {
-            if (!["accepted", "preparing", "ready"].includes(updatedOrderStatus)) {
-              return jsonRes({ error: "Kitchen role is restricted to accepting, preparing, and setting orders to ready." }, 403);
-            }
-            updatedPaymentStatus = order.payment_status;
-          }
-
           if (reqRole === "rider") {
             if (!["accepted", "assigned", "picked_up", "on_the_way", "delivered"].includes(updatedOrderStatus)) {
               return jsonRes({ error: "Rider role is restricted to: Accepted, Assigned, Picked Up, On The Way, and Delivered." }, 403);
@@ -761,14 +760,35 @@ export default {
         const targetRiderId = riderIdMatch ? riderIdMatch[1] : null;
 
         if (request.method === "GET") {
+          let ridersList = inMemoryRiders;
+          if (env && env.DB) {
+            try {
+              await ensureTables(env.DB);
+              const { results } = await env.DB.prepare("SELECT * FROM riders").all();
+              if (results && results.length > 0) {
+                ridersList = results;
+              }
+            } catch (err) {
+              console.error("D1 Riders fetch error:", err);
+            }
+          }
+
+          let ordersList = inMemoryOrders;
+          if (env && env.DB) {
+            try {
+              const { results } = await env.DB.prepare("SELECT * FROM orders WHERE order_status NOT IN ('delivered', 'completed', 'cancelled')").all();
+              if (results) ordersList = results;
+            } catch (err) {}
+          }
+
           if (targetRiderId) {
-            const rider = inMemoryRiders.find(r => r.id === targetRiderId);
+            const rider = ridersList.find(r => r.id === targetRiderId);
             if (!rider) return jsonRes({ error: "Rider not found" }, 404);
             return jsonRes(rider);
           }
-          
-          const ridersWithCounts = inMemoryRiders.map(r => {
-            const activeDeliveries = inMemoryOrders.filter(o => o.rider_id === r.id && !['delivered', 'completed', 'cancelled'].includes(o.order_status)).length;
+
+          const ridersWithCounts = ridersList.map(r => {
+            const activeDeliveries = ordersList.filter(o => o.rider_id === r.id).length;
             return { ...r, active_deliveries: activeDeliveries };
           });
           return jsonRes(ridersWithCounts);
@@ -777,13 +797,35 @@ export default {
         if (request.method === "PATCH" || request.method === "PUT") {
           const body = await request.json();
           const riderId = targetRiderId || body.id || body.rider_id;
-          const rider = inMemoryRiders.find(r => r.id === riderId);
+          let rider = inMemoryRiders.find(r => r.id === riderId);
+
+          if (env && env.DB) {
+            try {
+              await ensureTables(env.DB);
+              const dbRider = await env.DB.prepare("SELECT * FROM riders WHERE id = ?").bind(riderId).first();
+              if (dbRider) rider = dbRider;
+            } catch (err) {}
+          }
+
           if (!rider) return jsonRes({ error: "Rider not found" }, 404);
 
           if (body.status) rider.status = body.status;
           if (body.current_lat !== undefined) rider.current_lat = body.current_lat;
           if (body.current_lng !== undefined) rider.current_lng = body.current_lng;
           rider.last_active = new Date().toISOString();
+
+          const memIdx = inMemoryRiders.findIndex(r => r.id === rider.id);
+          if (memIdx >= 0) inMemoryRiders[memIdx] = rider;
+
+          if (env && env.DB) {
+            try {
+              await env.DB.prepare(`
+                UPDATE riders SET status = ?, current_lat = ?, current_lng = ?, last_active = ? WHERE id = ?
+              `).bind(rider.status, rider.current_lat, rider.current_lng, rider.last_active, rider.id).run();
+            } catch (err) {
+              console.error("D1 Rider Update error:", err);
+            }
+          }
 
           return jsonRes({ success: true, rider });
         }
@@ -796,21 +838,27 @@ export default {
         if (request.method === "POST") {
           const body = await request.json();
           const { rider_id, latitude, longitude } = body;
-          
-          const rider = inMemoryRiders.find(r => r.id === rider_id);
-          if (rider) {
-            // Ignore duplicate/identical coordinates within noise threshold (0.000001)
-            const isDuplicate = Math.abs((rider.current_lat || 0) - latitude) < 0.000001 &&
-                                Math.abs((rider.current_lng || 0) - longitude) < 0.000001;
+          const nowStr = new Date().toISOString();
 
-            if (!isDuplicate) {
-              rider.current_lat = latitude;
-              rider.current_lng = longitude;
-              rider.last_active = new Date().toISOString();
+          let rider = inMemoryRiders.find(r => r.id === rider_id);
+          if (rider) {
+            rider.current_lat = latitude;
+            rider.current_lng = longitude;
+            rider.last_active = nowStr;
+          }
+
+          if (env && env.DB) {
+            try {
+              await ensureTables(env.DB);
+              await env.DB.prepare(`
+                UPDATE riders SET current_lat = ?, current_lng = ?, last_active = ? WHERE id = ?
+              `).bind(latitude, longitude, nowStr, rider_id).run();
+            } catch (err) {
+              console.error("D1 Rider Location update error:", err);
             }
           }
 
-          return jsonRes({ success: true, rider_id, latitude, longitude, updated_at: new Date().toISOString() });
+          return jsonRes({ success: true, rider_id, latitude, longitude, updated_at: nowStr });
         }
       }
 
@@ -821,18 +869,49 @@ export default {
         if (request.method === "POST") {
           const body = await request.json();
           const { order_id, rider_id } = body;
+          const nowStr = new Date().toISOString();
 
           let order = inMemoryOrders.find(o => o.id === order_id || o.id === `BC-${order_id}`);
+          if (env && env.DB) {
+            try {
+              await ensureTables(env.DB);
+              const dbOrder = await env.DB.prepare("SELECT * FROM orders WHERE id = ? OR id = ?").bind(order_id, `BC-${order_id}`).first();
+              if (dbOrder) {
+                order = { ...dbOrder, items: typeof dbOrder.items === 'string' ? JSON.parse(dbOrder.items) : dbOrder.items };
+              }
+            } catch (err) {}
+          }
+
           if (!order) return jsonRes({ error: "Order not found" }, 404);
 
           let rider = inMemoryRiders.find(r => r.id === rider_id);
+          if (env && env.DB) {
+            try {
+              const dbRider = await env.DB.prepare("SELECT * FROM riders WHERE id = ?").bind(rider_id).first();
+              if (dbRider) rider = dbRider;
+            } catch (err) {}
+          }
+
           if (!rider) return jsonRes({ error: "Rider not found" }, 404);
 
           order.rider_id = rider_id;
           if (["pending", "accepted", "preparing", "ready"].includes(order.order_status)) {
             order.order_status = "assigned";
           }
-          order.updated_at = new Date().toISOString();
+          order.updated_at = nowStr;
+
+          const memIdx = inMemoryOrders.findIndex(o => o.id === order.id);
+          if (memIdx >= 0) inMemoryOrders[memIdx] = order;
+
+          if (env && env.DB) {
+            try {
+              await env.DB.prepare(`
+                UPDATE orders SET rider_id = ?, order_status = ?, updated_at = ? WHERE id = ?
+              `).bind(order.rider_id, order.order_status, order.updated_at, order.id).run();
+            } catch (err) {
+              console.error("D1 assign-rider update error:", err);
+            }
+          }
 
           addAuditLog(order.id, `Assigned to rider ${rider.name}`, reqRole, reqUserName);
 
@@ -894,12 +973,37 @@ export default {
       // -------------------------------------------------------------
       if (pathname.startsWith("/tracking/")) {
         const orderId = pathname.replace("/tracking/", "");
-        const order = inMemoryOrders.find(o => o.id === orderId || o.id === `BC-${orderId}`);
+        let order = null;
+
+        if (env && env.DB) {
+          try {
+            await ensureTables(env.DB);
+            const res = await env.DB.prepare("SELECT * FROM orders WHERE id = ? OR id = ?").bind(orderId, `BC-${orderId}`).first();
+            if (res) {
+              order = {
+                ...res,
+                items: typeof res.items === 'string' ? JSON.parse(res.items) : res.items
+              };
+            }
+          } catch (err) {}
+        }
+
+        if (!order) {
+          order = inMemoryOrders.find(o => o.id === orderId || o.id === `BC-${orderId}`);
+        }
+
         if (!order) return jsonRes({ error: "Order not found" }, 404);
 
         let rider = null;
         if (order.rider_id) {
-          rider = inMemoryRiders.find(r => r.id === order.rider_id) || null;
+          if (env && env.DB) {
+            try {
+              rider = await env.DB.prepare("SELECT * FROM riders WHERE id = ?").bind(order.rider_id).first();
+            } catch (err) {}
+          }
+          if (!rider) {
+            rider = inMemoryRiders.find(r => r.id === order.rider_id) || null;
+          }
         }
 
         return jsonRes({
@@ -1325,7 +1429,7 @@ export default {
               favourite_menu_item: mostPopularItem,
               avg_order_frequency: totalCustomers > 0 ? parseFloat((periodOrders.length / totalCustomers).toFixed(2)) : 1
             },
-            kitchen_performance: {
+            operations_performance: {
               avg_cooking_time_mins: parseFloat(avgPrepTime.toFixed(1)),
               orders_completed: completedOrders,
               fastest_completion_mins: minPrepMinutes === 999 ? 8 : parseFloat(minPrepMinutes.toFixed(1)),
