@@ -75,23 +75,23 @@ function renderTrackingUI(order, rider, restaurant) {
     statusPill.textContent = "DELIVERED ✅";
   } else if (status === "on_the_way") {
     statusPill.textContent = "ON THE WAY 🛵";
+  } else if (status === "picked_up") {
+    statusPill.textContent = "PICKED UP 🎒";
   } else if (status === "assigned") {
     statusPill.textContent = "RIDER ASSIGNED 📍";
-  } else if (status === "ready") {
-    statusPill.textContent = "READY FOR PICKUP / DELIVERY 📦";
-  } else if (status === "preparing") {
-    statusPill.textContent = "PREPARING IN KITCHEN 🍗";
+  } else if (status === "accepted" || status === "preparing" || status === "ready") {
+    statusPill.textContent = "ORDER ACCEPTED 📋";
   } else {
     statusPill.textContent = "ORDER RECEIVED 📋";
   }
 
   // Update Stepper
-  const steps = ["received", "preparing", "ready", "assigned", "ontheway", "delivered"];
+  const steps = ["received", "accepted", "assigned", "pickedup", "ontheway", "delivered"];
   let activeIndex = 0;
 
-  if (status === "preparing") activeIndex = 1;
-  else if (status === "ready") activeIndex = 2;
-  else if (status === "assigned" || status === "picked_up") activeIndex = 3;
+  if (status === "accepted" || status === "preparing" || status === "ready") activeIndex = 1;
+  else if (status === "assigned") activeIndex = 2;
+  else if (status === "picked_up") activeIndex = 3;
   else if (status === "on_the_way") activeIndex = 4;
   else if (status === "delivered" || status === "completed") activeIndex = 5;
 

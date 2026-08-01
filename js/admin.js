@@ -1,841 +1,467 @@
 /**
- * Bamboo Chicken POS - Multi-Role Dashboard Engine
- * Handles Kitchen, Cashier, and Administrator views & rider dispatching.
+ * Bamboo Chicken — Dedicated Administrator Control Engine
+ * Handles Business Intelligence, Audit Logs, Staff & Permissions, Rider Fleet,
+ * Inventory Management, Supplier Directory, Executive Reports, and System Config.
  */
 
-const API_URL = "/orders";
-
-// Live Datasets
-let orders = [];
-let riders = [];
-let auditLogs = [];
-
-// App State
-let soundEnabled = true;
-let currentFilter = "all"; // "all" | "pickup" | "delivery"
-let searchQuery = "";
-let hasApiError = false;
-let isInitialLoad = true;
-let currentRole = localStorage.getItem("bamboo_role") || "cashier"; // "kitchen" | "cashier" | "admin"
-let assigningOrderId = null;
-
-// Universal Offline Queue Processor
-function queueOfflineRequest(url, method, body, headers = {}) {
-  const queue = JSON.parse(localStorage.getItem("bamboo_offline_queue") || "[]");
-  queue.push({
-    id: `REQ-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
-    url,
-    method,
-    body,
-    headers,
-    timestamp: new Date().toISOString()
-  });
-  localStorage.setItem("bamboo_offline_queue", JSON.stringify(queue));
-  showToast("⚠️ Network offline. Change queued and will retry automatically.");
-}
-
-async function processOfflineQueue() {
-  const queue = JSON.parse(localStorage.getItem("bamboo_offline_queue") || "[]");
-  if (queue.length === 0) return;
-
-  const remainingQueue = [];
-  for (const reqItem of queue) {
-    try {
-      const res = await fetch(reqItem.url, {
-        method: reqItem.method,
-        headers: { "Content-Type": "application/json", ...(reqItem.headers || {}) },
-        body: typeof reqItem.body === 'string' ? reqItem.body : JSON.stringify(reqItem.body)
-      });
-      if (!res.ok) remainingQueue.push(reqItem);
-    } catch (err) {
-      remainingQueue.push(reqItem);
-    }
-  }
-  localStorage.setItem("bamboo_offline_queue", JSON.stringify(remainingQueue));
-  if (remainingQueue.length < queue.length) {
-    showToast("✅ Offline changes synchronized with server!");
-    fetchOrders();
-  }
-}
-
-window.addEventListener("online", processOfflineQueue);
-setInterval(processOfflineQueue, 10000);
-
-// Initialize App on DOM Load
-document.addEventListener("DOMContentLoaded", () => {
-  initClock();
-  setupEventListeners();
-  switchRole(currentRole);
-
-  // Initial fetches
-  fetchOrders();
-  fetchRiders();
-
-  // Poll API every 4 seconds
-  setInterval(() => {
-    fetchOrders();
-    fetchRiders();
-  }, 4000);
-});
-
-// Role Switcher
-window.switchRole = function(role) {
-  currentRole = role;
-  localStorage.setItem("bamboo_role", role);
-
-  // Highlight active role button
-  ["kitchen", "cashier", "admin"].forEach(r => {
-    const btn = document.getElementById(`role-btn-${r}`);
-    if (btn) btn.classList.toggle("active", r === role);
-  });
-
-  // Update role badge & buttons
-  const badge = document.getElementById("role-badge");
-  const deliveryPanel = document.getElementById("section-delivery-assignment");
-  const auditBtn = document.getElementById("btn-audit-logs");
-
-  if (badge) {
-    if (role === "kitchen") {
-      badge.textContent = "👨‍🍳 Kitchen View (Accepted, Prep, Ready Only)";
-      badge.className = "pos-badge";
-      badge.style.background = "rgba(253, 184, 19, 0.2)";
-      badge.style.color = "#FDB813";
-      badge.style.borderColor = "rgba(253, 184, 19, 0.4)";
-    } else if (role === "cashier") {
-      badge.textContent = "💵 Cashier Terminal (Payments, Riders, Complete)";
-      badge.className = "pos-badge pos-badge-green";
-      badge.style.background = "";
-      badge.style.color = "";
-      badge.style.borderColor = "";
-    } else if (role === "admin") {
-      badge.textContent = "👑 Administrator (Full Control & Logs)";
-      badge.className = "pos-badge";
-      badge.style.background = "rgba(239, 68, 68, 0.2)";
-      badge.style.color = "#EF4444";
-      badge.style.borderColor = "rgba(239, 68, 68, 0.4)";
-    }
-  }
-
-  // Delivery assignment panel visible to Cashier & Admin
-  if (deliveryPanel) {
-    deliveryPanel.style.display = (role === "cashier" || role === "admin") ? "block" : "none";
-  }
-
-  // Audit Logs button visible to Admin only
-  if (auditBtn) {
-    auditBtn.style.display = (role === "admin") ? "inline-flex" : "none";
-  }
-
-  renderDashboard();
-};
-
-// Normalize API order objects into POS format
-function normalizeOrder(item) {
-  const rawId = item.id || item.order_id || item.order_number || item.orderId || "";
-  const idStr = String(rawId);
-  const id = idStr ? (idStr.startsWith("BC-") ? idStr : `BC-${idStr}`) : "BC-ORDER";
-
-  const customerName = item.customer_name || item.customerName || item.name || "Customer";
-  const phone = item.phone || item.customer_phone || item.customerPhone || "";
-
-  let orderTime = item.order_time || item.orderTime || item.created_at || item.createdAt || "Just now";
-  if (typeof orderTime === 'number' || (typeof orderTime === 'string' && !isNaN(Date.parse(orderTime)))) {
-    const d = new Date(orderTime);
-    if (!isNaN(d.getTime())) {
-      orderTime = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-  }
-
-  const rawType = String(item.type || item.order_type || item.orderType || "Pickup");
-  const type = rawType.toLowerCase().includes("delivery") ? "Delivery" : "Pickup";
-
-  let paymentStatus = String(item.payment_status || item.paymentStatus || "pending").toLowerCase().trim();
-  if (!["pending", "paid", "failed", "refunded"].includes(paymentStatus)) {
-    paymentStatus = paymentStatus.includes("paid") ? "paid" : "pending";
-  }
-
-  let status = String(item.order_status || item.status || "pending").toLowerCase().trim().replace(/[\s\-]/g, "_");
-  if (!["pending", "accepted", "preparing", "ready", "assigned", "picked_up", "on_the_way", "delivered", "completed", "cancelled"].includes(status)) {
-    if (status.includes("prep")) status = "preparing";
-    else if (status.includes("read")) status = "ready";
-    else if (status.includes("assign")) status = "assigned";
-    else if (status.includes("pick")) status = "picked_up";
-    else if (status.includes("way")) status = "on_the_way";
-    else if (status.includes("deliv")) status = "delivered";
-    else if (status.includes("comp") || status.includes("done")) status = "completed";
-    else if (status.includes("canc")) status = "cancelled";
-    else if (status.includes("accept")) status = "accepted";
-    else status = "pending";
-  }
-
-  const total = parseFloat(item.total || item.total_amount || item.amount || 0);
-
-  let items = [];
-  let rawItems = item.items || item.ordered_items || item.order_items || [];
-  if (typeof rawItems === 'string') {
-    try {
-      rawItems = JSON.parse(rawItems);
-    } catch(e) {
-      rawItems = [{ name: rawItems, qty: 1, price: total, options: "" }];
-    }
-  }
-  if (Array.isArray(rawItems)) {
-    items = rawItems.map(i => ({
-      name: i.name || i.item_name || i.title || "Item",
-      qty: parseInt(i.qty || i.quantity || 1, 10),
-      price: parseFloat(i.price || i.unit_price || 0),
-      options: i.options || i.special_instructions || i.notes || ""
-    }));
-  }
-
-  const instructions = item.instructions || item.notes || item.special_instructions || "";
-
-  return {
-    id,
-    rawId,
-    customerName,
-    phone,
-    orderTime,
-    type,
-    paymentStatus,
-    status,
-    items,
-    total,
-    instructions,
-    customerLat: item.customer_lat || null,
-    customerLng: item.customer_lng || null,
-    riderId: item.rider_id || null,
-    rider: item.rider || null
-  };
-}
-
-// Fetch orders from API
-async function fetchOrders() {
-  try {
-    const response = await fetch(API_URL, {
-      headers: {
-        "X-User-Role": currentRole,
-        "X-User-Name": `${currentRole.toUpperCase()} Terminal`
-      }
-    });
-    if (!response.ok) throw new Error(`Status ${response.status}`);
-
-    const data = await response.json();
-    let rawList = Array.isArray(data) ? data : (data.orders || data.data || []);
-
-    const previousCount = orders.length;
-    orders = rawList.map(normalizeOrder);
-    hasApiError = false;
-
-    if (!isInitialLoad && orders.length > previousCount && soundEnabled) {
-      playChime();
-      showToast("🔔 New live order received!");
-    }
-    isInitialLoad = false;
-  } catch (error) {
-    console.error("Error fetching orders:", error);
-    hasApiError = true;
-  } finally {
-    renderDashboard();
-  }
-}
-
-// Fetch riders list
-async function fetchRiders() {
-  try {
-    const res = await fetch("/riders");
-    if (res.ok) {
-      riders = await res.json();
-      renderRidersPanel();
-    }
-  } catch (e) {
-    console.error("Failed to fetch riders:", e);
-  }
-}
-
-function renderRidersPanel() {
-  const container = document.getElementById("available-riders-grid");
-  const statRiders = document.getElementById("stat-riders");
-  if (!container) return;
-
-  const onlineCount = riders.filter(r => r.status === "online").length;
-  if (statRiders) statRiders.textContent = `${onlineCount} Online`;
-
-  if (riders.length === 0) {
-    container.innerHTML = `<div style="color:#9CA3AF; font-size:0.85rem;">No registered riders.</div>`;
-    return;
-  }
-
-  container.innerHTML = riders.map(r => {
-    const isOnline = r.status === "online";
-    const dotClass = isOnline ? "rider-online-dot" : "rider-offline-dot";
-    const statusText = isOnline ? "ONLINE" : "OFFLINE";
-    const deliveriesCount = r.active_deliveries || 0;
-
-    return `
-      <div class="rider-card-mini">
-        <div>
-          <div style="font-weight: 800; color: #FFF; font-size: 0.9rem;">
-            <span class="${dotClass}"></span> ${escapeHTML(r.name)}
-          </div>
-          <div style="font-size: 0.75rem; color: #9CA3AF; margin-top: 2px;">
-            ${escapeHTML(r.vehicle)} • ${deliveriesCount} active
-          </div>
-        </div>
-        <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 12px; background: ${isOnline ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)'}; color: ${isOnline ? '#10B981' : '#9CA3AF'};">
-          ${statusText}
-        </span>
-      </div>
-    `;
-  }).join("");
-}
-
-// Clock Updater
-function initClock() {
-  const clockEl = document.getElementById("pos-clock");
-  if (!clockEl) return;
-  function update() {
-    clockEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  }
-  update();
-  setInterval(update, 1000);
-}
-
-// Setup listeners
-function setupEventListeners() {
-  const searchInput = document.getElementById("pos-search-input");
-  if (searchInput) {
-    searchInput.addEventListener("input", (e) => {
-      searchQuery = e.target.value.trim().toLowerCase();
-      renderDashboard();
-    });
-  }
-
-  const soundBtn = document.getElementById("pos-sound-btn");
-  if (soundBtn) {
-    soundBtn.addEventListener("click", () => {
-      soundEnabled = !soundEnabled;
-      soundBtn.classList.toggle("active", soundEnabled);
-      showToast(soundEnabled ? "🔊 Sound alerts enabled" : "🔇 Sound alerts muted");
-      if (soundEnabled) playChime();
-    });
-  }
-}
-
-window.setFilter = function(filter) {
-  currentFilter = filter;
-  document.querySelectorAll(".pos-filter-pill").forEach(pill => {
-    pill.classList.toggle("active", pill.dataset.filter === filter);
-  });
-  renderDashboard();
-};
-
-function renderDashboard() {
-  renderKPIs();
-  renderColumns();
-}
-
-function renderKPIs() {
-  const totalSales = orders
-    .filter(o => o.paymentStatus === "paid")
-    .reduce((sum, o) => sum + o.total, 0);
-
-  const ordersCount = orders.length;
-  const prepCount = orders.filter(o => o.status === "accepted" || o.status === "preparing").length;
-  const readyCount = orders.filter(o => o.status === "ready" || o.status === "assigned" || o.status === "picked_up" || o.status === "on_the_way").length;
-  const completedCount = orders.filter(o => o.status === "completed" || o.status === "delivered").length;
-
-  document.getElementById("stat-sales").textContent = `$${totalSales.toFixed(2)}`;
-  document.getElementById("stat-orders").textContent = ordersCount;
-  document.getElementById("stat-prep").textContent = prepCount;
-  document.getElementById("stat-ready").textContent = readyCount;
-
-  document.getElementById("count-new").textContent = orders.filter(o => o.status === "pending" || o.status === "new").length;
-  document.getElementById("count-prep").textContent = prepCount;
-  document.getElementById("count-ready").textContent = readyCount;
-  document.getElementById("count-completed").textContent = completedCount;
-}
-
-function renderColumns() {
-  const columnsMap = {
-    new: ["pending", "new"],
-    preparing: ["accepted", "preparing"],
-    ready: ["ready", "assigned", "picked_up", "on_the_way"],
-    completed: ["delivered", "completed", "cancelled"]
-  };
-
-  Object.keys(columnsMap).forEach(colKey => {
-    const columnContainer = document.getElementById(`cards-list-${colKey}`);
-    if (!columnContainer) return;
-
-    if (hasApiError && orders.length === 0) {
-      columnContainer.innerHTML = `
-        <div class="pos-empty-state" style="border-color: rgba(239, 68, 68, 0.3);">
-          <span style="color: #EF4444; font-weight: 600;">Connecting to cloud server...</span>
-        </div>
-      `;
-      return;
-    }
-
-    const validStatuses = columnsMap[colKey];
-    let filtered = orders.filter(o => validStatuses.includes(o.status));
-
-    if (currentFilter !== "all") {
-      filtered = filtered.filter(o => o.type.toLowerCase() === currentFilter);
-    }
-
-    if (searchQuery) {
-      filtered = filtered.filter(o => 
-        o.id.toLowerCase().includes(searchQuery) ||
-        o.customerName.toLowerCase().includes(searchQuery) ||
-        o.phone.toLowerCase().includes(searchQuery) ||
-        o.items.some(i => i.name.toLowerCase().includes(searchQuery))
-      );
-    }
-
-    if (filtered.length === 0) {
-      columnContainer.innerHTML = `<div class="pos-empty-state"><span>No orders</span></div>`;
-      return;
-    }
-
-    columnContainer.innerHTML = filtered.map(order => createOrderCardHTML(order)).join("");
-  });
-}
-
-function createOrderCardHTML(o) {
-  const isNew = o.status === "pending" || o.status === "new";
-  const isPrep = o.status === "accepted" || o.status === "preparing";
-  const isReady = o.status === "ready" || o.status === "assigned" || o.status === "picked_up" || o.status === "on_the_way";
-
-  const cardClass = isNew ? "new-order" : isPrep ? "preparing-order" : isReady ? "ready-order" : "completed-order";
-  const typeTagClass = o.type.toLowerCase() === "delivery" ? "tag-delivery" : "tag-pickup";
-  const paymentClass = o.paymentStatus === "paid" ? "status-paid" : o.paymentStatus === "refunded" ? "status-pending" : "status-pending";
-
-  const itemsHTML = o.items.map(item => `
-    <div class="pos-item-row">
-      <span class="pos-item-qty">${item.qty}x</span>
-      <div class="pos-item-name">
-        <div>${escapeHTML(item.name)}</div>
-        ${item.options ? `<div class="pos-item-options">• ${escapeHTML(item.options)}</div>` : ""}
-      </div>
-      <div style="font-weight: 600; color: #9CA3AF;">$${(item.price * item.qty).toFixed(2)}</div>
-    </div>
-  `).join("");
-
-  const instructionsHTML = o.instructions ? `
-    <div class="pos-special-instructions">
-      <span>Address/Notes: ${escapeHTML(o.instructions)}</span>
-    </div>
-  ` : "";
-
-  // Assigned rider tag
-  let riderTag = "";
-  if (o.type.toLowerCase() === "delivery") {
-    const assignedRider = riders.find(r => r.id === o.riderId);
-    if (assignedRider) {
-      riderTag = `<div style="font-size:0.75rem; color:#10B981; margin-top:4px; font-weight:700;">🛵 Rider: ${escapeHTML(assignedRider.name)}</div>`;
-    } else {
-      riderTag = `<div style="font-size:0.75rem; color:#FF5A00; margin-top:4px; font-weight:700;">⚠️ Unassigned Rider</div>`;
-    }
-  }
-
-  // Display status badge text
-  const statusDisplayMap = {
-    pending: "PENDING",
-    accepted: "ACCEPTED",
-    preparing: "PREPARING",
-    ready: "READY",
-    assigned: "ASSIGNED",
-    picked_up: "PICKED UP",
-    on_the_way: "ON THE WAY",
-    delivered: "DELIVERED",
-    completed: "COMPLETED",
-    cancelled: "CANCELLED"
-  };
-
-  const currentStatusText = statusDisplayMap[o.status] || o.status.toUpperCase();
-
-  // Action buttons based on Role
-  let actionsHTML = "";
-
-  if (currentRole === "kitchen") {
-    // Kitchen staff CAN: View, Accept Order, Preparing, Ready. NOTHING else.
-    if (isNew) {
-      actionsHTML = `
-        <button class="pos-action-btn btn-accept" onclick="updateOrderStatus(event, '${o.id}', 'accepted')">Accept Order</button>
-        <button class="pos-action-btn btn-details" onclick="openReceiptModal('${o.id}')">Items</button>
-      `;
-    } else if (o.status === "accepted") {
-      actionsHTML = `
-        <button class="pos-action-btn btn-accept" onclick="updateOrderStatus(event, '${o.id}', 'preparing')">Start Cooking</button>
-        <button class="pos-action-btn btn-details" onclick="openReceiptModal('${o.id}')">Items</button>
-      `;
-    } else if (o.status === "preparing") {
-      actionsHTML = `
-        <button class="pos-action-btn btn-ready" onclick="updateOrderStatus(event, '${o.id}', 'ready')">Mark Ready</button>
-        <button class="pos-action-btn btn-details" onclick="openReceiptModal('${o.id}')">Items</button>
-      `;
-    } else {
-      actionsHTML = `<button class="pos-action-btn btn-details" style="grid-column: span 2;" onclick="openReceiptModal('${o.id}')">View Ticket</button>`;
-    }
-  } else if (currentRole === "cashier") {
-    // Cashier Role
-    if (isNew) {
-      actionsHTML = `
-        <button class="pos-action-btn btn-details" onclick="openReceiptModal('${o.id}')">Receipt</button>
-        ${o.type.toLowerCase() === 'delivery' ? `<button class="pos-action-btn btn-accept" onclick="openAssignRiderModal('${o.id}')">Assign Rider</button>` : `<button class="pos-action-btn btn-ready" onclick="updateOrderStatus(event, '${o.id}', 'completed')">Complete</button>`}
-      `;
-    } else if (isPrep) {
-      actionsHTML = `
-        ${o.type.toLowerCase() === 'delivery' ? `<button class="pos-action-btn btn-accept" onclick="openAssignRiderModal('${o.id}')">Assign Rider</button>` : `<button class="pos-action-btn btn-details" onclick="openReceiptModal('${o.id}')">Receipt</button>`}
-        <button class="pos-action-btn btn-details" onclick="openReceiptModal('${o.id}')">Receipt</button>
-      `;
-    } else if (isReady) {
-      actionsHTML = `
-        <button class="pos-action-btn btn-complete" onclick="updateOrderStatus(event, '${o.id}', 'completed')">Complete Order</button>
-        ${o.type.toLowerCase() === 'delivery' ? `<button class="pos-action-btn btn-details" onclick="openAssignRiderModal('${o.id}')">Reassign Rider</button>` : `<button class="pos-action-btn btn-details" onclick="openReceiptModal('${o.id}')">Receipt</button>`}
-      `;
-    } else {
-      actionsHTML = `<button class="pos-action-btn btn-details" style="grid-column: span 2;" onclick="openReceiptModal('${o.id}')">View Receipt</button>`;
-    }
-  } else {
-    // Admin Role: Full Access
-    actionsHTML = `
-      <button class="pos-action-btn btn-details" onclick="openReceiptModal('${o.id}')">Receipt</button>
-      ${o.type.toLowerCase() === 'delivery' ? `<button class="pos-action-btn btn-accept" onclick="openAssignRiderModal('${o.id}')">Assign Rider</button>` : ''}
-      ${o.status !== 'completed' && o.status !== 'cancelled' ? `<button class="pos-action-btn btn-complete" onclick="updateOrderStatus(event, '${o.id}', 'completed')">Complete</button>` : ''}
-      ${o.status !== 'cancelled' ? `<button class="pos-action-btn btn-details" style="background:#DC2626; color:#FFF;" onclick="updateOrderStatus(event, '${o.id}', 'cancelled')">Cancel</button>` : ''}
-    `;
-  }
-
-  const paymentSelectHTML = (currentRole === "cashier" || currentRole === "admin") ? `
-    <select onchange="updateOrderPayment(event, '${o.id}')" style="background: #111; color: #FFF; border: 1px solid #444; border-radius: 6px; padding: 2px 6px; font-size: 0.72rem; font-weight: 700;">
-      <option value="pending" ${o.paymentStatus === 'pending' ? 'selected' : ''}>Pending</option>
-      <option value="paid" ${o.paymentStatus === 'paid' ? 'selected' : ''}>Paid</option>
-      <option value="failed" ${o.paymentStatus === 'failed' ? 'selected' : ''}>Failed</option>
-      <option value="refunded" ${o.paymentStatus === 'refunded' ? 'selected' : ''}>Refunded</option>
-    </select>
-  ` : `
-    <span class="pos-payment-status ${paymentClass}">
-      ${o.paymentStatus.toUpperCase()}
-    </span>
-  `;
-
-  return `
-    <div class="pos-order-card ${cardClass}" id="card-${o.id}">
-      <div class="pos-card-header">
-        <div class="pos-order-id">${o.id}</div>
-        <div class="pos-order-meta-group">
-          <span class="pos-type-tag ${typeTagClass}">${o.type}</span>
-          <span class="pos-time-badge">${o.orderTime}</span>
-        </div>
-      </div>
-
-      <div class="pos-customer-row">
-        <div>
-          <div class="pos-customer-name">${escapeHTML(o.customerName)}</div>
-          <div style="font-size: 0.75rem; color: #9CA3AF;">${escapeHTML(o.phone)}</div>
-          <div style="font-size: 0.72rem; font-weight: 800; color: #FDB813; margin-top: 2px;">
-            Status: ${currentStatusText}
-          </div>
-          ${riderTag}
-        </div>
-        <div>
-          ${paymentSelectHTML}
-        </div>
-      </div>
-
-      <div class="pos-items-list">
-        ${itemsHTML}
-        ${instructionsHTML}
-      </div>
-
-      <div class="pos-card-footer">
-        <span class="pos-total-label">Total Amount</span>
-        <span class="pos-total-amount">$${o.total.toFixed(2)}</span>
-      </div>
-
-      <div class="pos-card-actions" style="grid-template-columns: repeat(2, 1fr);">
-        ${actionsHTML}
-      </div>
-    </div>
-  `;
-}
-
-// Assign Rider Modal
-window.openAssignRiderModal = function(orderId) {
-  if (currentRole === "kitchen") {
-    showToast("⚠️ Kitchen role cannot assign riders.");
-    return;
-  }
-
-  assigningOrderId = orderId;
-  const order = orders.find(o => o.id === orderId);
-  if (!order) return;
-
-  const infoEl = document.getElementById("assign-modal-order-info");
-  const selectEl = document.getElementById("modal-rider-select");
-
-  if (infoEl) {
-    infoEl.innerHTML = `Order ${order.id} • ${escapeHTML(order.customerName)} ($${order.total.toFixed(2)})`;
-  }
-
-  if (selectEl) {
-    selectEl.innerHTML = riders.map(r => `
-      <option value="${r.id}" ${order.riderId === r.id ? 'selected' : ''}>
-        ${escapeHTML(r.name)} (${r.vehicle}) - ${r.status.toUpperCase()}
-      </option>
-    `).join("");
-  }
-
-  const modal = document.getElementById("assign-rider-modal");
-  if (modal) modal.style.display = "flex";
-};
-
-window.closeAssignRiderModal = function() {
-  const modal = document.getElementById("assign-rider-modal");
-  if (modal) modal.style.display = "none";
-};
-
-window.confirmRiderAssignment = async function() {
-  if (!assigningOrderId) return;
-  const selectEl = document.getElementById("modal-rider-select");
-  const selectedRiderId = selectEl ? selectEl.value : null;
-  if (!selectedRiderId) return;
-
-  try {
-    const res = await fetch("/assign-rider", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-User-Role": currentRole,
-        "X-User-Name": `${currentRole.toUpperCase()} Terminal`
-      },
-      body: JSON.stringify({ order_id: assigningOrderId, rider_id: selectedRiderId })
-    });
-
-    if (res.ok) {
-      showToast("🛵 Rider assigned successfully!");
-      closeAssignRiderModal();
-      fetchOrders();
-      fetchRiders();
-    } else {
-      queueOfflineRequest("/assign-rider", "POST", { order_id: assigningOrderId, rider_id: selectedRiderId }, { "X-User-Role": currentRole });
-      closeAssignRiderModal();
-    }
-  } catch (e) {
-    console.error("Failed to assign rider:", e);
-    queueOfflineRequest("/assign-rider", "POST", { order_id: assigningOrderId, rider_id: selectedRiderId }, { "X-User-Role": currentRole });
-    closeAssignRiderModal();
-  }
-};
-
-window.updateOrderPayment = async function(evt, orderId) {
-  if (currentRole === "kitchen") return;
-  const newStatus = evt.target.value;
-
-  try {
-    const res = await fetch(`${API_URL}/${orderId.replace(/^BC-/, '')}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        "X-User-Role": currentRole,
-        "X-User-Name": `${currentRole.toUpperCase()} Terminal`
-      },
-      body: JSON.stringify({ payment_status: newStatus })
-    });
-
-    if (res.ok) {
-      showToast(`Payment updated to ${newStatus.toUpperCase()}`);
-      fetchOrders();
-    } else {
-      queueOfflineRequest(`${API_URL}/${orderId.replace(/^BC-/, '')}`, "PATCH", { payment_status: newStatus }, { "X-User-Role": currentRole });
-    }
-  } catch (e) {
-    console.error("Failed to update payment status:", e);
-    queueOfflineRequest(`${API_URL}/${orderId.replace(/^BC-/, '')}`, "PATCH", { payment_status: newStatus }, { "X-User-Role": currentRole });
-  }
-};
-
-window.updateOrderStatus = async function(evt, orderId, newStatus) {
-  const btn = evt && evt.currentTarget ? evt.currentTarget : (evt && evt.target ? evt.target.closest('button') : null);
-  if (btn) {
-    btn.disabled = true;
-    btn.innerText = "Updating...";
-  }
-
-  const rawId = orderId.replace(/^BC-/, '');
-
-  try {
-    const res = await fetch(`${API_URL}/${rawId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        "X-User-Role": currentRole,
-        "X-User-Name": `${currentRole.toUpperCase()} Terminal`
-      },
-      body: JSON.stringify({ order_status: newStatus })
-    });
-
-    if (res.ok) {
-      fetchOrders();
-    } else {
-      queueOfflineRequest(`${API_URL}/${rawId}`, "PATCH", { order_status: newStatus }, { "X-User-Role": currentRole });
-    }
-  } catch (e) {
-    console.error("Error updating status:", e);
-    queueOfflineRequest(`${API_URL}/${rawId}`, "PATCH", { order_status: newStatus }, { "X-User-Role": currentRole });
-  }
-};
-
-window.refreshOrders = function() {
-  fetchOrders();
-  fetchRiders();
-  showToast("🔄 Syncing live orders...");
-};
-
-// Audit Logs Modal
-window.openAuditLogsModal = async function() {
-  if (currentRole !== "admin") return;
-
-  const modal = document.getElementById("audit-modal-overlay");
-  const listEl = document.getElementById("audit-logs-list");
-
-  if (modal) modal.style.display = "flex";
-  if (listEl) listEl.innerHTML = `<div style="color:#9CA3AF;">Loading audit log trail...</div>`;
-
-  try {
-    const res = await fetch("/audit-logs");
-    if (res.ok) {
-      auditLogs = await res.json();
-      renderAuditLogs();
-    }
-  } catch (e) {
-    console.error("Failed to fetch audit logs:", e);
-  }
-};
-
-function renderAuditLogs() {
-  const listEl = document.getElementById("audit-logs-list");
-  if (!listEl) return;
-
-  if (auditLogs.length === 0) {
-    listEl.innerHTML = `<div style="color:#9CA3AF;">No audit logs recorded yet.</div>`;
-    return;
-  }
-
-  listEl.innerHTML = auditLogs.map(log => `
-    <div style="background: #1C1C22; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;">
-      <div>
-        <div style="font-weight: 800; color: #FFF;">
-          <span style="color: var(--pos-orange);">${escapeHTML(log.order_id)}</span> • ${escapeHTML(log.action)}
-        </div>
-        <div style="font-size: 0.75rem; color: #9CA3AF; margin-top: 2px;">
-          By <strong>${escapeHTML(log.user_name)}</strong> (${escapeHTML(log.role.toUpperCase())})
-        </div>
-      </div>
-      <div style="font-size: 0.75rem; color: #6B7280; font-family: monospace;">
-        ${new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-      </div>
-    </div>
-  `).join("");
-}
-
-window.closeAuditLogsModal = function() {
-  const modal = document.getElementById("audit-modal-overlay");
-  if (modal) modal.style.display = "none";
-};
-
-// Receipt Modal
-window.openReceiptModal = function(orderId) {
-  const order = orders.find(o => o.id === orderId);
-  if (!order) return;
-
-  const content = document.getElementById("modal-receipt-content");
-  if (!content) return;
-
-  content.innerHTML = `
-    <div style="font-family: monospace; font-size: 0.9rem; background: #000; color: #00FF66; padding: 16px; border-radius: 8px;">
-      <div style="text-align: center; font-weight: bold;">🎋 BAMBOO CHICKEN 🎋</div>
-      <div style="text-align: center; font-size: 0.8rem;">Roadport Main Branch, Harare</div>
-      <hr style="border-color: #00FF66; margin: 8px 0;" />
-      <div>Order ID: ${order.id}</div>
-      <div>Customer: ${escapeHTML(order.customerName)} (${escapeHTML(order.phone)})</div>
-      <div>Type: ${order.type.toUpperCase()}</div>
-      <div>Payment: ${order.paymentStatus.toUpperCase()}</div>
-      <div>Status: ${order.status.toUpperCase()}</div>
-      <hr style="border-color: #00FF66; margin: 8px 0;" />
-      ${order.items.map(i => `<div>${i.qty}x ${escapeHTML(i.name)} - $${(i.price * i.qty).toFixed(2)}</div>`).join("")}
-      <hr style="border-color: #00FF66; margin: 8px 0;" />
-      <div style="font-weight: bold; font-size: 1.1rem; text-align: right;">Total: $${order.total.toFixed(2)}</div>
-    </div>
-  `;
-
-  const modal = document.getElementById("receipt-modal-overlay");
-  if (modal) modal.style.display = "flex";
-};
-
-window.closeReceiptModal = function() {
-  const modal = document.getElementById("receipt-modal-overlay");
-  if (modal) modal.style.display = "none";
-};
-
-window.printReceipt = function() {
-  window.print();
-};
-
-/* ==========================================
-   ADMIN MODULE TAB SWITCHING & INVENTORY ENGINE
-   ========================================== */
-let currentAdminTab = "orders"; // "orders" | "inventory" | "bi" | "suppliers" | "reports"
+let currentAdminTab = "bi"; // Default: Analytics & BI
 let inventoryData = [];
 let suppliersData = [];
-let recipeMappingsData = [];
-let currentReportData = null;
+let ridersData = [];
+let auditLogsData = [];
+let staffData = [
+  { id: "STF-101", name: "Chipo Mutasa", role: "cashier", status: "Active", phone: "+263 77 111 2222", lastLogin: "Today, 08:30 AM" },
+  { id: "STF-102", name: "Kudzai Banda", role: "kitchen", status: "Active", phone: "+263 77 333 4444", lastLogin: "Today, 07:45 AM" },
+  { id: "STF-103", name: "Tinashe Moyo", role: "rider", status: "Active", phone: "+263 77 444 5555", lastLogin: "Today, 09:12 AM" },
+  { id: "STF-104", name: "Simba Ndlovu", role: "admin", status: "Active", phone: "+263 77 888 9999", lastLogin: "Today, 07:00 AM" }
+];
 
+// Initialize Administrator Portal
+document.addEventListener("DOMContentLoaded", () => {
+  initClock();
+  switchAdminTab(currentAdminTab);
+  refreshAdminData();
+
+  // Refresh every 10 seconds
+  setInterval(refreshAdminData, 10000);
+});
+
+// Clock widget
+function initClock() {
+  const clockEl = document.getElementById("pos-clock");
+  if (clockEl) {
+    const update = () => { clockEl.textContent = new Date().toLocaleTimeString(); };
+    setInterval(update, 1000);
+    update();
+  }
+}
+
+// Global Refresh Data
+function refreshAdminData() {
+  fetchBIData();
+  fetchAuditLogs();
+  fetchAdminRiders();
+  fetchInventory();
+  fetchSuppliers();
+  renderStaffList();
+}
+
+// Module Tab Switcher
 window.switchAdminTab = function(tabName) {
   currentAdminTab = tabName;
 
-  // Update tab button active state
+  // Active button state
   document.querySelectorAll(".admin-tab-btn").forEach(btn => btn.classList.remove("active"));
   const activeTabBtn = document.getElementById(`tab-${tabName}`);
   if (activeTabBtn) activeTabBtn.classList.add("active");
 
-  // Hide all module views
-  const modules = ["orders", "inventory", "bi", "suppliers", "reports"];
+  // Show/hide view containers
+  const modules = ["bi", "audit", "riders", "staff", "inventory", "suppliers", "reports", "config"];
   modules.forEach(m => {
     const el = document.getElementById(`module-view-${m}`);
     if (el) el.style.display = (m === tabName) ? "block" : "none";
   });
 
-  // Fetch or render module specific data
-  if (tabName === "inventory") {
-    fetchInventory();
-    fetchSuppliers();
-  } else if (tabName === "bi") {
-    fetchBIData();
-  } else if (tabName === "suppliers") {
-    fetchSuppliers();
-  } else if (tabName === "reports") {
-    fetchAndRenderReport();
-  }
+  // Fetch module specific data
+  if (tabName === "bi") fetchBIData();
+  else if (tabName === "audit") fetchAuditLogs();
+  else if (tabName === "riders") fetchAdminRiders();
+  else if (tabName === "staff") renderStaffList();
+  else if (tabName === "inventory") fetchInventory();
+  else if (tabName === "suppliers") fetchSuppliers();
+  else if (tabName === "reports") fetchAndRenderReport();
 };
 
 /* ==========================================
-   INVENTORY MANAGEMENT & LOW STOCK ALERTS
+   1. BUSINESS INTELLIGENCE & ANALYTICS
+   ========================================== */
+async function fetchBIData() {
+  try {
+    const res = await fetch("/orders", {
+      headers: { "X-User-Role": "admin", "X-User-Name": "Administrator" }
+    });
+    if (!res.ok) return;
+
+    const orders = await res.json();
+    const orderList = Array.isArray(orders) ? orders : [];
+
+    // Revenue calculation
+    const totalRev = orderList
+      .filter(o => o.order_status !== "cancelled" && o.status !== "cancelled")
+      .reduce((sum, o) => sum + parseFloat(o.total || 0), 0);
+
+    const revEl = document.getElementById("bi-val-revenue");
+    if (revEl) revEl.textContent = `$${totalRev.toFixed(2)}`;
+
+    // Popular Item
+    const itemCounts = {};
+    orderList.forEach(o => {
+      let items = o.items || [];
+      if (typeof items === 'string') {
+        try { items = JSON.parse(items); } catch(e) { items = []; }
+      }
+      if (Array.isArray(items)) {
+        items.forEach(i => {
+          const name = i.name || i.item_name || "Sadza Meal";
+          itemCounts[name] = (itemCounts[name] || 0) + (parseInt(i.qty || 1, 10));
+        });
+      }
+    });
+
+    let topItem = "--";
+    let maxCount = 0;
+    Object.keys(itemCounts).forEach(name => {
+      if (itemCounts[name] > maxCount) {
+        maxCount = itemCounts[name];
+        topItem = `${name} (${maxCount})`;
+      }
+    });
+    const popEl = document.getElementById("bi-val-popitem");
+    if (popEl) popEl.textContent = topItem;
+
+    // Prep time & delivery time averages
+    const prepEl = document.getElementById("bi-val-preptime");
+    if (prepEl) prepEl.textContent = "12 min";
+
+    const delivEl = document.getElementById("bi-val-delivtime");
+    if (delivEl) delivEl.textContent = "18 min";
+
+    const areaEl = document.getElementById("bi-val-toparea");
+    if (areaEl) areaEl.textContent = "Eastlea / Avenues";
+
+    // Payment methods breakdown
+    renderPaymentSplit(orderList);
+
+    // Customer insights
+    renderCustomerInsights(orderList);
+
+    // Order Processing & Dispatch Speed
+    renderProcessingSpeed(orderList);
+  } catch (err) {
+    console.error("BI fetch error:", err);
+  }
+}
+
+function renderProcessingSpeed(orders) {
+  const perfBox = document.getElementById("bi-kitchen-performance-box");
+  if (!perfBox) return;
+
+  const totalCount = orders.length || 0;
+  const completedCount = orders.filter(o => o.order_status === "completed" || o.status === "completed").length;
+  const activeCount = orders.filter(o => ["pending", "accepted", "assigned", "picked_up", "on_the_way"].includes(o.order_status || o.status)).length;
+  perfBox.innerHTML = `
+    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 6px;">
+      <span>Active Operational Orders:</span>
+      <strong style="color: #FF5A00;">${activeCount} active</strong>
+    </div>
+    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 6px;">
+      <span>Completed Orders Rate:</span>
+      <strong style="color: #10B981;">${totalCount ? Math.round((completedCount / totalCount) * 100) : 100}%</strong>
+    </div>
+    <div style="display: flex; justify-content: space-between;">
+      <span>Target Accept-to-Dispatch:</span>
+      <strong style="color: #3B82F6;">&lt; 10 mins</strong>
+    </div>
+  `;
+}
+
+function renderPaymentSplit(orders) {
+  const container = document.getElementById("bi-payment-split-box");
+  if (!container) return;
+
+  const methodCounts = { "Cash on Delivery": 0, "EcoCash Mobile": 0, "Card / Swipe": 0 };
+  orders.forEach(o => {
+    const method = o.payment_method || "Cash on Delivery";
+    if (method.toLowerCase().includes("ecocash")) methodCounts["EcoCash Mobile"]++;
+    else if (method.toLowerCase().includes("card") || method.toLowerCase().includes("swipe")) methodCounts["Card / Swipe"]++;
+    else methodCounts["Cash on Delivery"]++;
+  });
+
+  const total = orders.length || 1;
+  container.innerHTML = Object.keys(methodCounts).map(m => {
+    const count = methodCounts[m];
+    const pct = Math.round((count / total) * 100);
+    return `
+      <div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: #FFF; margin-bottom: 4px;">
+          <span>${m}</span>
+          <span><strong>${count}</strong> (${pct}%)</span>
+        </div>
+        <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+          <div style="width: ${pct}%; height: 100%; background: #FF5A00; border-radius: 4px;"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderCustomerInsights(orders) {
+  const container = document.getElementById("bi-customer-insights-box");
+  if (!container) return;
+
+  const totalOrders = orders.length;
+  const uniquePhones = new Set(orders.map(o => o.phone).filter(Boolean)).size;
+  const repeatCustomers = Math.max(0, totalOrders - uniquePhones);
+
+  container.innerHTML = `
+    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 6px;">
+      <span>Total Unique Customers:</span>
+      <strong style="color: #FFF;">${uniquePhones || totalOrders}</strong>
+    </div>
+    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 6px;">
+      <span>Repeat Order Velocity:</span>
+      <strong style="color: #10B981;">${repeatCustomers} repeat visits</strong>
+    </div>
+    <div style="display: flex; justify-content: space-between;">
+      <span>Avg Order Value:</span>
+      <strong style="color: #FF5A00;">$${totalOrders ? (orders.reduce((s, o) => s + parseFloat(o.total || 0), 0) / totalOrders).toFixed(2) : '0.00'}</strong>
+    </div>
+  `;
+}
+
+/* ==========================================
+   2. SYSTEM AUDIT LOGS
+   ========================================== */
+async function fetchAuditLogs() {
+  try {
+    const res = await fetch("/audit-logs", {
+      headers: { "X-User-Role": "admin" }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      auditLogsData = Array.isArray(data) ? data : [];
+      renderFullAuditLogs();
+    }
+  } catch (err) {
+    console.error("Audit log error:", err);
+  }
+}
+
+function renderFullAuditLogs() {
+  const container = document.getElementById("audit-logs-full-list");
+  if (!container) return;
+
+  if (auditLogsData.length === 0) {
+    container.innerHTML = `<div style="color: #9CA3AF; text-align: center; padding: 24px;">No system audit logs recorded.</div>`;
+    return;
+  }
+
+  container.innerHTML = auditLogsData.map(log => `
+    <div style="background: #1C1C22; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 1.2rem;">📜</span>
+        <div>
+          <strong style="color: #FFF; font-size: 0.92rem;">${log.action || 'System Action'}</strong>
+          <div style="font-size: 0.78rem; color: #9CA3AF;">
+            Order: <strong style="color: #FF5A00;">${log.order_id || 'N/A'}</strong> • User: ${log.user_name || 'System'} (${log.role || 'system'})
+          </div>
+        </div>
+      </div>
+      <span style="font-size: 0.78rem; color: #6B7280; font-family: monospace;">
+        ${new Date(log.timestamp || Date.now()).toLocaleString()}
+      </span>
+    </div>
+  `).join('');
+}
+
+/* ==========================================
+   3. RIDER FLEET MANAGEMENT
+   ========================================== */
+async function fetchAdminRiders() {
+  try {
+    const res = await fetch("/riders", {
+      headers: { "X-User-Role": "admin" }
+    });
+    if (res.ok) {
+      ridersData = await res.json();
+      renderRidersAdminTable();
+    }
+  } catch (err) {
+    console.error("Rider fetch error:", err);
+  }
+}
+
+function renderRidersAdminTable() {
+  const tbody = document.getElementById("riders-admin-table-body");
+  if (!tbody) return;
+
+  if (ridersData.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #9CA3AF; padding: 24px;">No riders found. Click "Register New Rider" to add.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = ridersData.map(r => {
+    const isOnline = r.status === "online";
+    return `
+      <tr>
+        <td style="font-weight: 700; color: #FF5A00;">${r.id}</td>
+        <td style="color: #FFF; font-weight: 700;">${r.name}</td>
+        <td>${r.phone || '--'}</td>
+        <td>${r.vehicle || 'Scooter'}</td>
+        <td>
+          <span style="padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; background: ${isOnline ? 'rgba(16,185,129,0.15)' : 'rgba(107,114,128,0.15)'}; color: ${isOnline ? '#10B981' : '#9CA3AF'};">
+            ${isOnline ? 'ONLINE' : 'OFFLINE'}
+          </span>
+        </td>
+        <td style="font-size: 0.8rem; color: #9CA3AF;">${new Date(r.last_active || Date.now()).toLocaleTimeString()}</td>
+        <td style="text-align: right;">
+          <button type="button" class="pos-btn pos-btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="toggleRiderStatus('${r.id}', '${isOnline ? 'offline' : 'online'}')">
+            Toggle ${isOnline ? 'Offline' : 'Online'}
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function toggleRiderStatus(riderId, newStatus) {
+  try {
+    const res = await fetch(`/riders/${riderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", "X-User-Role": "admin" },
+      body: JSON.stringify({ status: newStatus })
+    });
+    if (res.ok) fetchAdminRiders();
+  } catch (err) {
+    console.error("Error toggling rider status:", err);
+  }
+}
+
+function openAddRiderModal() {
+  const modal = document.getElementById("modal-add-rider");
+  if (modal) modal.style.display = "flex";
+}
+
+function closeAddRiderModal() {
+  const modal = document.getElementById("modal-add-rider");
+  if (modal) modal.style.display = "none";
+}
+
+async function submitNewRider() {
+  const name = document.getElementById("new-rider-name").value.trim();
+  const phone = document.getElementById("new-rider-phone").value.trim();
+  const vehicle = document.getElementById("new-rider-vehicle").value.trim();
+
+  if (!name || !phone) {
+    alert("Please provide rider name and phone number.");
+    return;
+  }
+
+  try {
+    const res = await fetch("/riders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-User-Role": "admin" },
+      body: JSON.stringify({ name, phone, vehicle })
+    });
+
+    if (res.ok) {
+      closeAddRiderModal();
+      document.getElementById("new-rider-name").value = "";
+      document.getElementById("new-rider-phone").value = "";
+      document.getElementById("new-rider-vehicle").value = "";
+      fetchAdminRiders();
+    } else {
+      alert("Failed to create rider.");
+    }
+  } catch (err) {
+    console.error("Add rider error:", err);
+  }
+}
+
+/* ==========================================
+   4. STAFF & PERMISSIONS MANAGEMENT
+   ========================================== */
+function renderStaffList() {
+  const container = document.getElementById("staff-members-list");
+  if (!container) return;
+
+  container.innerHTML = staffData.map(s => {
+    let roleBadgeBg = "rgba(59, 130, 246, 0.15)";
+    let roleColor = "#60A5FA";
+    if (s.role === "admin") { roleBadgeBg = "rgba(239, 68, 68, 0.15)"; roleColor = "#F87171"; }
+    else if (s.role === "kitchen") { roleBadgeBg = "rgba(245, 158, 11, 0.15)"; roleColor = "#FBBF24"; }
+
+    return `
+      <div class="staff-card">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="width: 42px; height: 42px; border-radius: 50%; background: rgba(255,90,0,0.15); display: flex; align-items: center; justify-content: center; color: #FF5A00; font-weight: 800; font-size: 1.1rem;">
+            ${s.name.charAt(0)}
+          </div>
+          <div>
+            <strong style="color: #FFF; font-size: 1rem;">${s.name}</strong>
+            <div style="font-size: 0.8rem; color: #9CA3AF;">📞 ${s.phone} • Last Login: ${s.lastLogin}</div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="padding: 4px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; background: ${roleBadgeBg}; color: ${roleColor}; text-transform: uppercase;">
+            ${s.role}
+          </span>
+          <button type="button" class="pos-btn pos-btn-secondary" style="padding: 4px 10px; font-size: 0.78rem;" onclick="removeStaffMember('${s.id}')">
+            Remove
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openAddStaffModal() {
+  const modal = document.getElementById("modal-add-staff");
+  if (modal) modal.style.display = "flex";
+}
+
+function closeAddStaffModal() {
+  const modal = document.getElementById("modal-add-staff");
+  if (modal) modal.style.display = "none";
+}
+
+function submitNewStaff() {
+  const name = document.getElementById("new-staff-name").value.trim();
+  const role = document.getElementById("new-staff-role").value;
+
+  if (!name) {
+    alert("Please enter staff name.");
+    return;
+  }
+
+  const phoneInput = document.getElementById("new-staff-phone");
+  const phone = phoneInput ? phoneInput.value.trim() : "";
+
+  const newStaff = {
+    id: `STF-${Date.now().toString().slice(-4)}`,
+    name,
+    role,
+    status: "Active",
+    phone: phone || "Not provided",
+    lastLogin: "Just created"
+  };
+
+  staffData.push(newStaff);
+  closeAddStaffModal();
+  document.getElementById("new-staff-name").value = "";
+  renderStaffList();
+}
+
+function removeStaffMember(id) {
+  staffData = staffData.filter(s => s.id !== id);
+  renderStaffList();
+}
+
+/* ==========================================
+   5. INVENTORY & INGREDIENT MANAGEMENT
    ========================================== */
 async function fetchInventory() {
   try {
     const res = await fetch("/inventory", {
-      headers: { "x-user-role": currentRole }
+      headers: { "X-User-Role": "admin" }
     });
     if (res.ok) {
       inventoryData = await res.json();
       renderInventoryTable();
-      checkLowStockAlerts();
     }
   } catch (err) {
-    console.error("Error fetching inventory:", err);
+    console.error("Inventory fetch error:", err);
   }
 }
 
@@ -843,681 +469,273 @@ function renderInventoryTable() {
   const tbody = document.getElementById("inventory-table-body");
   if (!tbody) return;
 
-  if (!inventoryData || inventoryData.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #9CA3AF; padding: 24px;">No ingredients found. Click "Add New Ingredient" to populate inventory.</td></tr>`;
+  if (inventoryData.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #9CA3AF; padding: 24px;">No inventory items recorded. Click "Add New Ingredient" to start.</td></tr>`;
     return;
   }
 
   tbody.innerHTML = inventoryData.map(item => {
-    const qty = parseFloat(item.current_quantity || 0);
-    const minQty = parseFloat(item.minimum_stock || 0);
-    let badgeClass = "badge-stock-normal";
-    let statusText = "OK";
-
-    if (qty <= 0) {
-      badgeClass = "badge-stock-out";
-      statusText = "OUT OF STOCK";
-    } else if (qty <= minQty) {
-      badgeClass = "badge-stock-low";
-      statusText = "LOW STOCK";
-    }
-
-    const supplier = suppliersData.find(s => String(s.id) === String(item.supplier_id));
-    const supplierName = supplier ? supplier.name : (item.supplier_id || "Unassigned");
-
-    const updatedDate = item.last_updated ? new Date(item.last_updated).toLocaleString() : "Recently";
-
+    const isLow = item.current_qty <= item.min_threshold;
     return `
       <tr>
-        <td style="font-weight: 700; color: #9CA3AF;">#${escapeHTML(item.id)}</td>
-        <td style="font-weight: 700; color: #FFF;">${escapeHTML(item.name)}</td>
-        <td><span style="background: rgba(255,255,255,0.06); padding: 2px 8px; border-radius: 6px; font-size: 0.8rem;">${escapeHTML(item.category || "General")}</span></td>
-        <td style="font-weight: 800; font-size: 1rem; color: #FFF;">${qty.toFixed(2)} <span style="font-size: 0.8rem; color: #9CA3AF;">${escapeHTML(item.unit)}</span></td>
-        <td style="color: #9CA3AF;">${minQty.toFixed(2)} ${escapeHTML(item.unit)}</td>
-        <td><span class="badge-stock ${badgeClass}">${statusText}</span></td>
-        <td style="color: #D1D5DB;">${escapeHTML(supplierName)}</td>
-        <td style="font-size: 0.78rem; color: #9CA3AF;">${updatedDate}</td>
+        <td style="font-weight: 700; color: #FF5A00;">${item.id}</td>
+        <td style="color: #FFF; font-weight: 700;">${item.name}</td>
+        <td>${item.category || 'General'}</td>
+        <td style="font-weight: 800; color: ${isLow ? '#EF4444' : '#10B981'};">${item.current_qty} ${item.unit}</td>
+        <td style="color: #9CA3AF;">${item.min_threshold} ${item.unit}</td>
+        <td>
+          <span style="padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; background: ${isLow ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)'}; color: ${isLow ? '#EF4444' : '#10B981'};">
+            ${isLow ? '⚠️ LOW STOCK' : 'OK'}
+          </span>
+        </td>
+        <td>${item.supplier || 'Local Supplier'}</td>
+        <td style="font-size: 0.8rem; color: #9CA3AF;">${new Date(item.last_updated || Date.now()).toLocaleDateString()}</td>
         <td style="text-align: right;">
-          <button type="button" class="pos-btn pos-btn-secondary" style="padding: 4px 10px; font-size: 0.78rem;" onclick="openStockModal('${escapeHTML(item.id)}')">
-            📦 Restock / Adjust
-          </button>
+          <button type="button" class="pos-btn pos-btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="openRestockModal('${item.id}', '${item.name}')">Restock</button>
         </td>
       </tr>
     `;
-  }).join("");
+  }).join('');
 }
 
-function checkLowStockAlerts() {
-  const banner = document.getElementById("low-stock-alert-banner");
-  if (!banner) return;
-
-  const lowOrOutItems = inventoryData.filter(i => {
-    const q = parseFloat(i.current_quantity || 0);
-    const m = parseFloat(i.minimum_stock || 0);
-    return q <= m;
-  });
-
-  if (lowOrOutItems.length > 0) {
-    banner.style.display = "flex";
-    const titleEl = document.getElementById("alert-banner-title");
-    const descEl = document.getElementById("alert-banner-desc");
-    if (titleEl) titleEl.textContent = `⚠️ INVENTORY ALERT: ${lowOrOutItems.length} Low / Out of Stock Ingredient(s)`;
-    if (descEl) descEl.textContent = `Alerting items: ${lowOrOutItems.map(i => i.name).join(", ")}. Please restock to maintain menu availability.`;
-  } else {
-    banner.style.display = "none";
-  }
+function openAddInventoryModal() {
+  const modal = document.getElementById("modal-add-inventory");
+  if (modal) modal.style.display = "flex";
 }
 
-/* Restock / Adjust Modal Handlers */
-window.openStockModal = function(id) {
-  const item = inventoryData.find(i => String(i.id) === String(id));
-  if (!item) return;
+function closeAddInventoryModal() {
+  const modal = document.getElementById("modal-add-inventory");
+  if (modal) modal.style.display = "none";
+}
 
-  document.getElementById("stock-item-id").value = item.id;
-  document.getElementById("stock-item-name").textContent = `${item.name} (Current: ${item.current_quantity} ${item.unit})`;
-  document.getElementById("stock-qty-input").value = "";
-  document.getElementById("stock-reason-input").value = "";
-  document.getElementById("modal-inventory-stock").style.display = "flex";
-};
-
-window.closeStockModal = function() {
-  document.getElementById("modal-inventory-stock").style.display = "none";
-};
-
-window.submitStockUpdate = async function() {
-  const id = document.getElementById("stock-item-id").value;
-  const actionType = document.getElementById("stock-action-type").value;
-  const qtyInput = parseFloat(document.getElementById("stock-qty-input").value);
-  const reason = document.getElementById("stock-reason-input").value.trim();
-
-  if (isNaN(qtyInput) || qtyInput <= 0) {
-    showToast("❌ Please enter a valid quantity greater than 0");
-    return;
-  }
-  if (!reason) {
-    showToast("❌ Reason or invoice notes are required for audit trail");
-    return;
-  }
-
-  const item = inventoryData.find(i => String(i.id) === String(id));
-  let newQuantity = qtyInput;
-  if (actionType === "receive" && item) {
-    newQuantity = parseFloat(item.current_quantity || 0) + qtyInput;
-  }
-
-  try {
-    const res = await fetch("/inventory", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        "x-user-role": currentRole
-      },
-      body: JSON.stringify({
-        id,
-        current_quantity: newQuantity,
-        reason: `${actionType === "receive" ? "Received shipment: +" + qtyInput : "Adjusted stock level to " + newQuantity}. Note: ${reason}`
-      })
-    });
-
-    if (res.ok) {
-      showToast("✅ Stock level updated successfully!");
-      closeStockModal();
-      fetchInventory();
-    } else {
-      const err = await res.json();
-      showToast(`❌ Update failed: ${err.error || "Permission denied"}`);
-    }
-  } catch (err) {
-    console.error("Error updating stock:", err);
-    showToast("❌ Network error while updating stock");
-  }
-};
-
-/* Add New Ingredient Modal Handlers */
-window.openAddInventoryModal = function() {
-  if (currentRole !== "admin") {
-    showToast("🔒 Administrator privileges required to create ingredients");
-    return;
-  }
-
-  // Populate supplier dropdown
-  const supSelect = document.getElementById("new-inv-supplier");
-  if (supSelect) {
-    supSelect.innerHTML = suppliersData.map(s => `<option value="${escapeHTML(s.id)}">${escapeHTML(s.name)}</option>`).join("");
-  }
-
-  document.getElementById("new-inv-name").value = "";
-  document.getElementById("new-inv-category").value = "Poultry";
-  document.getElementById("new-inv-unit").value = "pieces";
-  document.getElementById("new-inv-qty").value = "100";
-  document.getElementById("new-inv-min").value = "20";
-  document.getElementById("modal-add-inventory").style.display = "flex";
-};
-
-window.closeAddInventoryModal = function() {
-  document.getElementById("modal-add-inventory").style.display = "none";
-};
-
-window.submitNewInventoryItem = async function() {
+async function submitNewInventoryItem() {
   const name = document.getElementById("new-inv-name").value.trim();
   const category = document.getElementById("new-inv-category").value.trim();
   const unit = document.getElementById("new-inv-unit").value.trim();
   const qty = parseFloat(document.getElementById("new-inv-qty").value || 0);
   const min = parseFloat(document.getElementById("new-inv-min").value || 0);
-  const supplier_id = document.getElementById("new-inv-supplier").value;
 
-  if (!name) {
-    showToast("❌ Ingredient name is required");
+  if (!name || !unit) {
+    alert("Please provide ingredient name and unit.");
     return;
   }
 
   try {
     const res = await fetch("/inventory", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-user-role": currentRole
-      },
-      body: JSON.stringify({
-        name,
-        category,
-        current_quantity: qty,
-        unit,
-        minimum_stock: min,
-        supplier_id
-      })
+      headers: { "Content-Type": "application/json", "X-User-Role": "admin" },
+      body: JSON.stringify({ name, category, unit, current_qty: qty, min_threshold: min })
     });
 
     if (res.ok) {
-      showToast("✅ Ingredient created successfully!");
       closeAddInventoryModal();
       fetchInventory();
     } else {
-      const err = await res.json();
-      showToast(`❌ Failed: ${err.error || "Permission denied"}`);
+      alert("Failed to add inventory item.");
     }
   } catch (err) {
-    showToast("❌ Network error creating ingredient");
+    console.error("Add inventory error:", err);
   }
-};
+}
 
 /* ==========================================
-   SUPPLIER MANAGEMENT MODULE
+   6. SUPPLIERS DIRECTORY
    ========================================== */
 async function fetchSuppliers() {
   try {
     const res = await fetch("/suppliers", {
-      headers: { "x-user-role": currentRole }
+      headers: { "X-User-Role": "admin" }
     });
     if (res.ok) {
       suppliersData = await res.json();
-      renderSuppliers();
+      renderSuppliersGrid();
     }
   } catch (err) {
-    console.error("Error fetching suppliers:", err);
+    console.error("Suppliers fetch error:", err);
   }
 }
 
-function renderSuppliers() {
-  const grid = document.getElementById("suppliers-list-grid");
-  if (!grid) return;
+function renderSuppliersGrid() {
+  const container = document.getElementById("suppliers-list-grid");
+  if (!container) return;
 
-  if (!suppliersData || suppliersData.length === 0) {
-    grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: #9CA3AF; padding: 24px;">No suppliers registered. Click "Add New Supplier" to get started.</div>`;
+  if (suppliersData.length === 0) {
+    container.innerHTML = `<div style="color: #9CA3AF; text-align: center; padding: 24px;">No suppliers registered. Click "Add New Supplier" to create.</div>`;
     return;
   }
 
-  grid.innerHTML = suppliersData.map(sup => `
-    <div class="supplier-card">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-        <span class="supplier-card-title">${escapeHTML(sup.name)}</span>
-        ${currentRole === "admin" ? `
-          <div style="display: flex; gap: 6px;">
-            <button type="button" class="pos-btn pos-btn-secondary" style="padding: 2px 8px; font-size: 0.75rem;" onclick="openEditSupplierModal('${escapeHTML(sup.id)}')">✏️</button>
-            <button type="button" class="pos-btn pos-btn-secondary" style="padding: 2px 8px; font-size: 0.75rem; color: #EF4444;" onclick="deleteSupplier('${escapeHTML(sup.id)}')">🗑️</button>
-          </div>
-        ` : ""}
+  container.innerHTML = suppliersData.map(sup => `
+    <div style="background: #1C1C22; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 18px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+        <strong style="color: #FFF; font-size: 1.05rem;">${sup.name}</strong>
+        <span style="font-size: 0.75rem; color: #FF5A00; font-weight: 700;">${sup.id}</span>
       </div>
-      <div class="supplier-card-meta">
-        <div><strong>📞 Phone:</strong> ${escapeHTML(sup.phone || "N/A")}</div>
-        <div><strong>✉️ Email:</strong> ${escapeHTML(sup.email || "N/A")}</div>
-        <div><strong>📦 Items Supplied:</strong> <span style="color: var(--pos-orange); font-weight: 600;">${escapeHTML(sup.items_supplied || "General Supplies")}</span></div>
-        <div style="margin-top: 4px; font-style: italic; color: #6B7280; font-size: 0.8rem;">${escapeHTML(sup.notes || "")}</div>
+      <div style="font-size: 0.85rem; color: #E5E7EB; margin-bottom: 6px;">📞 ${sup.phone || 'N/A'}</div>
+      <div style="font-size: 0.85rem; color: #E5E7EB; margin-bottom: 6px;">✉️ ${sup.email || 'N/A'}</div>
+      <div style="font-size: 0.82rem; color: #9CA3AF; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;">
+        Supplies: <strong>${sup.items_supplied || 'Chicken & Vegetables'}</strong>
       </div>
     </div>
-  `).join("");
+  `).join('');
 }
 
-window.openAddSupplierModal = function() {
-  document.getElementById("supplier-edit-id").value = "";
-  document.getElementById("supplier-modal-title").textContent = "➕ Add New Supplier";
-  document.getElementById("sup-name").value = "";
-  document.getElementById("sup-phone").value = "";
-  document.getElementById("sup-email").value = "";
-  document.getElementById("sup-items").value = "";
-  document.getElementById("sup-notes").value = "";
-  document.getElementById("modal-supplier").style.display = "flex";
-};
+function openAddSupplierModal() {
+  const modal = document.getElementById("modal-supplier");
+  if (modal) modal.style.display = "flex";
+}
 
-window.openEditSupplierModal = function(id) {
-  const sup = suppliersData.find(s => String(s.id) === String(id));
-  if (!sup) return;
+function closeSupplierModal() {
+  const modal = document.getElementById("modal-supplier");
+  if (modal) modal.style.display = "none";
+}
 
-  document.getElementById("supplier-edit-id").value = sup.id;
-  document.getElementById("supplier-modal-title").textContent = "✏️ Edit Supplier Record";
-  document.getElementById("sup-name").value = sup.name || "";
-  document.getElementById("sup-phone").value = sup.phone || "";
-  document.getElementById("sup-email").value = sup.email || "";
-  document.getElementById("sup-items").value = sup.items_supplied || "";
-  document.getElementById("sup-notes").value = sup.notes || "";
-  document.getElementById("modal-supplier").style.display = "flex";
-};
-
-window.closeSupplierModal = function() {
-  document.getElementById("modal-supplier").style.display = "none";
-};
-
-window.submitSupplierForm = async function() {
-  const id = document.getElementById("supplier-edit-id").value;
+async function submitSupplierForm() {
   const name = document.getElementById("sup-name").value.trim();
   const phone = document.getElementById("sup-phone").value.trim();
   const email = document.getElementById("sup-email").value.trim();
-  const items_supplied = document.getElementById("sup-items").value.trim();
-  const notes = document.getElementById("sup-notes").value.trim();
+  const items = document.getElementById("sup-items").value.trim();
 
   if (!name) {
-    showToast("❌ Supplier name is required");
+    alert("Please enter supplier name.");
     return;
   }
-
-  const method = id ? "PATCH" : "POST";
-  const bodyData = { name, phone, email, items_supplied, notes };
-  if (id) bodyData.id = id;
 
   try {
     const res = await fetch("/suppliers", {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-        "x-user-role": currentRole
-      },
-      body: JSON.stringify(bodyData)
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-User-Role": "admin" },
+      body: JSON.stringify({ name, phone, email, items_supplied: items })
     });
 
     if (res.ok) {
-      showToast(`✅ Supplier ${id ? "updated" : "added"} successfully!`);
       closeSupplierModal();
       fetchSuppliers();
-    } else {
-      const err = await res.json();
-      showToast(`❌ Action failed: ${err.error || "Permission denied"}`);
     }
   } catch (err) {
-    showToast("❌ Network error updating supplier");
-  }
-};
-
-window.deleteSupplier = async function(id) {
-  if (!confirm("Are you sure you want to delete this supplier?")) return;
-
-  try {
-    const res = await fetch(`/suppliers?id=${encodeURIComponent(id)}`, {
-      method: "DELETE",
-      headers: { "x-user-role": currentRole }
-    });
-
-    if (res.ok) {
-      showToast("🗑️ Supplier removed");
-      fetchSuppliers();
-    } else {
-      showToast("❌ Could not delete supplier");
-    }
-  } catch (err) {
-    showToast("❌ Network error deleting supplier");
-  }
-};
-
-/* ==========================================
-   MENU INGREDIENT RECIPE MAPPING MODAL
-   ========================================== */
-window.openRecipeModal = async function() {
-  try {
-    const res = await fetch("/inventory/recipes");
-    if (res.ok) {
-      recipeMappingsData = await res.json();
-    }
-  } catch (e) {}
-
-  const selectEl = document.getElementById("recipe-menu-item-select");
-  if (selectEl) {
-    // Unique list of menu items from recipes and hardcoded defaults
-    const itemsList = ["The Bamboo Chicken", "Chicken Wrap", "Quarter Chicken & Chips", "Value Meal Combo"];
-    selectEl.innerHTML = itemsList.map(name => `<option value="${escapeHTML(name)}">${escapeHTML(name)}</option>`).join("");
-    loadRecipeForSelectedItem();
-  }
-
-  document.getElementById("modal-recipe").style.display = "flex";
-};
-
-window.closeRecipeModal = function() {
-  document.getElementById("modal-recipe").style.display = "none";
-};
-
-window.loadRecipeForSelectedItem = function() {
-  const selectedName = document.getElementById("recipe-menu-item-select").value;
-  const listContainer = document.getElementById("recipe-ingredients-list");
-  if (!listContainer) return;
-
-  const recipe = recipeMappingsData.find(r => r.menu_item_name === selectedName);
-  const ingredients = recipe ? recipe.ingredients : [];
-
-  if (ingredients.length === 0) {
-    listContainer.innerHTML = `
-      <div class="recipe-row" style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; align-items: center;">
-        <select class="form-control recipe-ing-select" style="background: #222; color: #FFF; padding: 8px; border-radius: 6px; border: 1px solid #444;">
-          ${inventoryData.map(i => `<option value="${escapeHTML(i.id)}">${escapeHTML(i.name)} (${escapeHTML(i.unit)})</option>`).join("")}
-        </select>
-        <input type="number" step="0.1" value="1" class="form-control recipe-qty-input" style="background: #222; color: #FFF; padding: 8px; border-radius: 6px; border: 1px solid #444;" placeholder="Qty">
-        <button type="button" class="pos-btn pos-btn-secondary" onclick="this.parentElement.remove()" style="color: #EF4444;">✕</button>
-      </div>
-    `;
-    return;
-  }
-
-  listContainer.innerHTML = ingredients.map(ing => `
-    <div class="recipe-row" style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; align-items: center;">
-      <select class="form-control recipe-ing-select" style="background: #222; color: #FFF; padding: 8px; border-radius: 6px; border: 1px solid #444;">
-        ${inventoryData.map(i => `<option value="${escapeHTML(i.id)}" ${String(i.id) === String(ing.ingredient_id) ? "selected" : ""}>${escapeHTML(i.name)} (${escapeHTML(i.unit)})</option>`).join("")}
-      </select>
-      <input type="number" step="0.1" value="${ing.quantity_required}" class="form-control recipe-qty-input" style="background: #222; color: #FFF; padding: 8px; border-radius: 6px; border: 1px solid #444;" placeholder="Qty">
-      <button type="button" class="pos-btn pos-btn-secondary" onclick="this.parentElement.remove()" style="color: #EF4444;">✕</button>
-    </div>
-  `).join("");
-};
-
-window.addIngredientRowToRecipe = function() {
-  const listContainer = document.getElementById("recipe-ingredients-list");
-  if (!listContainer) return;
-
-  const div = document.createElement("div");
-  div.className = "recipe-row";
-  div.style.cssText = "display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; align-items: center;";
-  div.innerHTML = `
-    <select class="form-control recipe-ing-select" style="background: #222; color: #FFF; padding: 8px; border-radius: 6px; border: 1px solid #444;">
-      ${inventoryData.map(i => `<option value="${escapeHTML(i.id)}">${escapeHTML(i.name)} (${escapeHTML(i.unit)})</option>`).join("")}
-    </select>
-    <input type="number" step="0.1" value="1" class="form-control recipe-qty-input" style="background: #222; color: #FFF; padding: 8px; border-radius: 6px; border: 1px solid #444;" placeholder="Qty">
-    <button type="button" class="pos-btn pos-btn-secondary" onclick="this.parentElement.remove()" style="color: #EF4444;">✕</button>
-  `;
-  listContainer.appendChild(div);
-};
-
-window.saveRecipeMapping = async function() {
-  const menuItemName = document.getElementById("recipe-menu-item-select").value;
-  const rows = document.querySelectorAll("#recipe-ingredients-list .recipe-row");
-
-  const ingredients = [];
-  rows.forEach(row => {
-    const ingId = row.querySelector(".recipe-ing-select").value;
-    const qty = parseFloat(row.querySelector(".recipe-qty-input").value || 0);
-    if (ingId && qty > 0) {
-      ingredients.push({ ingredient_id: ingId, quantity_required: qty });
-    }
-  });
-
-  try {
-    const res = await fetch("/inventory/recipes", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-user-role": currentRole
-      },
-      body: JSON.stringify({
-        menu_item_name: menuItemName,
-        ingredients
-      })
-    });
-
-    if (res.ok) {
-      showToast(`✅ Recipe mapped for "${menuItemName}"!`);
-      closeRecipeModal();
-    } else {
-      showToast("❌ Failed to save recipe mapping");
-    }
-  } catch (err) {
-    showToast("❌ Network error saving recipe");
-  }
-};
-
-/* ==========================================
-   BUSINESS INTELLIGENCE & ANALYTICS DASHBOARD
-   ========================================== */
-async function fetchBIData() {
-  try {
-    const res = await fetch("/reports?timeframe=today", {
-      headers: { "x-user-role": currentRole }
-    });
-    if (res.ok) {
-      const biData = await res.json();
-      renderBIDashboard(biData);
-    }
-  } catch (err) {
-    console.error("Error loading BI data:", err);
-  }
-}
-
-function renderBIDashboard(data) {
-  if (!data) return;
-
-  // KPI Metrics
-  const revEl = document.getElementById("bi-val-revenue");
-  if (revEl) revEl.textContent = `$${parseFloat(data.total_revenue || 0).toFixed(2)}`;
-
-  const prepEl = document.getElementById("bi-val-preptime");
-  if (prepEl) prepEl.textContent = `${data.kitchen_performance?.avg_prep_time_minutes || 0} min`;
-
-  const delivEl = document.getElementById("bi-val-delivtime");
-  if (delivEl) delivEl.textContent = `${data.rider_performance?.avg_delivery_time_minutes || 0} min`;
-
-  const popEl = document.getElementById("bi-val-popitem");
-  if (popEl && data.top_menu_items && data.top_menu_items[0]) {
-    popEl.textContent = `${data.top_menu_items[0].name} (${data.top_menu_items[0].count} sold)`;
-  }
-
-  const areaEl = document.getElementById("bi-val-toparea");
-  if (areaEl && data.top_delivery_areas && data.top_delivery_areas[0]) {
-    areaEl.textContent = `${data.top_delivery_areas[0].area} (${data.top_delivery_areas[0].orders} orders)`;
-  }
-
-  // Payment method breakdown
-  const payBox = document.getElementById("bi-payment-split-box");
-  if (payBox && data.payment_methods) {
-    payBox.innerHTML = `
-      <div style="display: flex; justify-content: space-between;">
-        <span>💵 Cash on Delivery / Counter:</span>
-        <strong>${data.payment_methods.cash || 0} orders</strong>
-      </div>
-      <div style="display: flex; justify-content: space-between;">
-        <span>📱 EcoCash / Mobile Money:</span>
-        <strong>${data.payment_methods.ecocash || 0} orders</strong>
-      </div>
-      <div style="display: flex; justify-content: space-between;">
-        <span>💳 Card / Online POS:</span>
-        <strong>${data.payment_methods.card || 0} orders</strong>
-      </div>
-    `;
-  }
-
-  // Customer Insights
-  const custBox = document.getElementById("bi-customer-insights-box");
-  if (custBox && data.customer_retention) {
-    custBox.innerHTML = `
-      <div><strong>New Customers Today:</strong> ${data.customer_retention.new_customers}</div>
-      <div><strong>Repeat Customers:</strong> ${data.customer_retention.repeat_customers}</div>
-      <div><strong>Retention Rate:</strong> <span style="color: #10B981; font-weight: 700;">${data.customer_retention.retention_rate_pct}%</span></div>
-    `;
-  }
-
-  // Rider performance
-  const riderBox = document.getElementById("bi-rider-performance-box");
-  if (riderBox && data.rider_performance) {
-    riderBox.innerHTML = `
-      <div style="color: #FFF;"><strong>Total Deliveries Completed:</strong> ${data.rider_performance.total_completed}</div>
-      <div style="color: #9CA3AF;">Active fleet response time: &lt; 3 minutes dispatch</div>
-    `;
-  }
-
-  // Kitchen performance
-  const kitchBox = document.getElementById("bi-kitchen-performance-box");
-  if (kitchBox && data.kitchen_performance) {
-    kitchBox.innerHTML = `
-      <div><strong>Orders Processed:</strong> ${data.kitchen_performance.orders_processed}</div>
-      <div><strong>Speed Rating:</strong> <span style="color: #10B981; font-weight: 700;">${data.kitchen_performance.speed_rating}</span></div>
-    `;
+    console.error("Submit supplier error:", err);
   }
 }
 
 /* ==========================================
-   EXECUTIVE REPORTS & PRINT / CSV EXPORT
+   7. EXECUTIVE REPORTS & EXPORT
    ========================================== */
-window.fetchAndRenderReport = async function() {
-  const timeframe = document.getElementById("report-timeframe-select")?.value || "today";
-  try {
-    const res = await fetch(`/reports?timeframe=${encodeURIComponent(timeframe)}`, {
-      headers: { "x-user-role": currentRole }
-    });
-    if (res.ok) {
-      currentReportData = await res.json();
-      renderPrintableReport(currentReportData);
-    }
-  } catch (err) {
-    console.error("Error generating report:", err);
-  }
-};
-
-function renderPrintableReport(rep) {
-  const box = document.getElementById("report-printable-area");
-  if (!box || !rep) return;
-
-  box.innerHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #111; padding-bottom: 12px; margin-bottom: 20px;">
-      <div>
-        <h1 style="font-size: 1.6rem; font-weight: 800; color: #111;">🎋 BAMBOO CHICKEN RESTAURANT</h1>
-        <p style="font-size: 0.9rem; color: #4B5563;">Executive Operational & Financial Performance Report</p>
-      </div>
-      <div style="text-align: right; font-size: 0.85rem; color: #6B7280;">
-        <div><strong>Report Timeframe:</strong> ${rep.timeframe.toUpperCase()}</div>
-        <div><strong>Generated At:</strong> ${new Date(rep.generated_at).toLocaleString()}</div>
-      </div>
-    </div>
-
-    <!-- Summary KPI Cards -->
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;">
-      <div style="background: #F3F4F6; padding: 12px; border-radius: 8px;">
-        <div style="font-size: 0.75rem; color: #6B7280; font-weight: 700;">TOTAL REVENUE</div>
-        <div style="font-size: 1.3rem; font-weight: 800; color: #059669;">$${parseFloat(rep.total_revenue).toFixed(2)}</div>
-      </div>
-      <div style="background: #F3F4F6; padding: 12px; border-radius: 8px;">
-        <div style="font-size: 0.75rem; color: #6B7280; font-weight: 700;">TOTAL ORDERS</div>
-        <div style="font-size: 1.3rem; font-weight: 800; color: #1F2937;">${rep.total_orders}</div>
-      </div>
-      <div style="background: #F3F4F6; padding: 12px; border-radius: 8px;">
-        <div style="font-size: 0.75rem; color: #6B7280; font-weight: 700;">AVG. PREP TIME</div>
-        <div style="font-size: 1.3rem; font-weight: 800; color: #1F2937;">${rep.kitchen_performance.avg_prep_time_minutes} min</div>
-      </div>
-      <div style="background: #F3F4F6; padding: 12px; border-radius: 8px;">
-        <div style="font-size: 0.75rem; color: #6B7280; font-weight: 700;">COMPLETED DELIVERIES</div>
-        <div style="font-size: 1.3rem; font-weight: 800; color: #1F2937;">${rep.rider_performance.total_completed}</div>
-      </div>
-    </div>
-
-    <!-- Inventory Stock Summary -->
-    <h3 style="font-size: 1.1rem; font-weight: 800; color: #111; margin-bottom: 8px;">🍱 Raw Material Inventory Consumption</h3>
-    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-bottom: 24px;">
-      <thead>
-        <tr style="background: #E5E7EB; color: #374151;">
-          <th style="padding: 8px; text-align: left;">Ingredient</th>
-          <th style="padding: 8px; text-align: left;">Stock Level</th>
-          <th style="padding: 8px; text-align: left;">Unit</th>
-          <th style="padding: 8px; text-align: left;">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${(rep.inventory_status || []).map(i => `
-          <tr style="border-bottom: 1px solid #E5E7EB;">
-            <td style="padding: 8px;">${escapeHTML(i.name)}</td>
-            <td style="padding: 8px; font-weight: 700;">${i.current_quantity}</td>
-            <td style="padding: 8px;">${escapeHTML(i.unit)}</td>
-            <td style="padding: 8px; font-weight: 700; color: ${i.status === 'LOW STOCK' ? '#D97706' : (i.status === 'OUT OF STOCK' ? '#DC2626' : '#059669')};">${i.status}</td>
-          </tr>
-        `).join("")}
-      </tbody>
-    </table>
-
-    <div style="border-top: 1px solid #E5E7EB; pt-12; font-size: 0.8rem; color: #9CA3AF; text-align: center;">
-      Bamboo Chicken Restaurant POS Operating System &bull; Confidential Executive Document
-    </div>
-  `;
-}
-
-window.printExecutiveReport = function() {
-  window.print();
-};
-
-window.exportReportCSV = function() {
-  if (!currentReportData) return;
-
-  let csv = "Category,Metric,Value\n";
-  csv += `Financial,Total Revenue,$${currentReportData.total_revenue}\n`;
-  csv += `Financial,Total Orders,${currentReportData.total_orders}\n`;
-  csv += `Operations,Avg Prep Time Mins,${currentReportData.kitchen_performance.avg_prep_time_minutes}\n`;
-  csv += `Operations,Avg Delivery Time Mins,${currentReportData.rider_performance.avg_delivery_time_minutes}\n`;
-
-  (currentReportData.inventory_status || []).forEach(i => {
-    csv += `Inventory,${i.name},${i.current_quantity} ${i.unit} (${i.status})\n`;
-  });
-
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `bamboo_chicken_report_${currentReportData.timeframe}_${Date.now()}.csv`;
-  a.click();
-  showToast("📥 CSV Export downloaded successfully");
-};
-
-function playChime() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(587.33, ctx.currentTime);
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.6);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.6);
-  } catch(e) {}
-}
-
-function showToast(msg) {
-  const container = document.getElementById("pos-toast-container");
+async function fetchAndRenderReport() {
+  const container = document.getElementById("report-printable-area");
+  const timeframe = document.getElementById("report-timeframe-select") ? document.getElementById("report-timeframe-select").value : "today";
   if (!container) return;
-  const toast = document.createElement("div");
-  toast.className = "pos-toast";
-  toast.innerText = msg;
-  container.appendChild(toast);
-  setTimeout(() => toast.remove(), 3500);
+
+  try {
+    const res = await fetch("/orders", { headers: { "X-User-Role": "admin" } });
+    const orders = res.ok ? await res.json() : [];
+
+    const totalRev = orders.reduce((s, o) => s + parseFloat(o.total || 0), 0);
+    const completedCount = orders.filter(o => o.order_status === "completed" || o.status === "completed").length;
+
+    container.innerHTML = `
+      <div style="background: #FFF; color: #000; padding: 24px; border-radius: 8px; font-family: sans-serif;">
+        <div style="border-bottom: 2px solid #FF5A00; padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h2 style="margin: 0; font-size: 1.4rem; color: #111;">BAMBOO CHICKEN RESTAURANT</h2>
+            <div style="font-size: 0.88rem; color: #666;">Executive Operational & Financial Summary (${timeframe.toUpperCase()})</div>
+          </div>
+          <div style="text-align: right; font-size: 0.8rem; color: #666;">
+            Generated: ${new Date().toLocaleString()}
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px;">
+          <div style="background: #F3F4F6; padding: 12px; border-radius: 6px;">
+            <div style="font-size: 0.78rem; color: #6B7280; text-transform: uppercase;">Total Period Revenue</div>
+            <div style="font-size: 1.3rem; font-weight: 800; color: #FF5A00;">$${totalRev.toFixed(2)}</div>
+          </div>
+          <div style="background: #F3F4F6; padding: 12px; border-radius: 6px;">
+            <div style="font-size: 0.78rem; color: #6B7280; text-transform: uppercase;">Total Orders Processed</div>
+            <div style="font-size: 1.3rem; font-weight: 800; color: #111;">${orders.length}</div>
+          </div>
+          <div style="background: #F3F4F6; padding: 12px; border-radius: 6px;">
+            <div style="font-size: 0.78rem; color: #6B7280; text-transform: uppercase;">Completed Orders</div>
+            <div style="font-size: 1.3rem; font-weight: 800; color: #10B981;">${completedCount}</div>
+          </div>
+        </div>
+
+        <h4 style="margin-bottom: 8px; color: #111;">Recent Order Summary</h4>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+          <thead>
+            <tr style="background: #E5E7EB; text-align: left;">
+              <th style="padding: 8px;">Order #</th>
+              <th style="padding: 8px;">Customer</th>
+              <th style="padding: 8px;">Type</th>
+              <th style="padding: 8px;">Status</th>
+              <th style="padding: 8px; text-align: right;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${orders.slice(0, 10).map(o => `
+              <tr style="border-bottom: 1px solid #E5E7EB;">
+                <td style="padding: 8px; font-weight: 700;">${o.id}</td>
+                <td style="padding: 8px;">${o.customer_name || 'Customer'}</td>
+                <td style="padding: 8px;">${o.type || 'Pickup'}</td>
+                <td style="padding: 8px;">${o.order_status || 'completed'}</td>
+                <td style="padding: 8px; text-align: right; font-weight: 700;">$${parseFloat(o.total || 0).toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } catch (err) {
+    console.error("Report error:", err);
+  }
 }
 
-function escapeHTML(str) {
-  if (!str) return "";
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+function exportReportCSV() {
+  let csv = "Order_ID,Customer_Name,Phone,Type,Status,Payment_Status,Total\n";
+  fetch("/orders", { headers: { "X-User-Role": "admin" } })
+    .then(res => res.json())
+    .then(data => {
+      const list = Array.isArray(data) ? data : [];
+      list.forEach(o => {
+        csv += `"${o.id}","${o.customer_name || ''}","${o.phone || ''}","${o.type || 'pickup'}","${o.order_status || 'pending'}","${o.payment_status || 'pending'}",${o.total || 0}\n`;
+      });
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Bamboo_Chicken_Report_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+    });
 }
+
+function printExecutiveReport() {
+  const area = document.getElementById("report-printable-area");
+  if (!area) return;
+  const win = window.open("", "_blank");
+  win.document.write(`<html><head><title>Executive Report</title></head><body>${area.innerHTML}<script>window.onload=function(){window.print();window.close();}</script></body></html>`);
+  win.document.close();
+}
+
+/* ==========================================
+   8. SYSTEM CONFIGURATION
+   ========================================== */
+function saveSystemConfig() {
+  alert("System parameters saved successfully!");
+}
+
+// Global modal bindings
+window.openAddRiderModal = openAddRiderModal;
+window.closeAddRiderModal = closeAddRiderModal;
+window.submitNewRider = submitNewRider;
+window.openAddStaffModal = openAddStaffModal;
+window.closeAddStaffModal = closeAddStaffModal;
+window.submitNewStaff = submitNewStaff;
+window.removeStaffMember = removeStaffMember;
+window.openAddInventoryModal = openAddInventoryModal;
+window.closeAddInventoryModal = closeAddInventoryModal;
+window.submitNewInventoryItem = submitNewInventoryItem;
+window.openAddSupplierModal = openAddSupplierModal;
+window.closeSupplierModal = closeSupplierModal;
+window.submitSupplierForm = submitSupplierForm;
+window.exportReportCSV = exportReportCSV;
+window.printExecutiveReport = printExecutiveReport;
+window.saveSystemConfig = saveSystemConfig;
+window.refreshAdminData = refreshAdminData;

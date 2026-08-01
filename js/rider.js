@@ -13,7 +13,7 @@ let isOnline = false;
 function queueOfflineRequest(url, method, body, headers = {}) {
   const queue = JSON.parse(localStorage.getItem("bamboo_offline_queue") || "[]");
   queue.push({
-    id: `REQ-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+    id: `REQ-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
     url,
     method,
     body,

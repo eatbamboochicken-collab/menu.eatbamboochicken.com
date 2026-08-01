@@ -881,7 +881,6 @@ window.updateModalQty = function(delta) {
 window.confirmModalAddToCart = function() {
   if (!selectedProduct) return;
   addToCart(selectedProduct.id, modalCurrentQty);
-  showToast(`🛒 Added ${modalCurrentQty}x ${selectedProduct.name} to your bucket!`);
   closeDetailsModal();
 };
 
@@ -1364,7 +1363,12 @@ window.confirmSkipLocation = function() {
   executeFinalOrderSubmission();
 };
 
+let isSubmittingOrder = false;
+
 async function executeFinalOrderSubmission() {
+  if (isSubmittingOrder) return;
+  isSubmittingOrder = true;
+
   const nameInput = document.getElementById("checkout-name");
   const phoneInput = document.getElementById("checkout-phone");
   const addressInput = document.getElementById("checkout-address");
@@ -1418,12 +1422,18 @@ async function executeFinalOrderSubmission() {
       createdOrder = data.order || data;
     }
   } catch (error) {
-    console.error("Failed to save order to API:", error);
+    console.error("Failed to save order to D1 API:", error);
   }
 
   if (loadingOverlay) loadingOverlay.style.display = "none";
 
-  const orderId = createdOrder ? createdOrder.id : `BC-${Math.floor(1000 + Math.random() * 9000)}`;
+  if (!createdOrder || !createdOrder.id) {
+    showToast("❌ Unable to process order. Please check your network and try again.");
+    isSubmittingOrder = false;
+    return;
+  }
+
+  const orderId = createdOrder.id;
 
   // Format WhatsApp Message
   let itemsFormattedList = "";
@@ -1480,6 +1490,7 @@ ${itemsFormattedList}
   }
 
   capturedLocationData = null;
+  isSubmittingOrder = false;
 }
 
 window.handleSaveLocationChoice = async function(shouldSave) {
@@ -1681,25 +1692,37 @@ window.addToCart = function(itemId, customQty = 1) {
     badge.classList.add("bounce");
   });
 
-  showToast(`🛒 Added ${displayName} to your bucket!`);
-  openCart();
+  showToast(`Added ${customQty > 1 ? customQty + 'x ' : ''}${displayName} to cart`);
 };
 
 // Custom Toast Alert System
 function showToast(message) {
+  if (!toastContainer) return;
+
+  // Replace existing toast if items are added in rapid succession
+  while (toastContainer.firstChild) {
+    toastContainer.removeChild(toastContainer.firstChild);
+  }
+
+  // Clean message: strip duplicate icons/emojis if present
+  const cleanMsg = message.replace(/^[🛒✅📍❌⚠️🍗💾]\s*/, "");
+
   const toast = document.createElement("div");
   toast.classList.add("toast");
+  toast.setAttribute("role", "status");
   toast.innerHTML = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="toast-success-icon"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-    <span style="font-weight: 600;">${message}</span>
+    <span class="toast-success-icon">✓</span>
+    <span>${cleanMsg}</span>
   `;
 
   toastContainer.appendChild(toast);
 
-  // Clear toast after animation sequence concludes
+  // Auto-dismiss after 1 second (1000ms)
   setTimeout(() => {
-    toast.remove();
-  }, 4000);
+    if (toast.parentNode) {
+      toast.remove();
+    }
+  }, 1000);
 }
 
 /* ==========================================================================
@@ -1804,8 +1827,7 @@ window.showOrderSuccessScreen = function() {
     const successOrderIdLabel = document.getElementById("success-order-id-label");
     
     if (successOrderIdLabel) {
-      const orderNum = Math.floor(Math.random() * 900) + 100;
-      successOrderIdLabel.textContent = `Order #${orderNum}`;
+      successOrderIdLabel.textContent = `Order Placed Successfully`;
     }
     
     if (successOrderItemsList) {
