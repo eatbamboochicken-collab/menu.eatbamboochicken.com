@@ -3,112 +3,59 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bamboo Chicken — Multi-Role Dashboard</title>
+  <title>Bamboo Chicken — Administrator Dashboard</title>
   <link rel="stylesheet" href="/css/admin.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    .role-switcher-bar {
+    .admin-nav-tabs {
       display: flex;
-      align-items: center;
       gap: 6px;
-      background: rgba(0, 0, 0, 0.4);
-      padding: 4px;
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      overflow-x: auto;
+      padding-bottom: 4px;
     }
-    .role-btn {
-      background: transparent;
-      border: none;
-      color: #9CA3AF;
-      padding: 6px 14px;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 0.82rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .role-btn:hover {
-      color: #FFF;
-      background: rgba(255, 255, 255, 0.08);
-    }
-    .role-btn.active {
-      background: var(--pos-orange);
-      color: #FFF;
-      box-shadow: 0 2px 8px rgba(255, 90, 0, 0.4);
-    }
-    .delivery-assign-panel {
+    .staff-card {
       background: #1C1C22;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 24px;
-      display: none;
-    }
-    .rider-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 12px;
-      margin-top: 14px;
-    }
-    .rider-card-mini {
-      background: #25252E;
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 12px;
-      padding: 12px 14px;
+      padding: 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
-    .rider-online-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #10B981;
-      display: inline-block;
-    }
-    .rider-offline-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #6B7280;
-      display: inline-block;
+    .config-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
     }
   </style>
 </head>
 <body>
 
-  <!-- Sticky POS Header -->
+  <!-- Sticky Administrator Header -->
   <header class="pos-header">
     <div class="pos-header-container">
       
       <!-- Brand & Terminal Info -->
       <div class="pos-brand-group">
-        <a href="/admin" class="pos-brand-title">
-          BAMBOO <span class="pos-brand-orange">CHICKEN</span> POS
+        <a href="/admin.html" class="pos-brand-title">
+          BAMBOO <span class="pos-brand-orange">CHICKEN</span> ADMIN
         </a>
-        <span class="pos-badge pos-badge-green" id="role-badge">● Cashier Terminal</span>
+        <span class="pos-badge" style="background: rgba(239, 68, 68, 0.2); color: #EF4444; border-color: rgba(239, 68, 68, 0.4);">
+          👑 Administrator Control Center
+        </span>
       </div>
 
-      <!-- 5 Role Switcher Navbar -->
+      <!-- Quick Nav links to operational portals -->
       <div class="role-switcher-bar">
-        <a href="/" class="role-btn" target="_blank" title="Open Customer Menu">
-          <span>🛍️</span> Customer
+        <a href="/" class="role-btn" target="_blank" title="Customer Menu">
+          <span>🛍️</span> Menu
         </a>
-        <a href="/kitchen.html" class="role-btn" id="role-btn-kitchen" title="Open Dedicated Kitchen Display">
-          <span>👨‍🍳</span> Kitchen Display
+        <a href="/cashier.html" class="role-btn" title="Open Cashier POS Terminal">
+          <span>💵</span> Cashier POS
         </a>
-        <button type="button" class="role-btn active" id="role-btn-cashier" onclick="switchRole('cashier')">
-          <span>💵</span> Cashier
-        </button>
         <a href="/rider.html" class="role-btn" title="Open Rider Portal">
-          <span>🛵</span> Rider
+          <span>🛵</span> Rider Portal
         </a>
-        <button type="button" class="role-btn" id="role-btn-admin" onclick="switchRole('admin')">
-          <span>👑</span> Admin
-        </button>
       </div>
 
       <!-- Live Clock & Status -->
@@ -121,48 +68,49 @@
 
       <!-- Action Buttons -->
       <div class="pos-header-actions">
-        <button type="button" class="pos-btn pos-btn-secondary" id="btn-audit-logs" style="display: none; background: rgba(255, 90, 0, 0.15); border-color: rgba(255, 90, 0, 0.4); color: #FF5A00; font-weight: 700;" onclick="openAuditLogsModal()">
-          📜 Audit Logs
-        </button>
-
-        <button type="button" class="pos-btn-icon active" id="pos-sound-btn" title="Toggle Sound Alerts" aria-label="Toggle Sound">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-        </button>
-
-        <button type="button" class="pos-btn pos-btn-secondary" onclick="refreshOrders()">
+        <button type="button" class="pos-btn pos-btn-secondary" onclick="refreshAdminData()">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-          <span>Refresh</span>
+          <span>Refresh Data</span>
         </button>
       </div>
 
     </div>
   </header>
 
-  <!-- Module Sub-Navigation Bar -->
+  <!-- Business Management Sub-Navigation Bar -->
   <nav class="admin-nav-bar" id="admin-module-nav">
     <div class="admin-nav-tabs">
-      <button type="button" class="admin-tab-btn active" id="tab-orders" onclick="switchAdminTab('orders')">
-        <span>📦</span> Live Orders & Dispatch
+      <button type="button" class="admin-tab-btn active" id="tab-bi" onclick="switchAdminTab('bi')">
+        <span>📊</span> Analytics & BI
+      </button>
+      <button type="button" class="admin-tab-btn" id="tab-audit" onclick="switchAdminTab('audit')">
+        <span>📜</span> Audit Logs
+      </button>
+      <button type="button" class="admin-tab-btn" id="tab-riders" onclick="switchAdminTab('riders')">
+        <span>🛵</span> Rider Management
+      </button>
+      <button type="button" class="admin-tab-btn" id="tab-staff" onclick="switchAdminTab('staff')">
+        <span>👥</span> Staff & Permissions
       </button>
       <button type="button" class="admin-tab-btn" id="tab-inventory" onclick="switchAdminTab('inventory')">
-        <span>🍱</span> Inventory & Ingredients
-      </button>
-      <button type="button" class="admin-tab-btn" id="tab-bi" onclick="switchAdminTab('bi')">
-        <span>📊</span> Business Intelligence
+        <span>🍱</span> Menu & Inventory
       </button>
       <button type="button" class="admin-tab-btn" id="tab-suppliers" onclick="switchAdminTab('suppliers')">
-        <span>🚚</span> Supplier Directory
+        <span>🚚</span> Suppliers Directory
       </button>
       <button type="button" class="admin-tab-btn" id="tab-reports" onclick="switchAdminTab('reports')">
         <span>📈</span> Executive Reports
       </button>
+      <button type="button" class="admin-tab-btn" id="tab-config" onclick="switchAdminTab('config')">
+        <span>⚙️</span> System Config
+      </button>
     </div>
   </nav>
 
-  <!-- Dashboard Content -->
+  <!-- Main Executive Dashboard Content -->
   <main class="pos-main">
 
-    <!-- Low Stock Alert Banner (Flashing Warning when items low/out) -->
+    <!-- Low Stock Alert Banner -->
     <div class="low-stock-alert-banner" id="low-stock-alert-banner" style="display: none;">
       <div style="display: flex; align-items: center; gap: 12px;">
         <span style="font-size: 1.5rem;">⚠️</span>
@@ -176,203 +124,14 @@
       </button>
     </div>
 
-    <!-- MODULE 1: ORDERS & DISPATCH (Default view) -->
-    <div id="module-view-orders">
-      <!-- Top KPI Statistics Bar -->
-      <section class="pos-stats-grid" id="kpi-stats-section">
-        <!-- Today's Sales -->
-        <div class="pos-stat-card">
-          <div class="pos-stat-info">
-            <span class="pos-stat-label">Today's Sales</span>
-            <span class="pos-stat-value" id="stat-sales">$0.00</span>
-          </div>
-          <div class="pos-stat-icon pos-stat-icon-sales">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          </div>
-        </div>
-
-        <!-- Orders Today -->
-        <div class="pos-stat-card">
-          <div class="pos-stat-info">
-            <span class="pos-stat-label">Orders Today</span>
-            <span class="pos-stat-value" id="stat-orders">0</span>
-          </div>
-          <div class="pos-stat-icon pos-stat-icon-orders">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-          </div>
-        </div>
-
-        <!-- Preparing -->
-        <div class="pos-stat-card">
-          <div class="pos-stat-info">
-            <span class="pos-stat-label">Preparing</span>
-            <span class="pos-stat-value" id="stat-prep">0</span>
-          </div>
-          <div class="pos-stat-icon pos-stat-icon-prep">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.87A8 8 0 0 1 17.64 4"/><path d="M20 10v4h-4"/><path d="M17.91 18.2A8 8 0 0 1 6.34 20"/><path d="M4 14V10h4"/></svg>
-          </div>
-        </div>
-
-        <!-- Ready -->
-        <div class="pos-stat-card">
-          <div class="pos-stat-info">
-            <span class="pos-stat-label">Ready</span>
-            <span class="pos-stat-value" id="stat-ready">0</span>
-          </div>
-          <div class="pos-stat-icon pos-stat-icon-ready">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          </div>
-        </div>
-
-        <!-- Active Riders -->
-        <div class="pos-stat-card">
-          <div class="pos-stat-info">
-            <span class="pos-stat-label">Active Riders</span>
-            <span class="pos-stat-value" id="stat-riders">0 Online</span>
-          </div>
-          <div class="pos-stat-icon pos-stat-icon-completed">
-            <span>🛵</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Cashier Exclusive: Delivery Assignment Section -->
-      <section class="delivery-assign-panel" id="section-delivery-assignment">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-          <div>
-            <h3 style="font-size: 1.15rem; font-weight: 800; color: #FFF; font-family: var(--font-display);">
-              🛵 Delivery Assignment & Rider Dispatch
-            </h3>
-            <p style="font-size: 0.82rem; color: #9CA3AF; margin-top: 2px;">
-              Cashiers assign or reassign available delivery orders to online riders.
-            </p>
-          </div>
-        </div>
-
-        <div class="rider-grid" id="available-riders-grid">
-          <!-- Rendered via JS -->
-        </div>
-      </section>
-
-      <!-- Controls Toolbar (Search & Filters) -->
-      <section class="pos-toolbar">
-        <div class="pos-search-wrapper">
-          <svg class="pos-search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="pos-search-input" class="pos-search-input" placeholder="Search order #, customer name, items..." autocomplete="off">
-        </div>
-
-        <div class="pos-filter-pills">
-          <button type="button" class="pos-filter-pill active" data-filter="all" onclick="setFilter('all')">All Orders</button>
-          <button type="button" class="pos-filter-pill" data-filter="pickup" onclick="setFilter('pickup')">Pickup Only</button>
-          <button type="button" class="pos-filter-pill" data-filter="delivery" onclick="setFilter('delivery')">Delivery Only</button>
-        </div>
-      </section>
-
-      <!-- Kanban Order Columns -->
-      <section class="pos-board-grid" id="kanban-board-grid">
-
-        <!-- Column 1: New Orders -->
-        <div class="pos-column">
-          <div class="pos-column-header">
-            <div class="pos-column-title-group">
-              <span class="pos-column-dot dot-red"></span>
-              <h2 class="pos-column-title">New Orders</h2>
-            </div>
-            <span class="pos-column-count" id="count-new">0</span>
-          </div>
-          <div class="pos-cards-list" id="cards-list-new"></div>
-        </div>
-
-        <!-- Column 2: Preparing -->
-        <div class="pos-column">
-          <div class="pos-column-header">
-            <div class="pos-column-title-group">
-              <span class="pos-column-dot dot-orange"></span>
-              <h2 class="pos-column-title">Preparing</h2>
-            </div>
-            <span class="pos-column-count" id="count-prep">0</span>
-          </div>
-          <div class="pos-cards-list" id="cards-list-preparing"></div>
-        </div>
-
-        <!-- Column 3: Ready -->
-        <div class="pos-column">
-          <div class="pos-column-header">
-            <div class="pos-column-title-group">
-              <span class="pos-column-dot dot-green"></span>
-              <h2 class="pos-column-title">Ready</h2>
-            </div>
-            <span class="pos-column-count" id="count-ready">0</span>
-          </div>
-          <div class="pos-cards-list" id="cards-list-ready"></div>
-        </div>
-
-        <!-- Column 4: Completed -->
-        <div class="pos-column">
-          <div class="pos-column-header">
-            <div class="pos-column-title-group">
-              <span class="pos-column-dot dot-gray"></span>
-              <h2 class="pos-column-title">Completed</h2>
-            </div>
-            <span class="pos-column-count" id="count-completed">0</span>
-          </div>
-          <div class="pos-cards-list" id="cards-list-completed"></div>
-        </div>
-
-      </section>
-    </div>
-
-    <!-- MODULE 2: INVENTORY & INGREDIENT MANAGEMENT -->
-    <div id="module-view-inventory" style="display: none;">
-      <section class="admin-card-panel">
-        <div class="admin-panel-header">
-          <div>
-            <h2 class="admin-panel-title">🍱 Raw Ingredient Stock & Inventory Management</h2>
-            <p style="font-size: 0.85rem; color: #9CA3AF; margin-top: 4px;">
-              Track ingredient levels, set minimum stock thresholds, receive shipments, and map menu recipes.
-            </p>
-          </div>
-          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <button type="button" class="pos-btn pos-btn-secondary" id="btn-recipe-mapping" onclick="openRecipeModal()">
-              🔗 Menu Ingredient Mapping
-            </button>
-            <button type="button" class="pos-btn pos-btn-primary" id="btn-add-inventory" onclick="openAddInventoryModal()">
-              ➕ Add New Ingredient
-            </button>
-          </div>
-        </div>
-
-        <div class="inventory-table-wrapper">
-          <table class="inventory-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Ingredient Name</th>
-                <th>Category</th>
-                <th>Stock Level</th>
-                <th>Min. Threshold</th>
-                <th>Status</th>
-                <th>Supplier</th>
-                <th>Last Updated</th>
-                <th style="text-align: right;">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="inventory-table-body">
-              <!-- Rendered via JS -->
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </div>
-
-    <!-- MODULE 3: BUSINESS INTELLIGENCE & ANALYTICS -->
-    <div id="module-view-bi" style="display: none;">
+    <!-- MODULE 1: BUSINESS INTELLIGENCE & ANALYTICS (Default) -->
+    <div id="module-view-bi">
       <section class="admin-card-panel">
         <div class="admin-panel-header">
           <div>
             <h2 class="admin-panel-title">📊 Executive Business Intelligence Dashboard</h2>
             <p style="font-size: 0.85rem; color: #9CA3AF; margin-top: 4px;">
-              Real-time operational metrics, prep time velocity, rider dispatch efficiency, and popular area insights.
+              Real-time operational metrics, prep time velocity, rider dispatch efficiency, and revenue insights.
             </p>
           </div>
         </div>
@@ -381,12 +140,12 @@
           <div class="bi-kpi-card">
             <span class="bi-kpi-label">Total Period Revenue</span>
             <span class="bi-kpi-value" id="bi-val-revenue">$0.00</span>
-            <span class="bi-kpi-subtext" id="bi-sub-revenue">⚡ Real-time from D1 Worker</span>
+            <span class="bi-kpi-subtext" id="bi-sub-revenue">⚡ Real-time from Cloudflare D1</span>
           </div>
           <div class="bi-kpi-card">
-            <span class="bi-kpi-label">Avg. Prep Time</span>
+            <span class="bi-kpi-label">Avg. Processing Time</span>
             <span class="bi-kpi-value" id="bi-val-preptime">-- min</span>
-            <span class="bi-kpi-subtext" id="bi-sub-preptime">Kitchen target: &lt; 15 mins</span>
+            <span class="bi-kpi-subtext" id="bi-sub-preptime">Order target: &lt; 10 mins</span>
           </div>
           <div class="bi-kpi-card">
             <span class="bi-kpi-label">Avg. Delivery Time</span>
@@ -436,10 +195,10 @@
             </div>
           </div>
 
-          <!-- Kitchen Efficiency -->
+          <!-- Order Processing Speed -->
           <div class="admin-card-panel" style="margin-bottom: 0;">
             <h3 style="font-size: 1.05rem; font-weight: 800; color: #FFF; margin-bottom: 12px; font-family: var(--font-display);">
-              👨‍🍳 Kitchen Speed & Performance
+              ⚡ Order Processing & Dispatch Speed
             </h3>
             <div id="bi-kitchen-performance-box" style="display: flex; flex-direction: column; gap: 8px; font-size: 0.9rem; color: #E5E7EB;">
               <!-- Rendered via JS -->
@@ -449,7 +208,130 @@
       </section>
     </div>
 
-    <!-- MODULE 4: SUPPLIER MANAGEMENT -->
+    <!-- MODULE 2: SYSTEM AUDIT LOGS -->
+    <div id="module-view-audit" style="display: none;">
+      <section class="admin-card-panel">
+        <div class="admin-panel-header">
+          <div>
+            <h2 class="admin-panel-title">📜 System Audit Logs & Operational Trail</h2>
+            <p style="font-size: 0.85rem; color: #9CA3AF; margin-top: 4px;">
+              Immutable event log tracking order creations, payment modifications, status transitions, and user role actions.
+            </p>
+          </div>
+          <button type="button" class="pos-btn pos-btn-secondary" onclick="fetchAuditLogs()">
+            🔄 Refresh Logs
+          </button>
+        </div>
+
+        <div style="padding: 10px; max-height: 65vh; overflow-y: auto;">
+          <div id="audit-logs-full-list" style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- MODULE 3: RIDER MANAGEMENT -->
+    <div id="module-view-riders" style="display: none;">
+      <section class="admin-card-panel">
+        <div class="admin-panel-header">
+          <div>
+            <h2 class="admin-panel-title">🛵 Delivery Rider Fleet Management</h2>
+            <p style="font-size: 0.85rem; color: #9CA3AF; margin-top: 4px;">
+              Manage active riders, edit vehicle details, toggle online/offline status, and register new delivery personnel.
+            </p>
+          </div>
+          <button type="button" class="pos-btn pos-btn-primary" onclick="openAddRiderModal()">
+            ➕ Register New Rider
+          </button>
+        </div>
+
+        <div class="inventory-table-wrapper">
+          <table class="inventory-table">
+            <thead>
+              <tr>
+                <th>Rider ID</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Vehicle</th>
+                <th>Status</th>
+                <th>Last Active</th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="riders-admin-table-body">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- MODULE 4: STAFF MANAGEMENT & PERMISSIONS -->
+    <div id="module-view-staff" style="display: none;">
+      <section class="admin-card-panel">
+        <div class="admin-panel-header">
+          <div>
+            <h2 class="admin-panel-title">👥 Staff Management & Role Permissions</h2>
+            <p style="font-size: 0.85rem; color: #9CA3AF; margin-top: 4px;">
+              Configure access levels, staff assignments, cashier access keys, and kitchen terminal credentials.
+            </p>
+          </div>
+          <button type="button" class="pos-btn pos-btn-primary" onclick="openAddStaffModal()">
+            ➕ Add Staff Member
+          </button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;" id="staff-members-list">
+          <!-- Rendered via JS -->
+        </div>
+      </section>
+    </div>
+
+    <!-- MODULE 5: INVENTORY & INGREDIENT MANAGEMENT -->
+    <div id="module-view-inventory" style="display: none;">
+      <section class="admin-card-panel">
+        <div class="admin-panel-header">
+          <div>
+            <h2 class="admin-panel-title">🍱 Raw Ingredient Stock & Menu Recipe Mapping</h2>
+            <p style="font-size: 0.85rem; color: #9CA3AF; margin-top: 4px;">
+              Track ingredient stock levels, set alert thresholds, receive shipments, and map menu item recipes.
+            </p>
+          </div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button type="button" class="pos-btn pos-btn-secondary" onclick="openRecipeModal()">
+              🔗 Menu Ingredient Mapping
+            </button>
+            <button type="button" class="pos-btn pos-btn-primary" onclick="openAddInventoryModal()">
+              ➕ Add New Ingredient
+            </button>
+          </div>
+        </div>
+
+        <div class="inventory-table-wrapper">
+          <table class="inventory-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Ingredient Name</th>
+                <th>Category</th>
+                <th>Stock Level</th>
+                <th>Min. Threshold</th>
+                <th>Status</th>
+                <th>Supplier</th>
+                <th>Last Updated</th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="inventory-table-body">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- MODULE 6: SUPPLIER DIRECTORY -->
     <div id="module-view-suppliers" style="display: none;">
       <section class="admin-card-panel">
         <div class="admin-panel-header">
@@ -459,7 +341,7 @@
               Manage vendor contacts, order schedules, supplied items, and notes.
             </p>
           </div>
-          <button type="button" class="pos-btn pos-btn-primary" id="btn-add-supplier" onclick="openAddSupplierModal()">
+          <button type="button" class="pos-btn pos-btn-primary" onclick="openAddSupplierModal()">
             ➕ Add New Supplier
           </button>
         </div>
@@ -470,12 +352,12 @@
       </section>
     </div>
 
-    <!-- MODULE 5: EXECUTIVE REPORTS & EXPORT -->
+    <!-- MODULE 7: EXECUTIVE REPORTS & EXPORT -->
     <div id="module-view-reports" style="display: none;">
       <section class="admin-card-panel">
         <div class="admin-panel-header">
           <div>
-            <h2 class="admin-panel-title">📈 System Operational Reports & Export</h2>
+            <h2 class="admin-panel-title">📈 Executive Financial & Operational Reports</h2>
             <p style="font-size: 0.85rem; color: #9CA3AF; margin-top: 4px;">
               Generate and export printable PDF or CSV sales and inventory reports for executive review.
             </p>
@@ -502,99 +384,112 @@
       </section>
     </div>
 
+    <!-- MODULE 8: SYSTEM CONFIGURATION -->
+    <div id="module-view-config" style="display: none;">
+      <section class="admin-card-panel">
+        <div class="admin-panel-header">
+          <div>
+            <h2 class="admin-panel-title">⚙️ System Configuration & Store Parameters</h2>
+            <p style="font-size: 0.85rem; color: #9CA3AF; margin-top: 4px;">
+              Manage store location settings, operating hours, delivery radius, tax rate, and notification sounds.
+            </p>
+          </div>
+          <button type="button" class="pos-btn pos-btn-primary" onclick="saveSystemConfig()">
+            💾 Save Configuration
+          </button>
+        </div>
+
+        <div class="config-grid">
+          <div style="background: #1C1C22; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px;">
+            <h3 style="color: #FFF; font-size: 1rem; margin-bottom: 12px;">🏪 Restaurant Details</h3>
+            <div style="margin-bottom: 10px;">
+              <label style="display: block; font-size: 0.8rem; color: #9CA3AF;">Store Name</label>
+              <input type="text" id="cfg-store-name" class="form-control" value="Bamboo Chicken - Harare Branch" style="width: 100%; padding: 8px; background: #222; color: #FFF; border: 1px solid #444; border-radius: 6px;">
+            </div>
+            <div style="margin-bottom: 10px;">
+              <label style="display: block; font-size: 0.8rem; color: #9CA3AF;">Branch Address</label>
+              <input type="text" id="cfg-store-address" class="form-control" value="Roadport Terminal, Samora Machel Ave, Harare" style="width: 100%; padding: 8px; background: #222; color: #FFF; border: 1px solid #444; border-radius: 6px;">
+            </div>
+            <div style="margin-bottom: 10px;">
+              <label style="display: block; font-size: 0.8rem; color: #9CA3AF;">Support Phone</label>
+              <input type="text" id="cfg-store-phone" class="form-control" value="+263 77 123 4567" style="width: 100%; padding: 8px; background: #222; color: #FFF; border: 1px solid #444; border-radius: 6px;">
+            </div>
+          </div>
+
+          <div style="background: #1C1C22; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px;">
+            <h3 style="color: #FFF; font-size: 1rem; margin-bottom: 12px;">🛵 Delivery & Operating Parameters</h3>
+            <div style="margin-bottom: 10px;">
+              <label style="display: block; font-size: 0.8rem; color: #9CA3AF;">Max Delivery Radius (km)</label>
+              <input type="number" id="cfg-delivery-radius" class="form-control" value="15" style="width: 100%; padding: 8px; background: #222; color: #FFF; border: 1px solid #444; border-radius: 6px;">
+            </div>
+            <div style="margin-bottom: 10px;">
+              <label style="display: block; font-size: 0.8rem; color: #9CA3AF;">Standard Delivery Fee ($)</label>
+              <input type="number" step="0.5" id="cfg-delivery-fee" class="form-control" value="2.00" style="width: 100%; padding: 8px; background: #222; color: #FFF; border: 1px solid #444; border-radius: 6px;">
+            </div>
+            <div style="margin-bottom: 10px;">
+              <label style="display: block; font-size: 0.8rem; color: #9CA3AF;">Target Kitchen Prep Time (min)</label>
+              <input type="number" id="cfg-target-prep" class="form-control" value="15" style="width: 100%; padding: 8px; background: #222; color: #FFF; border: 1px solid #444; border-radius: 6px;">
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
   </main>
 
-  <!-- Modal: Assign Rider Selector -->
-  <div class="pos-modal-overlay" id="assign-rider-modal">
+  <!-- Modal: Add New Rider -->
+  <div class="pos-modal-overlay" id="modal-add-rider" style="display: none;">
     <div class="pos-modal" style="max-width: 480px;">
       <div class="pos-modal-header">
-        <h3 class="pos-modal-title">🛵 Assign Delivery Rider</h3>
-        <button type="button" class="pos-modal-close" onclick="closeAssignRiderModal()">✕</button>
+        <h3 class="pos-modal-title">🛵 Register New Delivery Rider</h3>
+        <button type="button" class="pos-modal-close" onclick="closeAddRiderModal()">✕</button>
       </div>
       <div class="pos-modal-body" style="padding: 20px;">
-        <div id="assign-modal-order-info" style="margin-bottom: 16px; font-weight: 700; color: #FFF;"></div>
-        <label style="display: block; font-size: 0.85rem; color: #9CA3AF; margin-bottom: 6px;">Select Rider:</label>
-        <select id="modal-rider-select" class="form-control" style="width: 100%; padding: 10px; background: #222; color: #FFF; border: 1px solid #444; border-radius: 8px;">
-          <!-- Populated dynamically -->
-        </select>
-      </div>
-      <div class="pos-modal-footer">
-        <button type="button" class="pos-btn pos-btn-secondary" onclick="closeAssignRiderModal()">Cancel</button>
-        <button type="button" class="pos-btn pos-btn-primary" onclick="confirmRiderAssignment()">Assign Rider</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal: Receipt Preview & Details -->
-  <div class="pos-modal-overlay" id="receipt-modal-overlay">
-    <div class="pos-modal">
-      <div class="pos-modal-header">
-        <h3 class="pos-modal-title">Order Receipt Stub</h3>
-        <button type="button" class="pos-modal-close" onclick="closeReceiptModal()" aria-label="Close">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-      <div class="pos-modal-body" id="modal-receipt-content"></div>
-      <div class="pos-modal-footer">
-        <button type="button" class="pos-btn pos-btn-secondary" onclick="closeReceiptModal()">Close</button>
-        <button type="button" class="pos-btn pos-btn-primary" onclick="printReceipt()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-          <span>Print Receipt</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal: Audit Logs -->
-  <div class="pos-modal-overlay" id="audit-modal-overlay" style="display: none;">
-    <div class="pos-modal" style="max-width: 720px; width: 90%;">
-      <div class="pos-modal-header">
-        <h3 class="pos-modal-title">📜 System Audit Log & Activity Trail</h3>
-        <button type="button" class="pos-modal-close" onclick="closeAuditLogsModal()" aria-label="Close">✕</button>
-      </div>
-      <div class="pos-modal-body" style="padding: 20px; max-height: 60vh; overflow-y: auto;">
-        <div id="audit-logs-list" style="display: flex; flex-direction: column; gap: 10px;">
-          <!-- Rendered via JS -->
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 0.85rem; color: #9CA3AF; margin-bottom: 4px;">Full Name</label>
+          <input type="text" id="new-rider-name" class="form-control" style="width: 100%; padding: 10px; background: #222; color: #FFF; border: 1px solid #444; border-radius: 8px;" placeholder="e.g. Tendai Moyo">
+        </div>
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 0.85rem; color: #9CA3AF; margin-bottom: 4px;">Phone Number</label>
+          <input type="text" id="new-rider-phone" class="form-control" style="width: 100%; padding: 10px; background: #222; color: #FFF; border: 1px solid #444; border-radius: 8px;" placeholder="+263 77 000 0000">
+        </div>
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 0.85rem; color: #9CA3AF; margin-bottom: 4px;">Vehicle Description</label>
+          <input type="text" id="new-rider-vehicle" class="form-control" style="width: 100%; padding: 10px; background: #222; color: #FFF; border: 1px solid #444; border-radius: 8px;" placeholder="Honda Scooter (Red)">
         </div>
       </div>
       <div class="pos-modal-footer">
-        <button type="button" class="pos-btn pos-btn-secondary" onclick="closeAuditLogsModal()">Close</button>
+        <button type="button" class="pos-btn pos-btn-secondary" onclick="closeAddRiderModal()">Cancel</button>
+        <button type="button" class="pos-btn pos-btn-primary" onclick="submitNewRider()">Save Rider</button>
       </div>
     </div>
   </div>
 
-  <!-- Modal: Adjust / Receive Stock -->
-  <div class="pos-modal-overlay" id="modal-inventory-stock" style="display: none;">
-    <div class="pos-modal" style="max-width: 500px;">
+  <!-- Modal: Add New Staff Member -->
+  <div class="pos-modal-overlay" id="modal-add-staff" style="display: none;">
+    <div class="pos-modal" style="max-width: 480px;">
       <div class="pos-modal-header">
-        <h3 class="pos-modal-title" id="stock-modal-title">📦 Restock / Adjust Stock</h3>
-        <button type="button" class="pos-modal-close" onclick="closeStockModal()">✕</button>
+        <h3 class="pos-modal-title">👥 Add Staff Member</h3>
+        <button type="button" class="pos-modal-close" onclick="closeAddStaffModal()">✕</button>
       </div>
       <div class="pos-modal-body" style="padding: 20px;">
-        <input type="hidden" id="stock-item-id">
-        <div style="margin-bottom: 14px;">
-          <label style="display: block; font-size: 0.85rem; color: #9CA3AF; margin-bottom: 4px;">Ingredient</label>
-          <div id="stock-item-name" style="font-weight: 700; color: #FFF; font-size: 1.1rem;">--</div>
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 0.85rem; color: #9CA3AF; margin-bottom: 4px;">Staff Member Name</label>
+          <input type="text" id="new-staff-name" class="form-control" style="width: 100%; padding: 10px; background: #222; color: #FFF; border: 1px solid #444; border-radius: 8px;" placeholder="e.g. Chipo Mutasa">
         </div>
-        <div style="margin-bottom: 14px;">
-          <label style="display: block; font-size: 0.85rem; color: #9CA3AF; margin-bottom: 4px;">Action Type</label>
-          <select id="stock-action-type" class="form-control" style="width: 100%; padding: 10px; background: #222; color: #FFF; border: 1px solid #444; border-radius: 8px;">
-            <option value="receive">Shipment Received (Add to Current Quantity)</option>
-            <option value="adjust">Stock Count Adjustment (Set Exact Quantity)</option>
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 0.85rem; color: #9CA3AF; margin-bottom: 4px;">Assign Role</label>
+          <select id="new-staff-role" class="form-control" style="width: 100%; padding: 10px; background: #222; color: #FFF; border: 1px solid #444; border-radius: 8px;">
+            <option value="cashier">💵 Cashier / POS Operator</option>
+            <option value="kitchen">👨‍🍳 Kitchen Chef / Display Terminal</option>
+            <option value="rider">🛵 Delivery Rider</option>
+            <option value="admin">👑 Administrator</option>
           </select>
         </div>
-        <div style="margin-bottom: 14px;">
-          <label style="display: block; font-size: 0.85rem; color: #9CA3AF; margin-bottom: 4px;">Quantity</label>
-          <input type="number" step="0.01" id="stock-qty-input" class="form-control" style="width: 100%; padding: 10px; background: #222; color: #FFF; border: 1px solid #444; border-radius: 8px;" placeholder="0.00">
-        </div>
-        <div style="margin-bottom: 14px;">
-          <label style="display: block; font-size: 0.85rem; color: #9CA3AF; margin-bottom: 4px;">Reason / Delivery Notes (Mandatory for Audit Trail)</label>
-          <input type="text" id="stock-reason-input" class="form-control" style="width: 100%; padding: 10px; background: #222; color: #FFF; border: 1px solid #444; border-radius: 8px;" placeholder="e.g. Received invoice #4920 or Weekly stocktake count">
-        </div>
       </div>
       <div class="pos-modal-footer">
-        <button type="button" class="pos-btn pos-btn-secondary" onclick="closeStockModal()">Cancel</button>
-        <button type="button" class="pos-btn pos-btn-primary" onclick="submitStockUpdate()">Save Stock Update</button>
+        <button type="button" class="pos-btn pos-btn-secondary" onclick="closeAddStaffModal()">Cancel</button>
+        <button type="button" class="pos-btn pos-btn-primary" onclick="submitNewStaff()">Save Staff Member</button>
       </div>
     </div>
   </div>
@@ -631,12 +526,6 @@
             <input type="number" step="0.01" id="new-inv-min" class="form-control" style="width: 100%; padding: 10px; background: #222; color: #FFF; border: 1px solid #444; border-radius: 8px;" placeholder="20">
           </div>
         </div>
-        <div style="margin-bottom: 12px;">
-          <label style="display: block; font-size: 0.85rem; color: #9CA3AF; margin-bottom: 4px;">Supplier</label>
-          <select id="new-inv-supplier" class="form-control" style="width: 100%; padding: 10px; background: #222; color: #FFF; border: 1px solid #444; border-radius: 8px;">
-            <!-- Rendered via JS -->
-          </select>
-        </div>
       </div>
       <div class="pos-modal-footer">
         <button type="button" class="pos-btn pos-btn-secondary" onclick="closeAddInventoryModal()">Cancel</button>
@@ -672,10 +561,6 @@
           <label style="display: block; font-size: 0.85rem; color: #9CA3AF; margin-bottom: 4px;">Items Supplied</label>
           <input type="text" id="sup-items" class="form-control" style="width: 100%; padding: 10px; background: #222; color: #FFF; border: 1px solid #444; border-radius: 8px;" placeholder="Chicken Pieces, Packaging, Soft Drinks...">
         </div>
-        <div style="margin-bottom: 12px;">
-          <label style="display: block; font-size: 0.85rem; color: #9CA3AF; margin-bottom: 4px;">Notes / Delivery Schedule</label>
-          <textarea id="sup-notes" class="form-control" rows="3" style="width: 100%; padding: 10px; background: #222; color: #FFF; border: 1px solid #444; border-radius: 8px;"></textarea>
-        </div>
       </div>
       <div class="pos-modal-footer">
         <button type="button" class="pos-btn pos-btn-secondary" onclick="closeSupplierModal()">Cancel</button>
@@ -684,44 +569,10 @@
     </div>
   </div>
 
-  <!-- Modal: Recipe Ingredient Mapping -->
-  <div class="pos-modal-overlay" id="modal-recipe" style="display: none;">
-    <div class="pos-modal" style="max-width: 680px; width: 90%;">
-      <div class="pos-modal-header">
-        <h3 class="pos-modal-title">🔗 Menu Item Ingredient Mapping</h3>
-        <button type="button" class="pos-modal-close" onclick="closeRecipeModal()">✕</button>
-      </div>
-      <div class="pos-modal-body" style="padding: 20px;">
-        <p style="font-size: 0.85rem; color: #9CA3AF; margin-bottom: 16px;">
-          Define ingredients consumed when each menu item order is completed.
-        </p>
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; font-size: 0.85rem; color: #9CA3AF; margin-bottom: 6px;">Select Menu Item</label>
-          <select id="recipe-menu-item-select" class="form-control" style="width: 100%; padding: 10px; background: #222; color: #FFF; border: 1px solid #444; border-radius: 8px;" onchange="loadRecipeForSelectedItem()">
-            <!-- Populated dynamically -->
-          </select>
-        </div>
-
-        <div style="margin-bottom: 12px; font-weight: 700; color: #FFF;">Required Ingredients:</div>
-        <div id="recipe-ingredients-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 250px; overflow-y: auto;">
-          <!-- Ingredients rows -->
-        </div>
-
-        <button type="button" class="pos-btn pos-btn-secondary" style="margin-top: 12px;" onclick="addIngredientRowToRecipe()">
-          ➕ Add Ingredient Requirement
-        </button>
-      </div>
-      <div class="pos-modal-footer">
-        <button type="button" class="pos-btn pos-btn-secondary" onclick="closeRecipeModal()">Close</button>
-        <button type="button" class="pos-btn pos-btn-primary" onclick="saveRecipeMapping()">Save Recipe Mapping</button>
-      </div>
-    </div>
-  </div>
-
   <!-- Toast Container -->
   <div class="pos-toast-container" id="pos-toast-container"></div>
 
-  <!-- Leaflet JS -->
+  <!-- Scripts -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="/js/admin.js"></script>
 

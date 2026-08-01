@@ -20,6 +20,10 @@ export default defineConfig(() => {
               req.url = '/admin.html' + url.search;
               return next();
             }
+            if (url.pathname === '/cashier' || url.pathname === '/cashier/' || url.pathname.startsWith('/cashier?')) {
+              req.url = '/cashier.html' + url.search;
+              return next();
+            }
             if (url.pathname === '/rider' || url.pathname === '/rider/' || url.pathname.startsWith('/rider?')) {
               req.url = '/rider.html' + url.search;
               return next();
@@ -34,7 +38,7 @@ export default defineConfig(() => {
             }
 
             // Intercept API routes and serve via worker.js
-            const apiRoutes = ['/orders', '/riders', '/rider-location', '/assign-rider', '/saved-locations', '/tracking', '/audit-logs'];
+            const apiRoutes = ['/orders', '/riders', '/rider-location', '/assign-rider', '/saved-locations', '/tracking', '/audit-logs', '/inventory', '/suppliers', '/reports', '/analytics'];
             const isApi = apiRoutes.some(route => url.pathname === route || url.pathname.startsWith(route + '/'));
 
             if (isApi) {
@@ -84,6 +88,7 @@ export default defineConfig(() => {
         input: {
           main: path.resolve(__dirname, 'index.html'),
           admin: path.resolve(__dirname, 'admin.html'),
+          cashier: path.resolve(__dirname, 'cashier.html'),
           kitchen: path.resolve(__dirname, 'kitchen.html'),
           rider: path.resolve(__dirname, 'rider.html'),
           track: path.resolve(__dirname, 'track.html'),

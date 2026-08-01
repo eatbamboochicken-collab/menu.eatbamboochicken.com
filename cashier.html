@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bamboo Chicken — Cashier Terminal</title>
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .cashier-header-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cashier-nav-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #9CA3AF;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .cashier-nav-btn:hover {
+      background: rgba(255, 255, 255, 0.14);
+      color: #FFF;
+    }
+    .delivery-assign-panel {
+      background: #1C1C22;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+    }
+    .rider-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .rider-card-mini {
+      background: #25252E;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .rider-online-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #10B981;
+      display: inline-block;
+    }
+    .rider-offline-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #6B7280;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Cashier POS Header -->
+  <header class="pos-header">
+    <div class="pos-header-container">
+      
+      <!-- Brand & Terminal Info -->
+      <div class="pos-brand-group">
+        <a href="/cashier.html" class="pos-brand-title">
+          BAMBOO <span class="pos-brand-orange">CHICKEN</span> POS
+        </a>
+        <span class="pos-badge pos-badge-green" id="role-badge">● Cashier Terminal</span>
+      </div>
+
+      <!-- Quick Nav Links -->
+      <div class="cashier-header-bar">
+        <a href="/" class="cashier-nav-btn" target="_blank" title="Open Customer Menu">
+          <span>🛍️</span> Menu
+        </a>
+        <a href="/rider.html" class="cashier-nav-btn" target="_blank" title="Open Rider Portal">
+          <span>🛵</span> Rider Portal
+        </a>
+        <a href="/admin.html" class="cashier-nav-btn" title="Open Administrator Dashboard">
+          <span>👑</span> Admin Panel
+        </a>
+      </div>
+
+      <!-- Live Clock & Status -->
+      <div class="pos-header-info">
+        <div class="pos-clock-widget">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span id="pos-clock">--:--:--</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="pos-header-actions">
+        <button type="button" class="pos-btn-icon active" id="pos-sound-btn" title="Toggle Sound Alerts" aria-label="Toggle Sound">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        </button>
+
+        <button type="button" class="pos-btn pos-btn-secondary" onclick="refreshCashierOrders()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Cashier Main Dashboard -->
+  <main class="pos-main">
+
+    <!-- KPI Operational Bar -->
+    <section class="pos-stats-grid" id="kpi-stats-section">
+      <!-- Sales -->
+      <div class="pos-stat-card">
+        <div class="pos-stat-info">
+          <span class="pos-stat-label">Today's Revenue</span>
+          <span class="pos-stat-value" id="stat-sales">$0.00</span>
+        </div>
+        <div class="pos-stat-icon pos-stat-icon-sales">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+      </div>
+
+      <!-- Total Orders -->
+      <div class="pos-stat-card">
+        <div class="pos-stat-info">
+          <span class="pos-stat-label">Total Orders</span>
+          <span class="pos-stat-value" id="stat-orders">0</span>
+        </div>
+        <div class="pos-stat-icon pos-stat-icon-orders">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </div>
+      </div>
+
+      <!-- Accepted -->
+      <div class="pos-stat-card">
+        <div class="pos-stat-info">
+          <span class="pos-stat-label">Accepted Orders</span>
+          <span class="pos-stat-value" id="stat-prep">0</span>
+        </div>
+        <div class="pos-stat-icon pos-stat-icon-prep">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.87A8 8 0 0 1 17.64 4"/><path d="M20 10v4h-4"/><path d="M17.91 18.2A8 8 0 0 1 6.34 20"/><path d="M4 14V10h4"/></svg>
+        </div>
+      </div>
+
+      <!-- In Transit / Dispatch -->
+      <div class="pos-stat-card">
+        <div class="pos-stat-info">
+          <span class="pos-stat-label">Assigned & In Transit</span>
+          <span class="pos-stat-value" id="stat-ready">0</span>
+        </div>
+        <div class="pos-stat-icon pos-stat-icon-ready">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+      </div>
+
+      <!-- Active Riders -->
+      <div class="pos-stat-card">
+        <div class="pos-stat-info">
+          <span class="pos-stat-label">Delivery Fleet</span>
+          <span class="pos-stat-value" id="stat-riders">0 Online</span>
+        </div>
+        <div class="pos-stat-icon pos-stat-icon-completed">
+          <span>🛵</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Delivery Assignment Panel -->
+    <section class="delivery-assign-panel" id="section-delivery-assignment">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <h3 style="font-size: 1.1rem; font-weight: 800; color: #FFF; font-family: var(--font-display);">
+            🛵 Delivery Dispatch & Rider Assignment
+          </h3>
+          <p style="font-size: 0.82rem; color: #9CA3AF; margin-top: 2px;">
+            Assign online drivers to delivery orders, update payment statuses, and complete transactions.
+          </p>
+        </div>
+      </div>
+
+      <div class="rider-grid" id="available-riders-grid">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+    <!-- Controls Toolbar (Search & Filters) -->
+    <section class="pos-toolbar">
+      <div class="pos-search-wrapper">
+        <svg class="pos-search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="pos-search-input" class="pos-search-input" placeholder="Search order #, customer name, phone, items..." autocomplete="off">
+      </div>
+
+      <div class="pos-filter-pills">
+        <button type="button" class="pos-filter-pill active" data-filter="all" onclick="setCashierFilter('all')">All Orders</button>
+        <button type="button" class="pos-filter-pill" data-filter="pickup" onclick="setCashierFilter('pickup')">Pickup Only</button>
+        <button type="button" class="pos-filter-pill" data-filter="delivery" onclick="setCashierFilter('delivery')">Delivery Only</button>
+      </div>
+    </section>
+
+    <!-- Order Kanban Columns -->
+    <section class="pos-board-grid" id="kanban-board-grid">
+
+      <!-- Column 1: New Orders -->
+      <div class="pos-column">
+        <div class="pos-column-header">
+          <div class="pos-column-title-group">
+            <span class="pos-column-dot dot-red"></span>
+            <h2 class="pos-column-title">New Orders</h2>
+          </div>
+          <span class="pos-column-count" id="count-new">0</span>
+        </div>
+        <div class="pos-cards-list" id="cards-list-new"></div>
+      </div>
+
+      <!-- Column 2: Accepted Orders -->
+      <div class="pos-column">
+        <div class="pos-column-header">
+          <div class="pos-column-title-group">
+            <span class="pos-column-dot dot-orange"></span>
+            <h2 class="pos-column-title">Accepted Orders</h2>
+          </div>
+          <span class="pos-column-count" id="count-prep">0</span>
+        </div>
+        <div class="pos-cards-list" id="cards-list-preparing"></div>
+      </div>
+
+      <!-- Column 3: Assigned & In Transit -->
+      <div class="pos-column">
+        <div class="pos-column-header">
+          <div class="pos-column-title-group">
+            <span class="pos-column-dot dot-green"></span>
+            <h2 class="pos-column-title">Assigned & In Transit</h2>
+          </div>
+          <span class="pos-column-count" id="count-ready">0</span>
+        </div>
+        <div class="pos-cards-list" id="cards-list-ready"></div>
+      </div>
+
+      <!-- Column 4: Completed -->
+      <div class="pos-column">
+        <div class="pos-column-header">
+          <div class="pos-column-title-group">
+            <span class="pos-column-dot dot-gray"></span>
+            <h2 class="pos-column-title">Completed</h2>
+          </div>
+          <span class="pos-column-count" id="count-completed">0</span>
+        </div>
+        <div class="pos-cards-list" id="cards-list-completed"></div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Modal: Assign Rider Selector -->
+  <div class="pos-modal-overlay" id="assign-rider-modal">
+    <div class="pos-modal" style="max-width: 480px;">
+      <div class="pos-modal-header">
+        <h3 class="pos-modal-title">🛵 Assign Delivery Rider</h3>
+        <button type="button" class="pos-modal-close" onclick="closeAssignRiderModal()">✕</button>
+      </div>
+      <div class="pos-modal-body" style="padding: 20px;">
+        <div id="assign-modal-order-info" style="margin-bottom: 16px; font-weight: 700; color: #FFF;"></div>
+        <label style="display: block; font-size: 0.85rem; color: #9CA3AF; margin-bottom: 6px;">Select Online Rider:</label>
+        <select id="modal-rider-select" class="form-control" style="width: 100%; padding: 10px; background: #222; color: #FFF; border: 1px solid #444; border-radius: 8px;">
+          <!-- Populated dynamically -->
+        </select>
+      </div>
+      <div class="pos-modal-footer">
+        <button type="button" class="pos-btn pos-btn-secondary" onclick="closeAssignRiderModal()">Cancel</button>
+        <button type="button" class="pos-btn pos-btn-primary" onclick="confirmRiderAssignment()">Assign Rider</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Receipt Preview & Thermal Print -->
+  <div class="pos-modal-overlay" id="receipt-modal-overlay">
+    <div class="pos-modal">
+      <div class="pos-modal-header">
+        <h3 class="pos-modal-title">Order Receipt Stub</h3>
+        <button type="button" class="pos-modal-close" onclick="closeReceiptModal()" aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="pos-modal-body" id="modal-receipt-content"></div>
+      <div class="pos-modal-footer">
+        <button type="button" class="pos-btn pos-btn-secondary" onclick="closeReceiptModal()">Close</button>
+        <button type="button" class="pos-btn pos-btn-primary" onclick="printReceipt()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          <span>Print Receipt</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load Dedicated Cashier Application Logic -->
+  <script src="/js/cashier.js"></script>
+
+</body>
+</html>

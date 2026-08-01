@@ -383,7 +383,7 @@ let inMemoryAuditLogs = [
 // Helper to record audit logs
 function addAuditLog(orderId, action, role = "system", userName = "System") {
   const logEntry = {
-    id: `LOG-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    id: `LOG-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
     order_id: orderId,
     action: action,
     role: role,
@@ -392,6 +392,58 @@ function addAuditLog(orderId, action, role = "system", userName = "System") {
   };
   inMemoryAuditLogs.unshift(logEntry);
   return logEntry;
+}
+
+// Auto-provision D1 tables if missing
+async function ensureTables(db) {
+  if (!db) return;
+  try {
+    await db.prepare(`
+      CREATE TABLE IF NOT EXISTS orders (
+        id TEXT PRIMARY KEY,
+        customer_name TEXT,
+        phone TEXT,
+        items TEXT,
+        total REAL,
+        notes TEXT,
+        payment_method TEXT,
+        payment_status TEXT,
+        type TEXT,
+        order_status TEXT,
+        customer_lat REAL,
+        customer_lng REAL,
+        location_accuracy REAL,
+        rider_id TEXT,
+        created_at TEXT,
+        updated_at TEXT
+      );
+    `).run();
+    await db.prepare(`
+      CREATE TABLE IF NOT EXISTS riders (
+        id TEXT PRIMARY KEY,
+        name TEXT,
+        phone TEXT,
+        vehicle TEXT,
+        status TEXT,
+        current_lat REAL,
+        current_lng REAL,
+        last_active TEXT,
+        created_at TEXT
+      );
+    `).run();
+    await db.prepare(`
+      CREATE TABLE IF NOT EXISTS audit_logs (
+        id TEXT PRIMARY KEY,
+        order_id TEXT,
+        action TEXT,
+        role TEXT,
+        user_name TEXT,
+        timestamp TEXT
+      );
+    `).run();
+  } catch (err) {
+    console.error("ensureTables notice:", err);
+  }
 }
 
 export default {
@@ -420,6 +472,7 @@ export default {
           if (orderId) {
             let order = null;
             if (env && env.DB) {
+              await ensureTables(env.DB);
               const res = await env.DB.prepare("SELECT * FROM orders WHERE id = ? OR id = ?").bind(orderId, `BC-${orderId}`).first();
               if (res) {
                 order = {
@@ -427,7 +480,8 @@ export default {
                   items: typeof res.items === 'string' ? JSON.parse(res.items) : res.items
                 };
               }
-            } else {
+            }
+            if (!order) {
               order = inMemoryOrders.find(o => o.id === orderId || o.id === `BC-${orderId}`);
             }
 
@@ -437,24 +491,38 @@ export default {
             if (order.rider_id) {
               if (env && env.DB) {
                 rider = await env.DB.prepare("SELECT * FROM riders WHERE id = ?").bind(order.rider_id).first();
-              } else {
+              }
+              if (!rider) {
                 rider = inMemoryRiders.find(r => r.id === order.rider_id) || null;
               }
             }
             return jsonRes({ ...order, rider });
           }
 
-          // Return all orders with riders
-          let orderList = [];
+          // Return all orders with riders (merge D1 & Memory for 100% data reliability)
+          let dbOrders = [];
           if (env && env.DB) {
-            const { results } = await env.DB.prepare("SELECT * FROM orders ORDER BY created_at DESC").all();
-            orderList = (results || []).map(r => ({
-              ...r,
-              items: typeof r.items === 'string' ? JSON.parse(r.items) : r.items
-            }));
-          } else {
-            orderList = [...inMemoryOrders];
+            try {
+              await ensureTables(env.DB);
+              const { results } = await env.DB.prepare("SELECT * FROM orders ORDER BY created_at DESC").all();
+              dbOrders = (results || []).map(r => ({
+                ...r,
+                items: typeof r.items === 'string' ? JSON.parse(r.items) : r.items
+              }));
+            } catch (err) {
+              console.error("D1 order fetch error:", err);
+            }
           }
+
+          const orderMap = new Map();
+          inMemoryOrders.forEach(o => orderMap.set(o.id, o));
+          dbOrders.forEach(o => orderMap.set(o.id, o));
+
+          const orderList = Array.from(orderMap.values()).sort((a, b) => {
+            const tA = new Date(a.created_at || a.updated_at || 0).getTime();
+            const tB = new Date(b.created_at || b.updated_at || 0).getTime();
+            return tB - tA;
+          });
 
           const result = orderList.map(o => {
             const rider = o.rider_id ? (inMemoryRiders.find(r => r.id === o.rider_id) || null) : null;
@@ -466,8 +534,8 @@ export default {
         // POST ORDER (CREATE - CUSTOMER & SYSTEM)
         if (request.method === "POST") {
           const body = await request.json();
-          const cleanIdNum = Math.floor(1000 + Math.random() * 9000);
-          const newId = body.id || `BC-${cleanIdNum}`;
+          const cleanIdSuffix = Date.now().toString().slice(-6);
+          const newId = body.id || `BC-${cleanIdSuffix}`;
 
           const newOrder = {
             id: newId,
@@ -489,23 +557,28 @@ export default {
           };
 
           if (env && env.DB) {
-            await env.DB.prepare(`
-              INSERT INTO orders (id, customer_name, phone, items, total, notes, payment_method, payment_status, type, order_status, customer_lat, customer_lng, location_accuracy, rider_id, created_at, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `).bind(
-              newOrder.id, newOrder.customer_name, newOrder.phone, JSON.stringify(newOrder.items),
-              newOrder.total, newOrder.notes, newOrder.payment_method, newOrder.payment_status,
-              newOrder.type, newOrder.order_status, newOrder.customer_lat, newOrder.customer_lng,
-              newOrder.location_accuracy, newOrder.rider_id, newOrder.created_at, newOrder.updated_at
-            ).run();
-          } else {
-            // Idempotent check
-            const existingIdx = inMemoryOrders.findIndex(o => o.id === newOrder.id);
-            if (existingIdx >= 0) {
-              inMemoryOrders[existingIdx] = newOrder;
-            } else {
-              inMemoryOrders.unshift(newOrder);
+            try {
+              await ensureTables(env.DB);
+              await env.DB.prepare(`
+                INSERT INTO orders (id, customer_name, phone, items, total, notes, payment_method, payment_status, type, order_status, customer_lat, customer_lng, location_accuracy, rider_id, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              `).bind(
+                newOrder.id, newOrder.customer_name, newOrder.phone, JSON.stringify(newOrder.items),
+                newOrder.total, newOrder.notes, newOrder.payment_method, newOrder.payment_status,
+                newOrder.type, newOrder.order_status, newOrder.customer_lat, newOrder.customer_lng,
+                newOrder.location_accuracy, newOrder.rider_id, newOrder.created_at, newOrder.updated_at
+              ).run();
+            } catch (err) {
+              console.error("D1 Order Insert Error:", err);
             }
+          }
+
+          // Always synchronize in-memory state
+          const existingIdx = inMemoryOrders.findIndex(o => o.id === newOrder.id);
+          if (existingIdx >= 0) {
+            inMemoryOrders[existingIdx] = newOrder;
+          } else {
+            inMemoryOrders.unshift(newOrder);
           }
 
           addAuditLog(newOrder.id, "Order Created", "customer", newOrder.customer_name);
@@ -519,14 +592,16 @@ export default {
           const targetId = orderId || body.id || body.order_id;
           
           let order = inMemoryOrders.find(o => o.id === targetId || o.id === `BC-${targetId}`);
-          if (!order && (!env || !env.DB)) {
-            return jsonRes({ error: "Order not found" }, 404);
-          }
 
           if (env && env.DB) {
-            const dbOrder = await env.DB.prepare("SELECT * FROM orders WHERE id = ? OR id = ?").bind(targetId, `BC-${targetId}`).first();
-            if (dbOrder) {
-              order = { ...dbOrder, items: typeof dbOrder.items === 'string' ? JSON.parse(dbOrder.items) : dbOrder.items };
+            try {
+              await ensureTables(env.DB);
+              const dbOrder = await env.DB.prepare("SELECT * FROM orders WHERE id = ? OR id = ?").bind(targetId, `BC-${targetId}`).first();
+              if (dbOrder) {
+                order = { ...dbOrder, items: typeof dbOrder.items === 'string' ? JSON.parse(dbOrder.items) : dbOrder.items };
+              }
+            } catch (err) {
+              console.error("D1 Fetch before Patch Error:", err);
             }
           }
 
@@ -545,20 +620,16 @@ export default {
 
           // Enforce role permission limits
           if (reqRole === "kitchen") {
-            // Kitchen can only set accepted, preparing, ready
             if (!["accepted", "preparing", "ready"].includes(updatedOrderStatus)) {
               return jsonRes({ error: "Kitchen role is restricted to accepting, preparing, and setting orders to ready." }, 403);
             }
-            // Kitchen cannot modify payment status
             updatedPaymentStatus = order.payment_status;
           }
 
           if (reqRole === "rider") {
-            // Rider can only update: accepted, picked_up, on_the_way, delivered
-            if (!["accepted", "picked_up", "on_the_way", "delivered"].includes(updatedOrderStatus)) {
-              return jsonRes({ error: "Rider role is restricted to: Accepted, Picked Up, On The Way, and Delivered." }, 403);
+            if (!["accepted", "assigned", "picked_up", "on_the_way", "delivered"].includes(updatedOrderStatus)) {
+              return jsonRes({ error: "Rider role is restricted to: Accepted, Assigned, Picked Up, On The Way, and Delivered." }, 403);
             }
-            // Rider cannot edit payments or assign riders
             updatedPaymentStatus = order.payment_status;
           }
 
@@ -573,16 +644,29 @@ export default {
 
           order.updated_at = new Date().toISOString();
 
-          // Trigger automatic inventory deduction if order reached COMPLETED
+          // Deduct stock if order reached COMPLETED
           if (updatedOrderStatus === "completed") {
             deductStockOnCompletion(order, reqRole, reqUserName);
           }
 
+          // Always update inMemory
+          const memIdx = inMemoryOrders.findIndex(o => o.id === order.id);
+          if (memIdx >= 0) {
+            inMemoryOrders[memIdx] = order;
+          } else {
+            inMemoryOrders.unshift(order);
+          }
+
           if (env && env.DB) {
-            await env.DB.prepare(`
-              UPDATE orders SET order_status = ?, payment_status = ?, rider_id = ?, customer_lat = ?, customer_lng = ?, updated_at = ?
-              WHERE id = ?
-            `).bind(order.order_status, order.payment_status, order.rider_id, order.customer_lat, order.customer_lng, order.updated_at, order.id).run();
+            try {
+              await ensureTables(env.DB);
+              await env.DB.prepare(`
+                UPDATE orders SET order_status = ?, payment_status = ?, rider_id = ?, customer_lat = ?, customer_lng = ?, updated_at = ?
+                WHERE id = ?
+              `).bind(order.order_status, order.payment_status, order.rider_id, order.customer_lat, order.customer_lng, order.updated_at, order.id).run();
+            } catch (err) {
+              console.error("D1 Update Order Error:", err);
+            }
           }
 
           // Audit Log
@@ -1111,7 +1195,7 @@ export default {
               vehicle: r.vehicle,
               status: r.status,
               completed_deliveries: comp,
-              avg_delivery_time_mins: 15 + Math.floor(Math.random() * 8),
+              avg_delivery_time_mins: avgDelivTime ? Math.round(avgDelivTime) : 15,
               acceptance_rate: `${acceptRate}%`,
               estimated_distance_km: comp * 4.2
             };
