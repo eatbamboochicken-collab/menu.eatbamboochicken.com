@@ -12,10 +12,15 @@ let riderMarker = null;
 document.addEventListener("DOMContentLoaded", () => {
   // Check URL search params for order ID
   const urlParams = new URLSearchParams(window.location.search);
-  const orderId = urlParams.get("id") || urlParams.get("track") || urlParams.get("order");
+  let orderId = urlParams.get("id") || urlParams.get("track") || urlParams.get("order");
+
+  if (!orderId) {
+    orderId = localStorage.getItem("bamboo_active_order_id");
+  }
 
   if (orderId) {
-    document.getElementById("track-input-id").value = orderId;
+    const inputEl = document.getElementById("track-input-id");
+    if (inputEl) inputEl.value = orderId;
     loadOrderTracking(orderId);
   }
 
@@ -67,6 +72,14 @@ function renderTrackingUI(order, rider, restaurant) {
 
   // Status mapping
   const status = (order.order_status || order.status || "new").toLowerCase();
+
+  // Clear active order reference if completed, delivered, or cancelled
+  if (["delivered", "completed", "cancelled"].includes(status)) {
+    const activeOrder = localStorage.getItem("bamboo_active_order_id");
+    if (activeOrder && (activeOrder === order.id || activeOrder === `BC-${order.id}`)) {
+      localStorage.removeItem("bamboo_active_order_id");
+    }
+  }
   
   const statusPill = document.getElementById("lbl-status-pill");
   statusPill.className = "track-status-pill";

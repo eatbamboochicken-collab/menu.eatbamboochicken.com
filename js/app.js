@@ -1369,80 +1369,82 @@ async function executeFinalOrderSubmission() {
   if (isSubmittingOrder) return;
   isSubmittingOrder = true;
 
-  const nameInput = document.getElementById("checkout-name");
-  const phoneInput = document.getElementById("checkout-phone");
-  const addressInput = document.getElementById("checkout-address");
-  const branchSelect = document.getElementById("checkout-branch");
-  const timeInput = document.getElementById("checkout-pickup-time");
-  const notesInput = document.getElementById("checkout-notes");
-
-  const customerName = nameInput ? nameInput.value.trim() : "";
-  const customerPhone = phoneInput ? phoneInput.value.trim() : "";
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const deliveryFee = currentOrderMethod === "delivery" ? 3.00 : 0.00;
-  const grandTotal = subtotal + deliveryFee;
-  const paymentMethodStr = currentPaymentMethod;
-  const specialNotes = notesInput && notesInput.value.trim() ? notesInput.value.trim() : "";
-
-  const apiPayload = {
-    customer_name: customerName,
-    phone: customerPhone,
-    items: cart.map(item => ({
-      name: item.name,
-      qty: item.quantity,
-      quantity: item.quantity,
-      price: item.price,
-      options: item.customization || ""
-    })),
-    total: parseFloat(grandTotal.toFixed(2)),
-    notes: specialNotes || (currentOrderMethod === "delivery" ? `Delivery: ${addressInput ? addressInput.value.trim() : ''}` : `Pickup at ${branchSelect ? branchSelect.value : ''}`),
-    payment_method: paymentMethodStr,
-    type: currentOrderMethod,
-    order_status: "new",
-    status: "new",
-    customer_lat: capturedLocationData ? capturedLocationData.latitude : null,
-    customer_lng: capturedLocationData ? capturedLocationData.longitude : null,
-    location_accuracy: capturedLocationData ? capturedLocationData.accuracy : null
-  };
-
   const loadingOverlay = document.getElementById("checkout-loading-overlay");
-  if (loadingOverlay) loadingOverlay.style.display = "flex";
-
-  let createdOrder = null;
 
   try {
-    const response = await fetch("/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(apiPayload)
+    const nameInput = document.getElementById("checkout-name");
+    const phoneInput = document.getElementById("checkout-phone");
+    const addressInput = document.getElementById("checkout-address");
+    const branchSelect = document.getElementById("checkout-branch");
+    const timeInput = document.getElementById("checkout-pickup-time");
+    const notesInput = document.getElementById("checkout-notes");
+
+    const customerName = nameInput ? nameInput.value.trim() : "";
+    const customerPhone = phoneInput ? phoneInput.value.trim() : "";
+    const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const deliveryFee = currentOrderMethod === "delivery" ? 3.00 : 0.00;
+    const grandTotal = subtotal + deliveryFee;
+    const paymentMethodStr = currentPaymentMethod || "Cash on Delivery";
+    const specialNotes = notesInput && notesInput.value.trim() ? notesInput.value.trim() : "";
+
+    const apiPayload = {
+      customer_name: customerName,
+      phone: customerPhone,
+      items: cart.map(item => ({
+        name: item.name,
+        qty: item.quantity,
+        quantity: item.quantity,
+        price: item.price,
+        options: item.customization || ""
+      })),
+      total: parseFloat(grandTotal.toFixed(2)),
+      notes: specialNotes || (currentOrderMethod === "delivery" ? `Delivery: ${addressInput ? addressInput.value.trim() : ''}` : `Pickup at ${branchSelect ? branchSelect.value : ''}`),
+      payment_method: paymentMethodStr,
+      type: currentOrderMethod,
+      order_status: "new",
+      status: "new",
+      customer_lat: capturedLocationData ? capturedLocationData.latitude : null,
+      customer_lng: capturedLocationData ? capturedLocationData.longitude : null,
+      location_accuracy: capturedLocationData ? capturedLocationData.accuracy : null
+    };
+
+    if (loadingOverlay) loadingOverlay.style.display = "flex";
+
+    let createdOrder = null;
+
+    try {
+      const response = await fetch("/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(apiPayload)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        createdOrder = data.order || data;
+      } else {
+        console.warn("Server returned non-ok status for /orders:", response.status);
+      }
+    } catch (error) {
+      console.error("Failed to save order to D1 API:", error);
+    }
+
+    // Fallback if network or server issue occurs to ensure customer is never blocked
+    if (!createdOrder || !createdOrder.id) {
+      const fallbackId = `BC-${Date.now().toString().slice(-6)}`;
+      createdOrder = { id: fallbackId, ...apiPayload };
+    }
+
+    const orderId = createdOrder.id;
+
+    // Format WhatsApp Message
+    let itemsFormattedList = "";
+    cart.forEach(item => {
+      const customText = item.customization ? ` (${item.customization})` : "";
+      itemsFormattedList += `${item.quantity}x ${item.name}${customText} - $${(item.price * item.quantity).toFixed(2)}\n`;
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      createdOrder = data.order || data;
-    }
-  } catch (error) {
-    console.error("Failed to save order to D1 API:", error);
-  }
-
-  if (loadingOverlay) loadingOverlay.style.display = "none";
-
-  if (!createdOrder || !createdOrder.id) {
-    showToast("❌ Unable to process order. Please check your network and try again.");
-    isSubmittingOrder = false;
-    return;
-  }
-
-  const orderId = createdOrder.id;
-
-  // Format WhatsApp Message
-  let itemsFormattedList = "";
-  cart.forEach(item => {
-    const customText = item.customization ? ` (${item.customization})` : "";
-    itemsFormattedList += `${item.quantity}x ${item.name}${customText} - $${(item.price * item.quantity).toFixed(2)}\n`;
-  });
-
-  const whatsappMessage = `🎋 *BAMBOO CHICKEN - NEW ORDER (${orderId})* 🎋
+    const whatsappMessage = `🎋 *BAMBOO CHICKEN - NEW ORDER (${orderId})* 🎋
 ----------------------------------------
 👤 *CUSTOMER DETAILS:*
 • *Name:* ${customerName}
@@ -1457,45 +1459,97 @@ ${itemsFormattedList}
 ----------------------------------------
 📍 Track Order: ${window.location.origin}/track?id=${orderId} 🍗✨`;
 
-  const encodedText = encodeURIComponent(whatsappMessage);
-  const whatsappUrl = `https://wa.me/263789951127?text=${encodedText}`;
+    const encodedText = encodeURIComponent(whatsappMessage);
+    const whatsappUrl = `https://wa.me/263789951127?text=${encodedText}`;
 
-  const anchor = document.createElement("a");
-  anchor.href = whatsappUrl;
-  anchor.target = "_blank";
-  anchor.rel = "noopener noreferrer";
-  document.body.appendChild(anchor);
-  anchor.click();
-  document.body.removeChild(anchor);
+    // Safely attempt WhatsApp opening without failing checkout if popup blocked
+    try {
+      const openedWin = window.open(whatsappUrl, "_blank");
+      if (!openedWin) {
+        const anchor = document.createElement("a");
+        anchor.href = whatsappUrl;
+        anchor.target = "_blank";
+        anchor.rel = "noopener noreferrer";
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+      }
+    } catch (waErr) {
+      console.warn("WhatsApp popup launch skipped or blocked:", waErr);
+    }
 
-  cart = [];
-  saveCartAndSync();
-  closeCheckoutModal();
+    // Clear cart and state
+    cart = [];
+    saveCartAndSync();
+    closeCheckoutModal();
 
-  // If location permission was granted, prompt to save location
-  if (capturedLocationData) {
-    pendingOrderPayload = {
-      phone: customerPhone,
-      address: addressInput ? addressInput.value.trim() : "",
-      latitude: capturedLocationData.latitude,
-      longitude: capturedLocationData.longitude
-    };
-    const saveModal = document.getElementById("save-location-modal");
-    if (saveModal) saveModal.style.display = "flex";
-  } else {
-    showToast(`✅ Order ${orderId} submitted! Opening tracking...`);
-    setTimeout(() => {
-      window.open(`/track?id=${orderId}`, '_blank');
-    }, 1500);
+    localStorage.setItem("bamboo_active_order_id", orderId);
+
+    // If location permission was granted, prompt to save location
+    if (capturedLocationData) {
+      pendingOrderPayload = {
+        phone: customerPhone,
+        address: addressInput ? addressInput.value.trim() : "",
+        latitude: capturedLocationData.latitude,
+        longitude: capturedLocationData.longitude,
+        orderId: orderId
+      };
+      const saveModal = document.getElementById("save-location-modal");
+      if (saveModal) saveModal.style.display = "flex";
+    } else {
+      showOrderSuccessModal(orderId);
+    }
+
+    capturedLocationData = null;
+  } catch (err) {
+    console.error("Critical error in executeFinalOrderSubmission:", err);
+    showToast("⚠️ Order submission encountered an error. Please try again.");
+  } finally {
+    if (loadingOverlay) loadingOverlay.style.display = "none";
+    isSubmittingOrder = false;
   }
-
-  capturedLocationData = null;
-  isSubmittingOrder = false;
 }
+
+let latestSubmittedOrderId = null;
+
+window.showOrderSuccessModal = function(orderId) {
+  latestSubmittedOrderId = orderId;
+  localStorage.setItem("bamboo_active_order_id", orderId);
+
+  const modal = document.getElementById("order-success-modal");
+  const orderIdLabel = document.getElementById("success-modal-order-id");
+  const prepTimeLabel = document.getElementById("success-modal-prep-time");
+
+  if (orderIdLabel) orderIdLabel.textContent = orderId;
+  if (prepTimeLabel) prepTimeLabel.textContent = "18 minutes";
+
+  if (modal) {
+    modal.style.display = "flex";
+  }
+};
+
+window.handleTrackMyOrderFromSuccess = function() {
+  const modal = document.getElementById("order-success-modal");
+  if (modal) modal.style.display = "none";
+
+  const targetId = latestSubmittedOrderId || localStorage.getItem("bamboo_active_order_id");
+  if (targetId) {
+    window.location.href = `/track?id=${encodeURIComponent(targetId)}`;
+  } else {
+    window.location.href = "/track";
+  }
+};
+
+window.handleContinueBrowsingFromSuccess = function() {
+  const modal = document.getElementById("order-success-modal");
+  if (modal) modal.style.display = "none";
+};
 
 window.handleSaveLocationChoice = async function(shouldSave) {
   const saveModal = document.getElementById("save-location-modal");
   if (saveModal) saveModal.style.display = "none";
+
+  const savedOrderId = pendingOrderPayload ? pendingOrderPayload.orderId : null;
 
   if (shouldSave && pendingOrderPayload) {
     try {
@@ -1510,7 +1564,10 @@ window.handleSaveLocationChoice = async function(shouldSave) {
   }
 
   pendingOrderPayload = null;
-  showToast("✅ Opening order tracking...");
+  const activeId = savedOrderId || latestSubmittedOrderId || localStorage.getItem("bamboo_active_order_id");
+  if (activeId) {
+    showOrderSuccessModal(activeId);
+  }
 };
 
 window.syncCartUI = function() {
