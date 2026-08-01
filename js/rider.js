@@ -3,6 +3,8 @@
  * Production Rider Portal for real delivery tracking & dispatch.
  */
 
+const API_BASE = "https://bamboo-orders-api.warstreett.workers.dev";
+
 let activeRiderId = localStorage.getItem("bamboo_rider_id") || "RIDER-1";
 let allRiders = [];
 let assignedJobs = [];
@@ -61,13 +63,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function loadRiders() {
   try {
-    const res = await fetch("/riders");
-    if (!res.ok) return;
-    allRiders = await res.json();
+    const res = await fetch(`${API_BASE}/riders`);
+    if (res.ok) {
+      allRiders = await res.json();
+    } else if (allRiders.length === 0) {
+      allRiders = [
+        { id: "RIDER-1", name: "Blessing Moyo", vehicle: "Honda Ace 125" },
+        { id: "RIDER-2", name: "Tinashe Ndlovu", vehicle: "Yamaha Crux" },
+        { id: "RIDER-3", name: "Blessing Nyoni", vehicle: "TVS Motorbike" }
+      ];
+    }
+  } catch (e) {
+    console.error("Failed to load riders:", e);
+    if (allRiders.length === 0) {
+      allRiders = [
+        { id: "RIDER-1", name: "Blessing Moyo", vehicle: "Honda Ace 125" },
+        { id: "RIDER-2", name: "Tinashe Ndlovu", vehicle: "Yamaha Crux" },
+        { id: "RIDER-3", name: "Blessing Nyoni", vehicle: "TVS Motorbike" }
+      ];
+    }
+  }
 
-    const selector = document.getElementById("rider-selector");
-    if (!selector) return;
-
+  const selector = document.getElementById("rider-selector");
+  if (selector) {
     selector.innerHTML = "";
     allRiders.forEach(r => {
       const opt = document.createElement("option");
@@ -76,11 +94,8 @@ async function loadRiders() {
       if (r.id === activeRiderId) opt.selected = true;
       selector.appendChild(opt);
     });
-
-    updateRiderHeader();
-  } catch (e) {
-    console.error("Failed to load riders:", e);
   }
+  updateRiderHeader();
 }
 
 function updateRiderHeader() {
@@ -128,7 +143,7 @@ window.toggleOnlineStatus = async function(onlineChecked) {
   }
 
   try {
-    await fetch(`/riders/${activeRiderId}`, {
+    await fetch(`${API_BASE}/riders/${activeRiderId}`, {
       method: "PATCH",
       headers: { 
         "Content-Type": "application/json",
@@ -139,7 +154,7 @@ window.toggleOnlineStatus = async function(onlineChecked) {
     });
   } catch (e) {
     console.error("Failed to update rider status:", e);
-    queueOfflineRequest(`/riders/${activeRiderId}`, "PATCH", { status: isOnline ? "online" : "offline" });
+    queueOfflineRequest(`${API_BASE}/riders/${activeRiderId}`, "PATCH", { status: isOnline ? "online" : "offline" });
   }
 
   if (isOnline) {
@@ -191,7 +206,7 @@ function uploadCurrentGps() {
 
 async function sendGpsToServer(latitude, longitude) {
   try {
-    await fetch("/rider-location", {
+    await fetch(`${API_BASE}/rider-location`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -211,7 +226,7 @@ async function sendGpsToServer(latitude, longitude) {
 
 async function fetchRiderJobs(isSilent = false) {
   try {
-    const res = await fetch("/orders", {
+    const res = await fetch(`${API_BASE}/orders`, {
       headers: {
         "X-User-Role": "rider",
         "X-User-Name": activeRiderId
@@ -349,7 +364,7 @@ window.updateJobStatus = async function(orderId, newStatus) {
   const rawId = orderId.replace(/^BC-/, '');
 
   try {
-    const res = await fetch(`/orders/${rawId}`, {
+    const res = await fetch(`${API_BASE}/orders/${rawId}`, {
       method: "PATCH",
       headers: { 
         "Content-Type": "application/json",
@@ -362,7 +377,7 @@ window.updateJobStatus = async function(orderId, newStatus) {
     if (res.ok) {
       fetchRiderJobs();
     } else {
-      queueOfflineRequest(`/orders/${rawId}`, "PATCH", { order_status: newStatus }, { "X-User-Role": "rider", "X-User-Name": riderName });
+      queueOfflineRequest(`${API_BASE}/orders/${rawId}`, "PATCH", { order_status: newStatus }, { "X-User-Role": "rider", "X-User-Name": riderName });
     }
   } catch (e) {
     console.error("Failed to update status:", e);

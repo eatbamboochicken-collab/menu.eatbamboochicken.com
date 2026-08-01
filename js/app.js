@@ -4,6 +4,8 @@
  * Brand: Fun, Modern, Bright, Family Friendly, Premium Fast Food
  */
 
+const API_BASE = "https://bamboo-orders-api.warstreett.workers.dev";
+
 // Global Menu Database
 const MENU_DATA = [
   // ⭐ Value Combos
@@ -354,7 +356,7 @@ let unavailableMenuItems = [];
 
 async function fetchMenuAvailability() {
   try {
-    const res = await fetch("/inventory/availability");
+    const res = await fetch(`${API_BASE}/inventory/availability`);
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data.unavailable_items)) {
@@ -1234,7 +1236,7 @@ window.checkSavedLocationForPhone = async function() {
 
   if (phone) {
     try {
-      const res = await fetch(`/saved-locations?phone=${encodeURIComponent(phone)}`);
+      const res = await fetch(`${API_BASE}/saved-locations?phone=${encodeURIComponent(phone)}`);
       if (res.ok) {
         const list = await res.json();
         if (Array.isArray(list) && list.length > 0) {
@@ -1413,26 +1415,37 @@ async function executeFinalOrderSubmission() {
     let createdOrder = null;
 
     try {
-      const response = await fetch("/orders", {
+      console.log("POST /orders Request Body:", apiPayload);
+      const response = await fetch(`${API_BASE}/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(apiPayload)
       });
 
+      console.log("POST /orders HTTP Status:", response.status);
+      const resText = await response.text();
+      console.log("POST /orders Response Body:", resText);
+
       if (response.ok) {
-        const data = await response.json();
-        createdOrder = data.order || data;
+        try {
+          const data = JSON.parse(resText);
+          createdOrder = data.order || data;
+        } catch (jsonErr) {
+          console.error("Error parsing JSON response from /orders:", jsonErr);
+        }
       } else {
-        console.warn("Server returned non-ok status for /orders:", response.status);
+        console.warn("Server returned non-ok status for /orders:", response.status, resText);
       }
     } catch (error) {
       console.error("Failed to save order to D1 API:", error);
     }
 
-    // Fallback if network or server issue occurs to ensure customer is never blocked
+    // Fail order if network or server issue occurs - no fake or fallback IDs allowed
     if (!createdOrder || !createdOrder.id) {
-      const fallbackId = `BC-${Date.now().toString().slice(-6)}`;
-      createdOrder = { id: fallbackId, ...apiPayload };
+      showToast("❌ Unable to process order. Database error. Please try again.");
+      if (loadingOverlay) loadingOverlay.style.display = "none";
+      isSubmittingOrder = false;
+      return;
     }
 
     const orderId = createdOrder.id;
@@ -1554,7 +1567,7 @@ window.handleSaveLocationChoice = async function(shouldSave) {
   if (shouldSave && pendingOrderPayload) {
     try {
       localStorage.setItem("bamboo_saved_location", JSON.stringify(pendingOrderPayload));
-      await fetch("/saved-locations", {
+      await fetch(`${API_BASE}/saved-locations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(pendingOrderPayload)

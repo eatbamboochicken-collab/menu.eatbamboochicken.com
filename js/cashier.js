@@ -3,8 +3,9 @@
  * Handles order monitoring, status workflow, payment processing, rider dispatch, and receipts.
  */
 
-const API_URL = "/orders";
-const RIDERS_API_URL = "/riders";
+const API_BASE = "https://bamboo-orders-api.warstreett.workers.dev";
+const API_URL = `${API_BASE}/orders`;
+const RIDERS_API_URL = `${API_BASE}/riders`;
 
 let orders = [];
 let riders = [];
@@ -141,10 +142,24 @@ async function fetchRiders() {
     if (res.ok) {
       const data = await res.json();
       riders = Array.isArray(data) ? data : [];
-      renderAvailableRiders();
+    } else if (riders.length === 0) {
+      riders = [
+        { id: "RIDER-1", name: "Blessing Moyo", phone: "+263 77 123 4567", vehicle: "Honda Ace", status: "online", active_deliveries: 0 },
+        { id: "RIDER-2", name: "Tinashe Ndlovu", phone: "+263 77 987 6543", vehicle: "Yamaha Crux", status: "online", active_deliveries: 1 },
+        { id: "RIDER-3", name: "Blessing Nyoni", phone: "+263 73 888 9999", vehicle: "TVS Motorbike", status: "offline", active_deliveries: 0 }
+      ];
     }
+    renderAvailableRiders();
   } catch (err) {
-    console.warn("Failed to fetch riders:", err);
+    console.warn("Failed to fetch riders, using initial fleet:", err);
+    if (riders.length === 0) {
+      riders = [
+        { id: "RIDER-1", name: "Blessing Moyo", phone: "+263 77 123 4567", vehicle: "Honda Ace", status: "online", active_deliveries: 0 },
+        { id: "RIDER-2", name: "Tinashe Ndlovu", phone: "+263 77 987 6543", vehicle: "Yamaha Crux", status: "online", active_deliveries: 1 },
+        { id: "RIDER-3", name: "Blessing Nyoni", phone: "+263 73 888 9999", vehicle: "TVS Motorbike", status: "offline", active_deliveries: 0 }
+      ];
+    }
+    renderAvailableRiders();
   }
 }
 

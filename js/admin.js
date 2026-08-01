@@ -4,6 +4,8 @@
  * Inventory Management, Supplier Directory, Executive Reports, and System Config.
  */
 
+const API_BASE = "https://bamboo-orders-api.warstreett.workers.dev";
+
 let currentAdminTab = "bi"; // Default: Analytics & BI
 let inventoryData = [];
 let suppliersData = [];
@@ -11,7 +13,6 @@ let ridersData = [];
 let auditLogsData = [];
 let staffData = [
   { id: "STF-101", name: "Chipo Mutasa", role: "cashier", status: "Active", phone: "+263 77 111 2222", lastLogin: "Today, 08:30 AM" },
-  { id: "STF-102", name: "Kudzai Banda", role: "kitchen", status: "Active", phone: "+263 77 333 4444", lastLogin: "Today, 07:45 AM" },
   { id: "STF-103", name: "Tinashe Moyo", role: "rider", status: "Active", phone: "+263 77 444 5555", lastLogin: "Today, 09:12 AM" },
   { id: "STF-104", name: "Simba Ndlovu", role: "admin", status: "Active", phone: "+263 77 888 9999", lastLogin: "Today, 07:00 AM" }
 ];
@@ -77,7 +78,7 @@ window.switchAdminTab = function(tabName) {
    ========================================== */
 async function fetchBIData() {
   try {
-    const res = await fetch("/orders", {
+    const res = await fetch(`${API_BASE}/orders`, {
       headers: { "X-User-Role": "admin", "X-User-Name": "Administrator" }
     });
     if (!res.ok) return;
@@ -143,7 +144,7 @@ async function fetchBIData() {
 }
 
 function renderProcessingSpeed(orders) {
-  const perfBox = document.getElementById("bi-kitchen-performance-box");
+  const perfBox = document.getElementById("bi-ops-performance-box");
   if (!perfBox) return;
 
   const totalCount = orders.length || 0;
@@ -224,7 +225,7 @@ function renderCustomerInsights(orders) {
    ========================================== */
 async function fetchAuditLogs() {
   try {
-    const res = await fetch("/audit-logs", {
+    const res = await fetch(`${API_BASE}/audit-logs`, {
       headers: { "X-User-Role": "admin" }
     });
     if (res.ok) {
@@ -269,7 +270,7 @@ function renderFullAuditLogs() {
    ========================================== */
 async function fetchAdminRiders() {
   try {
-    const res = await fetch("/riders", {
+    const res = await fetch(`${API_BASE}/riders`, {
       headers: { "X-User-Role": "admin" }
     });
     if (res.ok) {
@@ -316,7 +317,7 @@ function renderRidersAdminTable() {
 
 async function toggleRiderStatus(riderId, newStatus) {
   try {
-    const res = await fetch(`/riders/${riderId}`, {
+    const res = await fetch(`${API_BASE}/riders/${riderId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json", "X-User-Role": "admin" },
       body: JSON.stringify({ status: newStatus })
@@ -348,7 +349,7 @@ async function submitNewRider() {
   }
 
   try {
-    const res = await fetch("/riders", {
+    const res = await fetch(`${API_BASE}/riders`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-User-Role": "admin" },
       body: JSON.stringify({ name, phone, vehicle })
@@ -379,7 +380,6 @@ function renderStaffList() {
     let roleBadgeBg = "rgba(59, 130, 246, 0.15)";
     let roleColor = "#60A5FA";
     if (s.role === "admin") { roleBadgeBg = "rgba(239, 68, 68, 0.15)"; roleColor = "#F87171"; }
-    else if (s.role === "kitchen") { roleBadgeBg = "rgba(245, 158, 11, 0.15)"; roleColor = "#FBBF24"; }
 
     return `
       <div class="staff-card">
@@ -453,7 +453,7 @@ function removeStaffMember(id) {
    ========================================== */
 async function fetchInventory() {
   try {
-    const res = await fetch("/inventory", {
+    const res = await fetch(`${API_BASE}/inventory`, {
       headers: { "X-User-Role": "admin" }
     });
     if (res.ok) {
@@ -521,7 +521,7 @@ async function submitNewInventoryItem() {
   }
 
   try {
-    const res = await fetch("/inventory", {
+    const res = await fetch(`${API_BASE}/inventory`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-User-Role": "admin" },
       body: JSON.stringify({ name, category, unit, current_qty: qty, min_threshold: min })
@@ -543,7 +543,7 @@ async function submitNewInventoryItem() {
    ========================================== */
 async function fetchSuppliers() {
   try {
-    const res = await fetch("/suppliers", {
+    const res = await fetch(`${API_BASE}/suppliers`, {
       headers: { "X-User-Role": "admin" }
     });
     if (res.ok) {
@@ -601,7 +601,7 @@ async function submitSupplierForm() {
   }
 
   try {
-    const res = await fetch("/suppliers", {
+    const res = await fetch(`${API_BASE}/suppliers`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-User-Role": "admin" },
       body: JSON.stringify({ name, phone, email, items_supplied: items })
@@ -625,7 +625,7 @@ async function fetchAndRenderReport() {
   if (!container) return;
 
   try {
-    const res = await fetch("/orders", { headers: { "X-User-Role": "admin" } });
+    const res = await fetch(`${API_BASE}/orders`, { headers: { "X-User-Role": "admin" } });
     const orders = res.ok ? await res.json() : [];
 
     const totalRev = orders.reduce((s, o) => s + parseFloat(o.total || 0), 0);
@@ -690,7 +690,7 @@ async function fetchAndRenderReport() {
 
 function exportReportCSV() {
   let csv = "Order_ID,Customer_Name,Phone,Type,Status,Payment_Status,Total\n";
-  fetch("/orders", { headers: { "X-User-Role": "admin" } })
+  fetch(`${API_BASE}/orders`, { headers: { "X-User-Role": "admin" } })
     .then(res => res.json())
     .then(data => {
       const list = Array.isArray(data) ? data : [];

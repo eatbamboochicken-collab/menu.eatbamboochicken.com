@@ -2,6 +2,8 @@
  * Bamboo Chicken - Customer Order Live Tracking Script
  */
 
+const API_BASE = "https://bamboo-orders-api.warstreett.workers.dev";
+
 let currentOrderId = null;
 let pollTimer = null;
 let mapInstance = null;
@@ -46,7 +48,7 @@ async function loadOrderTracking(orderId, isSilent = false) {
   }
 
   try {
-    const res = await fetch(`/tracking/${currentOrderId}`);
+    const res = await fetch(`${API_BASE}/tracking/${currentOrderId}`);
     if (!res.ok) {
       throw new Error(`Order ${currentOrderId} not found`);
     }
