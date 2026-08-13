@@ -62,10 +62,18 @@
       letter-spacing: 0.5px;
     }
 
+    .view-toggle-wrap {
+      display: flex;
+      background: #23232A;
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid #32323D;
+    }
+
     .pos-status-bar {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
       font-size: 0.85rem;
     }
 
@@ -114,13 +122,14 @@
     }
 
     .btn-pos-primary {
-      background: #E03131;
-      color: #FFFFFF;
+      background: #FDB813;
+      color: #121214;
       border: none;
+      font-weight: 700;
     }
 
     .btn-pos-primary:hover {
-      background: #C92A2A;
+      background: #e5a40f;
     }
 
     .pos-main {
@@ -132,6 +141,55 @@
       box-sizing: border-box;
     }
 
+    /* Today's Operational Summary Bar */
+    .summary-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .summary-card {
+      background: #1A1A1E;
+      border: 1px solid #2A2A30;
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .summary-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #9CA3AF;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .summary-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #FFFFFF;
+    }
+
+    .summary-card.card-new { border-left: 4px solid #FDB813; }
+    .summary-card.card-new .summary-value { color: #FDB813; }
+
+    .summary-card.card-prep { border-left: 4px solid #60A5FA; }
+    .summary-card.card-prep .summary-value { color: #60A5FA; }
+
+    .summary-card.card-ready { border-left: 4px solid #34D399; }
+    .summary-card.card-ready .summary-value { color: #34D399; }
+
+    .summary-card.card-completed { border-left: 4px solid #9CA3AF; }
+    .summary-card.card-completed .summary-value { color: #9CA3AF; }
+
+    .summary-card.card-cancelled { border-left: 4px solid #F87171; }
+    .summary-card.card-cancelled .summary-value { color: #F87171; }
+
+    /* Toolbar */
     .pos-toolbar {
       background: #1A1A1E;
       border: 1px solid #2A2A30;
@@ -254,6 +312,7 @@
       }
     }
 
+    /* Order Card */
     .order-card {
       background: #1A1A1E;
       border: 1px solid #2A2A30;
@@ -268,7 +327,13 @@
 
     .order-card.new-order {
       border: 2px solid #FDB813;
-      box-shadow: 0 0 15px rgba(253, 184, 19, 0.25);
+      box-shadow: 0 0 18px rgba(253, 184, 19, 0.4);
+      animation: pulseNewOrder 2s infinite alternate ease-in-out;
+    }
+
+    @keyframes pulseNewOrder {
+      0% { box-shadow: 0 0 8px rgba(253, 184, 19, 0.3); border-color: #FDB813; }
+      100% { box-shadow: 0 0 24px rgba(253, 184, 19, 0.75); border-color: #FFE082; }
     }
 
     .card-top {
@@ -282,7 +347,7 @@
     .order-id-title {
       font-family: 'Outfit', sans-serif;
       font-weight: 800;
-      font-size: 1.15rem;
+      font-size: 1.25rem;
       color: #FFFFFF;
       display: flex;
       align-items: center;
@@ -387,7 +452,7 @@
       padding-top: 10px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
       font-size: 0.84rem;
     }
 
@@ -396,10 +461,10 @@
       justify-content: space-between;
       font-family: 'Outfit', sans-serif;
       font-weight: 800;
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       color: #FFFFFF;
-      margin-top: 4px;
-      padding-top: 4px;
+      margin-top: 2px;
+      padding-top: 6px;
       border-top: 1px solid #2A2A30;
     }
 
@@ -430,6 +495,289 @@
 
     .badge-paid { background: rgba(16, 185, 129, 0.2); color: #34D399; }
     .badge-unpaid { background: rgba(239, 68, 68, 0.2); color: #F87171; }
+
+    /* Operational Action Area */
+    .action-area {
+      border-top: 1px solid #2A2A30;
+      padding-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .btn-action {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 0.9rem;
+      font-family: 'Outfit', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-action-accept {
+      background: #FDB813;
+      color: #121214;
+    }
+
+    .btn-action-accept:hover {
+      background: #e5a40f;
+    }
+
+    .btn-action-ready {
+      background: #3B82F6;
+      color: #FFFFFF;
+    }
+
+    .btn-action-ready:hover {
+      background: #2563EB;
+    }
+
+    .btn-action-complete {
+      background: #10B981;
+      color: #FFFFFF;
+    }
+
+    .btn-action-complete:hover {
+      background: #059669;
+    }
+
+    .action-done-label {
+      text-align: center;
+      padding: 8px;
+      background: #23232A;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #9CA3AF;
+    }
+
+    .btn-cancel-link {
+      background: transparent;
+      border: none;
+      color: #9CA3AF;
+      font-size: 0.78rem;
+      cursor: pointer;
+      text-decoration: underline;
+      text-align: center;
+      margin-top: 2px;
+    }
+
+    .btn-cancel-link:hover {
+      color: #F87171;
+    }
+
+    /* History Layout & Compact Rows */
+    .history-container {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .history-date-group {
+      background: #1A1A1E;
+      border: 1px solid #2A2A30;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .history-date-header {
+      background: #23232A;
+      padding: 12px 18px;
+      border-bottom: 1px solid #2A2A30;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .history-date-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1.05rem;
+      color: #FFFFFF;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .history-date-count {
+      background: #32323D;
+      color: #FDB813;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .history-orders-list {
+      display: flex;
+      flex-direction: column;
+      divide-y: 1px solid #23232A;
+    }
+
+    .history-order-row {
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid #23232A;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .history-order-row:last-child {
+      border-bottom: none;
+    }
+
+    .history-order-row:hover {
+      background: #23232D;
+    }
+
+    .row-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+
+    .row-bc-num {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1.05rem;
+      color: #FFFFFF;
+      min-width: 70px;
+    }
+
+    .row-time {
+      font-size: 0.84rem;
+      color: #9CA3AF;
+      min-width: 80px;
+    }
+
+    .row-customer {
+      font-weight: 600;
+      color: #E5E7EB;
+      font-size: 0.88rem;
+      min-width: 110px;
+    }
+
+    .row-phone {
+      color: #FDB813;
+      font-size: 0.82rem;
+      min-width: 100px;
+    }
+
+    .row-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      white-space: nowrap;
+    }
+
+    .row-total {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1.05rem;
+      color: #FDB813;
+    }
+
+    /* Modal Styling */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(4px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #1A1A1E;
+      border: 1px solid #32323D;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 560px;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+      overflow: hidden;
+      animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #2A2A30;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #23232A;
+    }
+
+    .modal-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close-btn {
+      background: #32323D;
+      border: none;
+      color: #9CA3AF;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      font-size: 1.3rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .modal-close-btn:hover {
+      background: #3A3A48;
+      color: #FFFFFF;
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
 
     .state-banner {
       background: #1A1A1E;
@@ -484,12 +832,12 @@
   <!-- POS Header -->
   <header class="pos-header">
     <div class="pos-header-inner">
-      <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
         <a href="/" class="pos-brand-logo">
           <span>🎋 Bamboo Chicken</span>
         </a>
         <span class="pos-badge">Cashier Terminal</span>
-        <div style="display: flex; background: #23232A; padding: 3px; border-radius: 8px; border: 1px solid #32323D;">
+        <div class="view-toggle-wrap">
           <button type="button" class="btn-pos" id="btn-view-today" style="background: #FDB813; color: #121214; border: none; font-size: 0.8rem; padding: 5px 12px;" onclick="switchView('today')">
             📅 Today's Orders
           </button>
@@ -519,6 +867,34 @@
   <!-- POS Main Content -->
   <main class="pos-main">
     
+    <!-- Today Summary Bar -->
+    <div class="summary-bar" id="summary-bar">
+      <div class="summary-card">
+        <span class="summary-label">Today's Orders</span>
+        <span class="summary-value" id="summary-total">0</span>
+      </div>
+      <div class="summary-card card-new">
+        <span class="summary-label">⏳ New / Pending</span>
+        <span class="summary-value" id="summary-pending">0</span>
+      </div>
+      <div class="summary-card card-prep">
+        <span class="summary-label">🔥 Preparing</span>
+        <span class="summary-value" id="summary-preparing">0</span>
+      </div>
+      <div class="summary-card card-ready">
+        <span class="summary-label">✅ Ready</span>
+        <span class="summary-value" id="summary-ready">0</span>
+      </div>
+      <div class="summary-card card-completed">
+        <span class="summary-label">🎉 Completed</span>
+        <span class="summary-value" id="summary-completed">0</span>
+      </div>
+      <div class="summary-card card-cancelled">
+        <span class="summary-label">❌ Cancelled</span>
+        <span class="summary-value" id="summary-cancelled">0</span>
+      </div>
+    </div>
+
     <!-- Filter Toolbar -->
     <div class="pos-toolbar">
       <div class="filter-tabs">
@@ -548,10 +924,12 @@
           <input type="text" id="pos-search" class="search-input" placeholder="Search by Order #, Customer Name, or Phone..." oninput="renderOrdersUI()">
         </div>
 
-        <div id="history-date-wrap" style="display: none; align-items: center; gap: 8px;">
-          <span style="font-size: 0.85rem; font-weight: 600; color: #9CA3AF;">Date:</span>
-          <input type="date" id="history-date-picker" class="select-input" onchange="renderOrdersUI()">
-          <button type="button" class="btn-pos" onclick="clearHistoryDateFilter()">Show All Dates</button>
+        <div id="history-date-wrap" style="display: none; align-items: center; gap: 6px; flex-wrap: wrap;">
+          <span style="font-size: 0.82rem; font-weight: 600; color: #9CA3AF;">Filter Date:</span>
+          <button type="button" class="btn-pos" onclick="shiftHistoryDate(-1)" title="Previous Day" style="padding: 6px 10px;">◀</button>
+          <input type="date" id="history-date-picker" class="select-input" style="padding: 6px 10px; font-size: 0.85rem;" onchange="renderOrdersUI()">
+          <button type="button" class="btn-pos" onclick="shiftHistoryDate(1)" title="Next Day" style="padding: 6px 10px;">▶</button>
+          <button type="button" class="btn-pos" onclick="clearHistoryDateFilter()" style="font-size: 0.8rem; padding: 6px 10px;">Show All Dates</button>
         </div>
 
         <select id="pos-type-filter" class="select-input" onchange="renderOrdersUI()">
@@ -569,6 +947,20 @@
 
   <div class="toast" id="pos-toast"></div>
 
+  <!-- Order Details Modal -->
+  <div class="modal-overlay" id="order-details-modal" onclick="closeOrderDetailsModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div id="modal-order-title" class="modal-title">📋 Order Details</div>
+        <button type="button" class="modal-close-btn" onclick="closeOrderDetailsModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-order-body">
+        <!-- Content dynamically injected -->
+      </div>
+    </div>
+  </div>
+
   <script src="/js/cashier.js"></script>
 </body>
 </html>
+
