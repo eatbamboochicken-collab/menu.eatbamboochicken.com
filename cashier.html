@@ -489,6 +489,7 @@
           <span>🎋 Bamboo Chicken</span>
         </a>
         <span class="pos-badge">Cashier Terminal</span>
+        <span style="background: rgba(253, 184, 19, 0.15); color: #FDB813; border: 1px solid rgba(253, 184, 19, 0.3); font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 20px;">📅 Today's View</span>
       </div>
 
       <div class="pos-status-bar">
@@ -496,6 +497,10 @@
           <span class="dot" id="status-dot"></span>
           <span id="status-text">Connected to D1</span>
         </div>
+
+        <button type="button" class="btn-pos" id="btn-history" onclick="showToast('📜 History module entry point (Phase 2B Step 2)')">
+          <span>📜</span> History
+        </button>
 
         <button type="button" class="btn-pos" id="btn-toggle-sound" onclick="toggleSoundAlert()">
           <span id="sound-icon">🔔</span> Sound: ON
