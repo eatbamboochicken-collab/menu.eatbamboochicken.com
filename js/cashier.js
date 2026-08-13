@@ -9,6 +9,7 @@ const TARGET_TIMEZONE = "Africa/Harare";
 
 let cachedOrders = [];
 let knownOrderIds = new Set();
+let updatingOrders = new Set();
 let isFirstLoad = true;
 let currentFilter = "all";
 let currentMode = "today"; // 'today' or 'history'
@@ -76,10 +77,10 @@ async function fetchOrders() {
     console.error("Cashier fetch error:", err);
 
     if (statusDot) statusDot.className = "dot error";
-    if (statusText) statusText.textContent = "Unable to connect to production order server.";
+    if (statusText) statusText.textContent = "Connection problem";
 
     if (cachedOrders.length === 0) {
-      renderErrorState("Unable to connect to production order server.");
+      renderErrorState("Connection problem - unable to reach order server.");
     }
   } finally {
     isFetching = false;
@@ -111,15 +112,18 @@ window.switchView = function(mode) {
   const btnToday = document.getElementById("btn-view-today");
   const btnHistory = document.getElementById("btn-view-history");
   const dateWrap = document.getElementById("history-date-wrap");
+  const summaryBar = document.getElementById("summary-bar");
 
   if (mode === "today") {
     if (btnToday) { btnToday.style.background = "#FDB813"; btnToday.style.color = "#121214"; }
     if (btnHistory) { btnHistory.style.background = "transparent"; btnHistory.style.color = "#9CA3AF"; }
     if (dateWrap) dateWrap.style.display = "none";
+    if (summaryBar) summaryBar.style.display = "grid";
   } else {
     if (btnToday) { btnToday.style.background = "transparent"; btnToday.style.color = "#9CA3AF"; }
     if (btnHistory) { btnHistory.style.background = "#FDB813"; btnHistory.style.color = "#121214"; }
     if (dateWrap) dateWrap.style.display = "flex";
+    if (summaryBar) summaryBar.style.display = "none";
   }
 
   updateCounts();
@@ -129,6 +133,28 @@ window.switchView = function(mode) {
 window.clearHistoryDateFilter = function() {
   const picker = document.getElementById("history-date-picker");
   if (picker) picker.value = "";
+  renderOrdersUI();
+};
+
+window.shiftHistoryDate = function(delta) {
+  const picker = document.getElementById("history-date-picker");
+  if (!picker) return;
+
+  let baseDateStr = picker.value;
+  if (!baseDateStr) {
+    baseDateStr = getTodayLocalDateStr();
+  }
+
+  const parts = baseDateStr.split("-");
+  if (parts.length === 3) {
+    const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    d.setDate(d.getDate() + delta);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    picker.value = `${y}-${m}-${day}`;
+  }
+
   renderOrdersUI();
 };
 
@@ -220,8 +246,27 @@ function getActiveOrdersForCurrentView() {
     if (selectedDate) {
       return cachedOrders.filter(o => getLocalDateStr(o.created_at) === selectedDate);
     }
-    return cachedOrders;
+    // Default History View: Show ONLY orders that are NOT today's orders
+    return cachedOrders.filter(o => getLocalDateStr(o.created_at) !== todayStr);
   }
+}
+
+function formatHistoryDateHeader(dateStr) {
+  if (!dateStr || dateStr.length < 10) return dateStr || "UNKNOWN DATE";
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    const year = parts[0];
+    const monthIdx = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    const months = [
+      "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
+      "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
+    ];
+    if (months[monthIdx]) {
+      return `${day} ${months[monthIdx]} ${year}`;
+    }
+  }
+  return dateStr.toUpperCase();
 }
 
 function updateCounts() {
@@ -248,13 +293,101 @@ function updateCounts() {
     if (el) el.textContent = val;
   };
 
+  // Update Toolbar Tab Badges
   setElText("count-all", counts.all);
   setElText("count-pending", counts.pending);
   setElText("count-preparing", counts.preparing);
   setElText("count-ready", counts.ready);
   setElText("count-completed", counts.completed);
   setElText("count-cancelled", counts.cancelled);
+
+  // Update Operational Summary Bar
+  setElText("summary-total", counts.all);
+  setElText("summary-pending", counts.pending);
+  setElText("summary-preparing", counts.preparing);
+  setElText("summary-ready", counts.ready);
+  setElText("summary-completed", counts.completed);
+  setElText("summary-cancelled", counts.cancelled);
 }
+
+window.updateOrderStatus = async function(orderId, newStatus) {
+  const oidStr = String(orderId);
+  if (updatingOrders.has(oidStr)) return;
+
+  const order = cachedOrders.find(o => String(o.id) === oidStr);
+  if (!order) {
+    console.warn(`Order #${orderId} not found in cached orders.`);
+    return;
+  }
+
+  const currentNormalized = normalizeStatus(order.order_status);
+  const targetNormalized = normalizeStatus(newStatus);
+
+  // Safety confirmation for destructive cancel action
+  if (targetNormalized === "cancelled") {
+    const bcDisplay = order.daily_bc_num || `#${order.id}`;
+    if (!confirm(`Are you sure you want to CANCEL order ${bcDisplay}?`)) {
+      return;
+    }
+  }
+
+  // Authorized status transition map
+  const ALLOWED_TRANSITIONS = {
+    pending: ["preparing", "cancelled"],
+    preparing: ["ready", "cancelled"],
+    ready: ["completed", "cancelled"],
+    completed: [],
+    cancelled: []
+  };
+
+  const allowedNext = ALLOWED_TRANSITIONS[currentNormalized] || [];
+  if (!allowedNext.includes(targetNormalized)) {
+    console.warn(`Unauthorized status transition from ${currentNormalized} to ${targetNormalized} for order #${order.daily_bc_num || orderId}`);
+    showToast(`⚠️ Cannot transition order from ${currentNormalized.toUpperCase()} to ${targetNormalized.toUpperCase()}`);
+    return;
+  }
+
+  updatingOrders.add(oidStr);
+
+  const oldStatus = order.order_status;
+
+  // Optimistically update
+  order.order_status = newStatus;
+  updateCounts();
+  renderOrdersUI();
+
+  showToast(`Updating #${order.daily_bc_num || orderId} to ${newStatus.toUpperCase()}...`);
+
+  try {
+    const res = await fetch(`${API_BASE}/orders/${orderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ order_status: newStatus })
+    });
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    showToast(`✅ Order #${order.daily_bc_num || orderId} updated to ${newStatus.toUpperCase()}`);
+    await fetchOrders();
+  } catch (err) {
+    console.error("Failed to update order status:", err);
+    showToast("⚠️ Could not update order. Please check network connection.");
+    if (order && oldStatus) {
+      order.order_status = oldStatus;
+      updateCounts();
+      renderOrdersUI();
+    }
+  } finally {
+    updatingOrders.delete(oidStr);
+    renderOrdersUI();
+  }
+};
+
+window.cancelOrderPrompt = function(orderId, bcNum) {
+  window.updateOrderStatus(orderId, "cancelled");
+};
 
 function normalizeStatus(statusStr) {
   if (!statusStr) return "pending";
@@ -284,14 +417,6 @@ function renderOrdersUI() {
   const typeFilter = document.getElementById("pos-type-filter")?.value || "all";
 
   let baseOrders = getActiveOrdersForCurrentView();
-
-  // Sort orders: Newest First
-  baseOrders.sort((a, b) => {
-    const timeA = a.created_at ? new Date(a.created_at.includes("T") ? a.created_at : a.created_at.replace(" ", "T") + (a.created_at.includes("Z") ? "" : "Z")).getTime() : 0;
-    const timeB = b.created_at ? new Date(b.created_at.includes("T") ? b.created_at : b.created_at.replace(" ", "T") + (b.created_at.includes("Z") ? "" : "Z")).getTime() : 0;
-    if (timeB !== timeA) return timeB - timeA;
-    return (Number(b.id) || 0) - (Number(a.id) || 0);
-  });
 
   let filtered = baseOrders.filter(o => {
     const normSt = normalizeStatus(o.order_status);
@@ -338,8 +463,221 @@ function renderOrdersUI() {
     return;
   }
 
-  container.innerHTML = filtered.map(order => createOrderCardHTML(order)).join("");
+  if (currentMode === "today") {
+    // Sort Today's orders: Newest First
+    filtered.sort((a, b) => {
+      const timeA = a.created_at ? new Date(a.created_at.includes("T") ? a.created_at : a.created_at.replace(" ", "T") + (a.created_at.includes("Z") ? "" : "Z")).getTime() : 0;
+      const timeB = b.created_at ? new Date(b.created_at.includes("T") ? b.created_at : b.created_at.replace(" ", "T") + (b.created_at.includes("Z") ? "" : "Z")).getTime() : 0;
+      if (timeB !== timeA) return timeB - timeA;
+      return (Number(b.id) || 0) - (Number(a.id) || 0);
+    });
+
+    container.className = "orders-grid";
+    container.innerHTML = filtered.map(order => createOrderCardHTML(order)).join("");
+  } else {
+    // HISTORY MODE: Group by Date
+    container.className = "history-container";
+
+    const groups = {};
+    filtered.forEach(o => {
+      const dKey = getLocalDateStr(o.created_at) || "UNKNOWN";
+      if (!groups[dKey]) groups[dKey] = [];
+      groups[dKey].push(o);
+    });
+
+    // Sort dates descending (newest historical date first)
+    const sortedDates = Object.keys(groups).sort().reverse();
+
+    let historyHTML = sortedDates.map(dateKey => {
+      const groupOrders = groups[dateKey];
+      // Sort orders within date descending
+      groupOrders.sort((a, b) => {
+        const timeA = a.created_at ? new Date(a.created_at.includes("T") ? a.created_at : a.created_at.replace(" ", "T") + (a.created_at.includes("Z") ? "" : "Z")).getTime() : 0;
+        const timeB = b.created_at ? new Date(b.created_at.includes("T") ? b.created_at : b.created_at.replace(" ", "T") + (b.created_at.includes("Z") ? "" : "Z")).getTime() : 0;
+        if (timeB !== timeA) return timeB - timeA;
+        return (Number(b.id) || 0) - (Number(a.id) || 0);
+      });
+
+      const formattedTitle = formatHistoryDateHeader(dateKey);
+      const rowsHTML = groupOrders.map(o => createCompactHistoryRowHTML(o)).join("");
+
+      return `
+        <div class="history-date-group">
+          <div class="history-date-header">
+            <div class="history-date-title">
+              📅 ${escapeHTML(formattedTitle)}
+            </div>
+            <div class="history-date-count">
+              ${groupOrders.length} order${groupOrders.length === 1 ? '' : 's'}
+            </div>
+          </div>
+          <div class="history-orders-list">
+            ${rowsHTML}
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    container.innerHTML = historyHTML;
+  }
 }
+
+function createCompactHistoryRowHTML(order) {
+  const dailyBcNum = order.daily_bc_num || `BC-${order.id}`;
+  const rawStatus = normalizeStatus(order.order_status);
+  const isDelivery = String(order.type || "").toLowerCase().includes("deliv");
+  const grandTotal = parseFloat(order.total || 0);
+
+  let timeFormatted = "";
+  if (order.created_at) {
+    try {
+      const isoStr = order.created_at.includes("T") ? order.created_at : order.created_at.replace(" ", "T") + (order.created_at.includes("Z") ? "" : "Z");
+      const d = new Date(isoStr);
+      timeFormatted = d.toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: TARGET_TIMEZONE });
+    } catch(e) {
+      timeFormatted = order.created_at;
+    }
+  }
+
+  return `
+    <div class="history-order-row" onclick="openOrderDetailsModal(${order.id})">
+      <div class="row-left">
+        <span class="row-bc-num">#${escapeHTML(dailyBcNum)}</span>
+        <span class="row-time">⏰ ${escapeHTML(timeFormatted)}</span>
+        <span class="row-customer">👤 ${escapeHTML(order.customer_name || 'Customer')}</span>
+        <span class="row-phone">📞 ${escapeHTML(order.phone || 'No phone')}</span>
+        <span class="order-type-badge ${isDelivery ? 'type-delivery' : 'type-pickup'}" style="font-size: 0.72rem; padding: 2px 8px;">
+          ${isDelivery ? '🛵 Delivery' : '🛍️ Pickup'}
+        </span>
+      </div>
+      <div class="row-right">
+        <span class="row-total">$${grandTotal.toFixed(2)}</span>
+        <span class="badge-status badge-${rawStatus}">${rawStatus.toUpperCase()}</span>
+        <button type="button" class="btn-pos" style="font-size: 0.78rem; padding: 4px 10px;" onclick="event.stopPropagation(); openOrderDetailsModal(${order.id})">
+          👁️ Details
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+window.openOrderDetailsModal = function(orderId) {
+  const order = cachedOrders.find(o => String(o.id) === String(orderId));
+  if (!order) return;
+
+  const modal = document.getElementById("order-details-modal");
+  const titleEl = document.getElementById("modal-order-title");
+  const bodyEl = document.getElementById("modal-order-body");
+  if (!modal || !bodyEl) return;
+
+  const dailyBcNum = order.daily_bc_num || `BC-${order.id}`;
+  const rawStatus = normalizeStatus(order.order_status);
+  const rawPayment = normalizePayment(order.payment_status);
+  const isDelivery = String(order.type || "").toLowerCase().includes("deliv");
+  const grandTotal = parseFloat(order.total || 0);
+
+  let fullTimeFormatted = "";
+  if (order.created_at) {
+    try {
+      const isoStr = order.created_at.includes("T") ? order.created_at : order.created_at.replace(" ", "T") + (order.created_at.includes("Z") ? "" : "Z");
+      const d = new Date(isoStr);
+      fullTimeFormatted = d.toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: TARGET_TIMEZONE }) +
+                          " • " + d.toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric', timeZone: TARGET_TIMEZONE });
+    } catch(e) {
+      fullTimeFormatted = order.created_at;
+    }
+  }
+
+  let itemsArray = [];
+  if (Array.isArray(order.items)) {
+    itemsArray = order.items;
+  } else if (typeof order.items === "string") {
+    try { itemsArray = JSON.parse(order.items); } catch (e) { itemsArray = []; }
+  }
+
+  const itemsHTML = itemsArray.map(item => {
+    const qty = item.quantity || item.qty || 1;
+    const price = parseFloat(item.price || 0);
+    const itemTotal = price * qty;
+    const name = escapeHTML(item.name || "Item");
+    const custom = item.customization || item.options ? ` (${escapeHTML(item.customization || item.options)})` : "";
+
+    return `
+      <div class="item-row" style="padding: 6px 0; border-bottom: 1px solid #2A2A30;">
+        <div class="item-qty-name">
+          <span class="item-qty">${qty}x</span>
+          <span>${name}${custom}</span>
+        </div>
+        <div class="item-price">$${itemTotal.toFixed(2)}</div>
+      </div>
+    `;
+  }).join("");
+
+  if (titleEl) {
+    titleEl.textContent = `📋 Order #${dailyBcNum} Details`;
+  }
+
+  bodyEl.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; background: #23232A; padding: 12px; border-radius: 10px;">
+      <div>
+        <div style="font-size: 0.8rem; color: #9CA3AF;">Order Time</div>
+        <div style="font-weight: 700; color: #FFFFFF; font-size: 0.95rem;">${escapeHTML(fullTimeFormatted)}</div>
+      </div>
+      <span class="order-type-badge ${isDelivery ? 'type-delivery' : 'type-pickup'}">
+        ${isDelivery ? '🛵 Delivery' : '🛍️ Pickup'}
+      </span>
+    </div>
+
+    <div class="customer-info" style="margin: 0;">
+      <div class="cust-name">👤 Customer: ${escapeHTML(order.customer_name || 'Customer')}</div>
+      <div>📞 Phone: <a href="tel:${escapeHTML(order.phone || '')}" class="cust-phone">${escapeHTML(order.phone || 'No phone')}</a></div>
+      ${order.notes ? `<div class="cust-address">📍 Address / Notes: ${escapeHTML(order.notes)}</div>` : ''}
+    </div>
+
+    <div>
+      <div style="font-size: 0.82rem; font-weight: 700; color: #9CA3AF; text-transform: uppercase; margin-bottom: 8px;">Order Items</div>
+      <div style="background: #121214; padding: 12px; border-radius: 10px;">
+        ${itemsHTML || '<div style="color: #6B7280; font-size: 0.85rem;">No items recorded</div>'}
+      </div>
+    </div>
+
+    <div class="totals-box" style="background: #23232A; padding: 12px; border-radius: 10px;">
+      <div class="payment-method-tag" style="background: transparent; padding: 0;">
+        <span>Payment: <strong>${escapeHTML(order.payment_method || 'Cash')}</strong></span>
+        <span class="badge-status ${rawPayment === 'paid' ? 'badge-paid' : 'badge-unpaid'}">
+          ${rawPayment.toUpperCase()}
+        </span>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+        <span style="font-size: 0.85rem; color: #9CA3AF;">Current Status:</span>
+        <span class="badge-status badge-${rawStatus}">${rawStatus.toUpperCase()}</span>
+      </div>
+
+      <div class="grand-total-row">
+        <span>Total Amount:</span>
+        <span style="color: #FDB813;">$${grandTotal.toFixed(2)}</span>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-top: 8px;">
+      ${rawStatus === 'pending' ? `<button type="button" class="btn-action btn-action-accept" onclick="closeOrderDetailsModal(); updateOrderStatus(${order.id}, 'preparing')">⚡ ACCEPT ORDER</button>` : ''}
+      ${rawStatus === 'preparing' ? `<button type="button" class="btn-action btn-action-ready" onclick="closeOrderDetailsModal(); updateOrderStatus(${order.id}, 'ready')">✅ MARK READY</button>` : ''}
+      ${rawStatus === 'ready' ? `<button type="button" class="btn-action btn-action-complete" onclick="closeOrderDetailsModal(); updateOrderStatus(${order.id}, 'completed')">🎉 MARK COMPLETED</button>` : ''}
+      <button type="button" class="btn-pos" style="width: 100%; padding: 10px; font-weight: 700;" onclick="closeOrderDetailsModal()">Close Details</button>
+    </div>
+  `;
+
+  modal.classList.add("active");
+};
+
+window.closeOrderDetailsModal = function(e) {
+  if (e && e.target !== e.currentTarget && !e.target.classList.contains("modal-close-btn")) {
+    return;
+  }
+  const modal = document.getElementById("order-details-modal");
+  if (modal) modal.classList.remove("active");
+};
 
 function renderEmptyState(title, desc) {
   const container = document.getElementById("orders-container");
@@ -419,13 +757,63 @@ function createOrderCardHTML(order) {
 
   const isNew = rawStatus === "pending";
   const grandTotal = parseFloat(order.total || 0);
+  const isUpdating = updatingOrders.has(String(order.id));
+
+  // Operational Action Area
+  let actionHTML = "";
+  if (rawStatus === "pending") {
+    actionHTML = `
+      <div class="action-area">
+        <button type="button" class="btn-action btn-action-accept" ${isUpdating ? 'disabled style="opacity:0.65; cursor:wait;"' : ''} onclick="updateOrderStatus(${order.id}, 'preparing')">
+          ${isUpdating ? '⏳ ACCEPTING...' : '⚡ ACCEPT ORDER'}
+        </button>
+        <button type="button" class="btn-cancel-link" ${isUpdating ? 'disabled style="opacity:0.5;"' : ''} onclick="cancelOrderPrompt(${order.id}, '${dailyBcNum}')">
+          Cancel Order
+        </button>
+      </div>
+    `;
+  } else if (rawStatus === "preparing") {
+    actionHTML = `
+      <div class="action-area">
+        <button type="button" class="btn-action btn-action-ready" ${isUpdating ? 'disabled style="opacity:0.65; cursor:wait;"' : ''} onclick="updateOrderStatus(${order.id}, 'ready')">
+          ${isUpdating ? '⏳ UPDATING...' : '✅ MARK READY'}
+        </button>
+        <button type="button" class="btn-cancel-link" ${isUpdating ? 'disabled style="opacity:0.5;"' : ''} onclick="cancelOrderPrompt(${order.id}, '${dailyBcNum}')">
+          Cancel Order
+        </button>
+      </div>
+    `;
+  } else if (rawStatus === "ready") {
+    actionHTML = `
+      <div class="action-area">
+        <button type="button" class="btn-action btn-action-complete" ${isUpdating ? 'disabled style="opacity:0.65; cursor:wait;"' : ''} onclick="updateOrderStatus(${order.id}, 'completed')">
+          ${isUpdating ? '⏳ UPDATING...' : '🎉 MARK COMPLETED'}
+        </button>
+        <button type="button" class="btn-cancel-link" ${isUpdating ? 'disabled style="opacity:0.5;"' : ''} onclick="cancelOrderPrompt(${order.id}, '${dailyBcNum}')">
+          Cancel Order
+        </button>
+      </div>
+    `;
+  } else if (rawStatus === "completed") {
+    actionHTML = `
+      <div class="action-area">
+        <div class="action-done-label">✓ Order Completed</div>
+      </div>
+    `;
+  } else if (rawStatus === "cancelled") {
+    actionHTML = `
+      <div class="action-area">
+        <div class="action-done-label" style="color: #F87171;">✕ Order Cancelled</div>
+      </div>
+    `;
+  }
 
   return `
     <div class="order-card ${isNew ? 'new-order' : ''}" id="card-${order.id}">
       <div class="card-top">
         <div>
           <div class="order-id-title">
-            <span>${escapeHTML(dailyBcNum)}</span>
+            <span>#${escapeHTML(dailyBcNum)}</span>
           </div>
           <div class="order-time">${timeFormatted}</div>
         </div>
@@ -440,7 +828,7 @@ function createOrderCardHTML(order) {
         <div>
           📞 <a href="tel:${escapeHTML(order.phone || '')}" class="cust-phone">${escapeHTML(order.phone || 'No phone')}</a>
         </div>
-        ${order.notes ? `<div class="cust-address">📍 Notes/Address: ${escapeHTML(order.notes)}</div>` : ''}
+        ${order.notes ? `<div class="cust-address">📍 ${escapeHTML(order.notes)}</div>` : ''}
       </div>
 
       <div class="items-list">
@@ -455,8 +843,8 @@ function createOrderCardHTML(order) {
           </span>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
-          <span style="font-size: 0.8rem; color: #9CA3AF;">Order Status:</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+          <span style="font-size: 0.8rem; color: #9CA3AF;">Status:</span>
           <span class="badge-status badge-${rawStatus}">
             ${rawStatus.toUpperCase()}
           </span>
@@ -467,6 +855,8 @@ function createOrderCardHTML(order) {
           <span style="color: #FDB813;">$${grandTotal.toFixed(2)}</span>
         </div>
       </div>
+
+      ${actionHTML}
     </div>
   `;
 }

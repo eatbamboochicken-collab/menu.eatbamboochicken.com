@@ -1,8 +1,10 @@
 /**
- * Bamboo Chicken - Interactive Digital Menu Script (Phase 1)
+ * Bamboo Chicken - Interactive Digital Menu Script (Phase 2A)
  * Vanilla JavaScript (ES6+)
  * Brand: Fun, Modern, Bright, Family Friendly, Premium Fast Food
  */
+
+const API_BASE = "https://bamboo-orders-api.warstreett.workers.dev";
 
 // Global Menu Database
 const MENU_DATA = [
@@ -1379,9 +1381,56 @@ async function executeFinalOrderSubmission() {
 
     if (loadingOverlay) loadingOverlay.style.display = "flex";
 
-    const orderId = `BC-${Date.now().toString().slice(-6)}`;
+    // Submit Real Order to Production Worker & D1 Database
+    let postResponse;
+    try {
+      console.log("Submitting order to Production Worker:", `${API_BASE}/orders`);
+      postResponse = await fetch(`${API_BASE}/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(apiPayload)
+      });
+    } catch (networkErr) {
+      console.error("Network error connecting to production worker:", networkErr);
+      showToast("❌ Network error. Could not reach server. Please try again.");
+      if (loadingOverlay) loadingOverlay.style.display = "none";
+      isSubmittingOrder = false;
+      return;
+    }
 
-    // Format WhatsApp Message
+    if (!postResponse.ok) {
+      console.error("Production Worker returned status:", postResponse.status);
+      showToast("❌ Could not save order to database. Please try again.");
+      if (loadingOverlay) loadingOverlay.style.display = "none";
+      isSubmittingOrder = false;
+      return;
+    }
+
+    // Retrieve the persisted Order ID from D1 via GET /orders
+    let orderId = null;
+    try {
+      const getRes = await fetch(`${API_BASE}/orders`);
+      if (getRes.ok) {
+        const ordersList = await getRes.json();
+        if (Array.isArray(ordersList) && ordersList.length > 0) {
+          const match = ordersList.find(o => o.phone === customerPhone) || ordersList[0];
+          if (match && match.id !== undefined && match.id !== null) {
+            orderId = String(match.id).startsWith("BC-") ? String(match.id) : `BC-${match.id}`;
+          }
+        }
+      }
+    } catch (getErr) {
+      console.warn("Error fetching assigned order ID from D1:", getErr);
+    }
+
+    if (!orderId) {
+      showToast("❌ Order saved, but failed to retrieve confirmation ID. Please try again.");
+      if (loadingOverlay) loadingOverlay.style.display = "none";
+      isSubmittingOrder = false;
+      return;
+    }
+
+    // Format WhatsApp Message with confirmed orderId from D1
     let itemsFormattedList = "";
     cart.forEach(item => {
       const customText = item.customization ? ` (${item.customization})` : "";
