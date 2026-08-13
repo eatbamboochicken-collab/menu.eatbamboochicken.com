@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cashier Terminal | Bamboo Chicken</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body {
+      background-color: #121214;
+      color: #F3F4F6;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      padding: 0;
+    }
+
+    .pos-header {
+      background: #1A1A1E;
+      border-bottom: 1px solid #2A2A30;
+      padding: 14px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .pos-header-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .pos-brand-logo {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1.35rem;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .pos-badge {
+      background: #FDB813;
+      color: #121214;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .pos-status-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.85rem;
+    }
+
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #23232A;
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid #32323D;
+      font-weight: 600;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10B981;
+      display: inline-block;
+    }
+
+    .dot.error {
+      background: #EF4444;
+    }
+
+    .btn-pos {
+      background: #23232A;
+      color: #E5E7EB;
+      border: 1px solid #32323D;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-pos:hover {
+      background: #2D2D36;
+      border-color: #4B4B58;
+      color: #FFFFFF;
+    }
+
+    .btn-pos-primary {
+      background: #E03131;
+      color: #FFFFFF;
+      border: none;
+    }
+
+    .btn-pos-primary:hover {
+      background: #C92A2A;
+    }
+
+    .pos-main {
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px;
+      flex: 1;
+      box-sizing: border-box;
+    }
+
+    .pos-toolbar {
+      background: #1A1A1E;
+      border: 1px solid #2A2A30;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #2A2A30;
+    }
+
+    .filter-tab {
+      background: transparent;
+      color: #9CA3AF;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .filter-tab:hover {
+      color: #F3F4F6;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .filter-tab.active {
+      background: #FDB813;
+      color: #121214;
+    }
+
+    .tab-count {
+      background: rgba(0,0,0,0.2);
+      padding: 2px 7px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+    }
+
+    .filter-tab.active .tab-count {
+      background: rgba(0,0,0,0.15);
+      color: #121214;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .search-input-wrap {
+      flex: 1;
+      min-width: 240px;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      background: #121214;
+      border: 1px solid #32323D;
+      color: #FFFFFF;
+      padding: 10px 14px 10px 38px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: #FDB813;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6B7280;
+    }
+
+    .select-input {
+      background: #121214;
+      border: 1px solid #32323D;
+      color: #FFFFFF;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .select-input:focus {
+      outline: none;
+      border-color: #FDB813;
+    }
+
+    .orders-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 20px;
+    }
+
+    @media (max-width: 480px) {
+      .orders-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .order-card {
+      background: #1A1A1E;
+      border: 1px solid #2A2A30;
+      border-radius: 16px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+    }
+
+    .order-card.new-order {
+      border: 2px solid #FDB813;
+      box-shadow: 0 0 15px rgba(253, 184, 19, 0.25);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px dashed #2A2A30;
+      padding-bottom: 12px;
+    }
+
+    .order-id-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .order-time {
+      font-size: 0.78rem;
+      color: #9CA3AF;
+      margin-top: 2px;
+    }
+
+    .order-type-badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .type-delivery {
+      background: rgba(255, 90, 0, 0.15);
+      color: #FF7A30;
+      border: 1px solid rgba(255, 90, 0, 0.3);
+    }
+
+    .type-pickup {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60A5FA;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .customer-info {
+      background: #121214;
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.85rem;
+    }
+
+    .cust-name {
+      font-weight: 700;
+      color: #FFFFFF;
+    }
+
+    .cust-phone {
+      color: #FDB813;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .cust-phone:hover {
+      text-decoration: underline;
+    }
+
+    .cust-address {
+      color: #9CA3AF;
+      font-size: 0.8rem;
+      word-break: break-word;
+    }
+
+    .items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 180px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      font-size: 0.86rem;
+      gap: 12px;
+    }
+
+    .item-qty-name {
+      display: flex;
+      gap: 8px;
+      color: #E5E7EB;
+    }
+
+    .item-qty {
+      font-weight: 800;
+      color: #FDB813;
+    }
+
+    .item-price {
+      font-weight: 700;
+      color: #FFFFFF;
+      white-space: nowrap;
+    }
+
+    .totals-box {
+      border-top: 1px dashed #2A2A30;
+      padding-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.84rem;
+    }
+
+    .grand-total-row {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: #FFFFFF;
+      margin-top: 4px;
+      padding-top: 4px;
+      border-top: 1px solid #2A2A30;
+    }
+
+    .payment-method-tag {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #23232A;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      color: #D1D5DB;
+    }
+
+    .badge-status {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .badge-pending { background: rgba(245, 158, 11, 0.2); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.4); }
+    .badge-preparing { background: rgba(59, 130, 246, 0.2); color: #60A5FA; border: 1px solid rgba(59, 130, 246, 0.4); }
+    .badge-ready { background: rgba(16, 185, 129, 0.2); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .badge-completed { background: rgba(107, 114, 128, 0.2); color: #9CA3AF; border: 1px solid rgba(107, 114, 128, 0.4); }
+    .badge-cancelled { background: rgba(239, 68, 68, 0.2); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+
+    .badge-paid { background: rgba(16, 185, 129, 0.2); color: #34D399; }
+    .badge-unpaid { background: rgba(239, 68, 68, 0.2); color: #F87171; }
+
+    .state-banner {
+      background: #1A1A1E;
+      border: 1px solid #2A2A30;
+      border-radius: 16px;
+      padding: 48px 24px;
+      text-align: center;
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .state-icon {
+      font-size: 3rem;
+    }
+
+    .state-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #FFFFFF;
+    }
+
+    .state-desc {
+      color: #9CA3AF;
+      font-size: 0.9rem;
+      max-width: 400px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1F1F24;
+      color: #FFFFFF;
+      border: 1px solid #3A3A45;
+      padding: 12px 20px;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      font-size: 0.88rem;
+      font-weight: 600;
+      z-index: 1000;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- POS Header -->
+  <header class="pos-header">
+    <div class="pos-header-inner">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <a href="/" class="pos-brand-logo">
+          <span>🎋 Bamboo Chicken</span>
+        </a>
+        <span class="pos-badge">Cashier Terminal</span>
+      </div>
+
+      <div class="pos-status-bar">
+        <div class="status-indicator">
+          <span class="dot" id="status-dot"></span>
+          <span id="status-text">Connected to D1</span>
+        </div>
+
+        <button type="button" class="btn-pos" id="btn-toggle-sound" onclick="toggleSoundAlert()">
+          <span id="sound-icon">🔔</span> Sound: ON
+        </button>
+
+        <button type="button" class="btn-pos btn-pos-primary" onclick="fetchOrdersManual()">
+          <span>🔄</span> Refresh
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- POS Main Content -->
+  <main class="pos-main">
+    
+    <!-- Filter Toolbar -->
+    <div class="pos-toolbar">
+      <div class="filter-tabs">
+        <button type="button" class="filter-tab active" data-filter="all" onclick="setFilter('all')">
+          All Orders <span class="tab-count" id="count-all">0</span>
+        </button>
+        <button type="button" class="filter-tab" data-filter="pending" onclick="setFilter('pending')">
+          ⏳ New / Pending <span class="tab-count" id="count-pending">0</span>
+        </button>
+        <button type="button" class="filter-tab" data-filter="preparing" onclick="setFilter('preparing')">
+          🔥 Preparing <span class="tab-count" id="count-preparing">0</span>
+        </button>
+        <button type="button" class="filter-tab" data-filter="ready" onclick="setFilter('ready')">
+          ✅ Ready <span class="tab-count" id="count-ready">0</span>
+        </button>
+        <button type="button" class="filter-tab" data-filter="completed" onclick="setFilter('completed')">
+          🎉 Completed <span class="tab-count" id="count-completed">0</span>
+        </button>
+        <button type="button" class="filter-tab" data-filter="cancelled" onclick="setFilter('cancelled')">
+          ❌ Cancelled <span class="tab-count" id="count-cancelled">0</span>
+        </button>
+      </div>
+
+      <div class="search-row">
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="pos-search" class="search-input" placeholder="Search by Order #, Customer Name, or Phone..." oninput="renderOrdersUI()">
+        </div>
+
+        <select id="pos-type-filter" class="select-input" onchange="renderOrdersUI()">
+          <option value="all">All Types (Pickup & Delivery)</option>
+          <option value="delivery">🛵 Delivery Only</option>
+          <option value="pickup">🛍️ Pickup Only</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Orders Grid -->
+    <div class="orders-grid" id="orders-container"></div>
+
+  </main>
+
+  <div class="toast" id="pos-toast"></div>
+
+  <script src="/js/cashier.js"></script>
+</body>
+</html>
