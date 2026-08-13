@@ -1,10 +1,11 @@
 /**
- * Bamboo Chicken - Cashier Terminal Script (Phase 2A - Read Only)
+ * Bamboo Chicken - Cashier Terminal Script
  * Production API Base: https://bamboo-orders-api.warstreett.workers.dev
  */
 
 const API_BASE = "https://bamboo-orders-api.warstreett.workers.dev";
 const POLL_INTERVAL_MS = 4000;
+const TARGET_TIMEZONE = "Africa/Harare";
 
 let cachedOrders = [];
 let knownOrderIds = new Set();
@@ -151,33 +152,34 @@ window.setFilter = function(filter) {
 function getLocalDateStr(dateInput) {
   if (!dateInput) return "";
   try {
-    const str = String(dateInput);
+    const str = String(dateInput).trim();
     const isoStr = str.includes("T") ? str : str.replace(" ", "T") + (str.includes("Z") ? "" : "Z");
     const d = new Date(isoStr);
     if (isNaN(d.getTime())) {
       return str.substring(0, 10);
     }
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
+    return d.toLocaleDateString("en-CA", { timeZone: TARGET_TIMEZONE });
   } catch (e) {
     return String(dateInput).substring(0, 10);
   }
 }
 
 function getTodayLocalDateStr() {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
+  try {
+    return new Date().toLocaleDateString("en-CA", { timeZone: TARGET_TIMEZONE });
+  } catch (e) {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
 }
 
 /**
  * Process raw D1 orders:
- * 1. Groups all orders by calendar date (YYYY-MM-DD).
- * 2. Assigns sequence index per date (BC-01, BC-02, etc.) sorted chronologically ascending by ID/timestamp.
+ * 1. Groups all orders by calendar date (YYYY-MM-DD in Africa/Harare).
+ * 2. Assigns sequence index per date (BC-01, BC-02, etc.) sorted chronologically ascending by creation time.
  * 3. Preserves original D1 database ID (order.id) intact.
  */
 function processOrdersData(rawOrders) {
@@ -192,8 +194,8 @@ function processOrdersData(rawOrders) {
 
   Object.keys(groups).forEach(dateKey => {
     groups[dateKey].sort((a, b) => {
-      const timeA = a.created_at ? new Date(a.created_at.includes("T") ? a.created_at : a.created_at.replace(" ", "T")).getTime() : 0;
-      const timeB = b.created_at ? new Date(b.created_at.includes("T") ? b.created_at : b.created_at.replace(" ", "T")).getTime() : 0;
+      const timeA = a.created_at ? new Date(a.created_at.includes("T") ? a.created_at : a.created_at.replace(" ", "T") + (a.created_at.includes("Z") ? "" : "Z")).getTime() : 0;
+      const timeB = b.created_at ? new Date(b.created_at.includes("T") ? b.created_at : b.created_at.replace(" ", "T") + (b.created_at.includes("Z") ? "" : "Z")).getTime() : 0;
       if (timeA !== timeB) return timeA - timeB;
       return (Number(a.id) || 0) - (Number(b.id) || 0);
     });
@@ -285,8 +287,8 @@ function renderOrdersUI() {
 
   // Sort orders: Newest First
   baseOrders.sort((a, b) => {
-    const timeA = a.created_at ? new Date(a.created_at.includes("T") ? a.created_at : a.created_at.replace(" ", "T")).getTime() : 0;
-    const timeB = b.created_at ? new Date(b.created_at.includes("T") ? b.created_at : b.created_at.replace(" ", "T")).getTime() : 0;
+    const timeA = a.created_at ? new Date(a.created_at.includes("T") ? a.created_at : a.created_at.replace(" ", "T") + (a.created_at.includes("Z") ? "" : "Z")).getTime() : 0;
+    const timeB = b.created_at ? new Date(b.created_at.includes("T") ? b.created_at : b.created_at.replace(" ", "T") + (b.created_at.includes("Z") ? "" : "Z")).getTime() : 0;
     if (timeB !== timeA) return timeB - timeA;
     return (Number(b.id) || 0) - (Number(a.id) || 0);
   });
@@ -398,7 +400,7 @@ function createOrderCardHTML(order) {
           <span class="item-qty">${qty}x</span>
           <span>${name}${custom}</span>
         </div>
-        <div class="item-price">${itemTotal.toFixed(2)}</div>
+        <div class="item-price">$${itemTotal.toFixed(2)}</div>
       </div>
     `;
   }).join("");
@@ -406,9 +408,10 @@ function createOrderCardHTML(order) {
   let timeFormatted = "";
   if (order.created_at) {
     try {
-      const d = new Date(order.created_at.includes("Z") ? order.created_at : order.created_at + "Z");
-      timeFormatted = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) +
-                      " • " + d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      const isoStr = order.created_at.includes("T") ? order.created_at : order.created_at.replace(" ", "T") + (order.created_at.includes("Z") ? "" : "Z");
+      const d = new Date(isoStr);
+      timeFormatted = d.toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: TARGET_TIMEZONE }) +
+                      " • " + d.toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric', timeZone: TARGET_TIMEZONE });
     } catch(e) {
       timeFormatted = order.created_at;
     }
@@ -461,7 +464,7 @@ function createOrderCardHTML(order) {
 
         <div class="grand-total-row">
           <span>Total:</span>
-          <span style="color: #FDB813;">${grandTotal.toFixed(2)}</span>
+          <span style="color: #FDB813;">$${grandTotal.toFixed(2)}</span>
         </div>
       </div>
     </div>
