@@ -10,6 +10,7 @@ let cachedOrders = [];
 let knownOrderIds = new Set();
 let isFirstLoad = true;
 let currentFilter = "all";
+let currentMode = "today"; // 'today' or 'history'
 let soundEnabled = true;
 let isFetching = false;
 
@@ -104,6 +105,32 @@ window.toggleSoundAlert = function() {
   }
 };
 
+window.switchView = function(mode) {
+  currentMode = mode;
+  const btnToday = document.getElementById("btn-view-today");
+  const btnHistory = document.getElementById("btn-view-history");
+  const dateWrap = document.getElementById("history-date-wrap");
+
+  if (mode === "today") {
+    if (btnToday) { btnToday.style.background = "#FDB813"; btnToday.style.color = "#121214"; }
+    if (btnHistory) { btnHistory.style.background = "transparent"; btnHistory.style.color = "#9CA3AF"; }
+    if (dateWrap) dateWrap.style.display = "none";
+  } else {
+    if (btnToday) { btnToday.style.background = "transparent"; btnToday.style.color = "#9CA3AF"; }
+    if (btnHistory) { btnHistory.style.background = "#FDB813"; btnHistory.style.color = "#121214"; }
+    if (dateWrap) dateWrap.style.display = "flex";
+  }
+
+  updateCounts();
+  renderOrdersUI();
+};
+
+window.clearHistoryDateFilter = function() {
+  const picker = document.getElementById("history-date-picker");
+  if (picker) picker.value = "";
+  renderOrdersUI();
+};
+
 window.setFilter = function(filter) {
   currentFilter = filter;
 
@@ -180,12 +207,26 @@ function processOrdersData(rawOrders) {
   return rawOrders;
 }
 
-function updateCounts() {
+function getActiveOrdersForCurrentView() {
   const todayStr = getTodayLocalDateStr();
-  const todaysOrders = cachedOrders.filter(o => getLocalDateStr(o.created_at) === todayStr);
+
+  if (currentMode === "today") {
+    return cachedOrders.filter(o => getLocalDateStr(o.created_at) === todayStr);
+  } else {
+    // History mode
+    const selectedDate = document.getElementById("history-date-picker")?.value;
+    if (selectedDate) {
+      return cachedOrders.filter(o => getLocalDateStr(o.created_at) === selectedDate);
+    }
+    return cachedOrders;
+  }
+}
+
+function updateCounts() {
+  const viewOrders = getActiveOrdersForCurrentView();
 
   const counts = {
-    all: todaysOrders.length,
+    all: viewOrders.length,
     pending: 0,
     preparing: 0,
     ready: 0,
@@ -193,7 +234,7 @@ function updateCounts() {
     cancelled: 0
   };
 
-  todaysOrders.forEach(o => {
+  viewOrders.forEach(o => {
     const st = normalizeStatus(o.order_status);
     if (counts[st] !== undefined) {
       counts[st]++;
@@ -239,20 +280,18 @@ function renderOrdersUI() {
 
   const searchVal = (document.getElementById("pos-search")?.value || "").toLowerCase().trim();
   const typeFilter = document.getElementById("pos-type-filter")?.value || "all";
-  const todayStr = getTodayLocalDateStr();
 
-  // Filter 1: Today's Orders Only
-  let todaysOrders = cachedOrders.filter(o => getLocalDateStr(o.created_at) === todayStr);
+  let baseOrders = getActiveOrdersForCurrentView();
 
-  // Sort Today's Orders: Newest First
-  todaysOrders.sort((a, b) => {
+  // Sort orders: Newest First
+  baseOrders.sort((a, b) => {
     const timeA = a.created_at ? new Date(a.created_at.includes("T") ? a.created_at : a.created_at.replace(" ", "T")).getTime() : 0;
     const timeB = b.created_at ? new Date(b.created_at.includes("T") ? b.created_at : b.created_at.replace(" ", "T")).getTime() : 0;
     if (timeB !== timeA) return timeB - timeA;
     return (Number(b.id) || 0) - (Number(a.id) || 0);
   });
 
-  let filtered = todaysOrders.filter(o => {
+  let filtered = baseOrders.filter(o => {
     const normSt = normalizeStatus(o.order_status);
 
     if (currentFilter !== "all" && normSt !== currentFilter) {
@@ -283,13 +322,17 @@ function renderOrdersUI() {
     return true;
   });
 
-  if (todaysOrders.length === 0) {
-    renderEmptyState("No orders today.", "Customer orders placed on the web menu today will appear here automatically.");
+  if (baseOrders.length === 0) {
+    if (currentMode === "today") {
+      renderEmptyState("No orders today.", "Customer orders placed on the web menu today will appear here automatically.");
+    } else {
+      renderEmptyState("No historical orders found.", "Select a different date or click 'Show All Dates' to view historical orders.");
+    }
     return;
   }
 
   if (filtered.length === 0) {
-    renderEmptyState("No matching orders for today.", "Try adjusting your search query or status filter tab.");
+    renderEmptyState("No matching orders.", "Try adjusting your search query or status filter tab.");
     return;
   }
 
@@ -327,7 +370,6 @@ function renderErrorState(title) {
 
 function createOrderCardHTML(order) {
   const dailyBcNum = order.daily_bc_num || `BC-${order.id}`;
-  const d1Id = order.id;
   const rawStatus = normalizeStatus(order.order_status);
   const rawPayment = normalizePayment(order.payment_status);
   const isDelivery = String(order.type || "").toLowerCase().includes("deliv");
@@ -356,7 +398,7 @@ function createOrderCardHTML(order) {
           <span class="item-qty">${qty}x</span>
           <span>${name}${custom}</span>
         </div>
-        <div class="item-price">$${itemTotal.toFixed(2)}</div>
+        <div class="item-price">${itemTotal.toFixed(2)}</div>
       </div>
     `;
   }).join("");
@@ -381,7 +423,6 @@ function createOrderCardHTML(order) {
         <div>
           <div class="order-id-title">
             <span>${escapeHTML(dailyBcNum)}</span>
-            <span style="font-size: 0.78rem; font-weight: 600; color: #9CA3AF;">(D1 ID: #${d1Id})</span>
           </div>
           <div class="order-time">${timeFormatted}</div>
         </div>
@@ -420,7 +461,7 @@ function createOrderCardHTML(order) {
 
         <div class="grand-total-row">
           <span>Total:</span>
-          <span style="color: #FDB813;">$${grandTotal.toFixed(2)}</span>
+          <span style="color: #FDB813;">${grandTotal.toFixed(2)}</span>
         </div>
       </div>
     </div>
