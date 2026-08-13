@@ -66,7 +66,7 @@ async function fetchOrders() {
     }
 
     isFirstLoad = false;
-    cachedOrders = data;
+    cachedOrders = processOrdersData(data);
     updateCounts();
     renderOrdersUI();
 
@@ -118,9 +118,74 @@ window.setFilter = function(filter) {
   renderOrdersUI();
 };
 
+/**
+ * Utility functions for Date & Daily BC Sequence Numbers
+ */
+function getLocalDateStr(dateInput) {
+  if (!dateInput) return "";
+  try {
+    const str = String(dateInput);
+    const isoStr = str.includes("T") ? str : str.replace(" ", "T") + (str.includes("Z") ? "" : "Z");
+    const d = new Date(isoStr);
+    if (isNaN(d.getTime())) {
+      return str.substring(0, 10);
+    }
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  } catch (e) {
+    return String(dateInput).substring(0, 10);
+  }
+}
+
+function getTodayLocalDateStr() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * Process raw D1 orders:
+ * 1. Groups all orders by calendar date (YYYY-MM-DD).
+ * 2. Assigns sequence index per date (BC-01, BC-02, etc.) sorted chronologically ascending by ID/timestamp.
+ * 3. Preserves original D1 database ID (order.id) intact.
+ */
+function processOrdersData(rawOrders) {
+  if (!Array.isArray(rawOrders)) return [];
+
+  const groups = {};
+  rawOrders.forEach(o => {
+    const dateKey = getLocalDateStr(o.created_at) || "unknown";
+    if (!groups[dateKey]) groups[dateKey] = [];
+    groups[dateKey].push(o);
+  });
+
+  Object.keys(groups).forEach(dateKey => {
+    groups[dateKey].sort((a, b) => {
+      const timeA = a.created_at ? new Date(a.created_at.includes("T") ? a.created_at : a.created_at.replace(" ", "T")).getTime() : 0;
+      const timeB = b.created_at ? new Date(b.created_at.includes("T") ? b.created_at : b.created_at.replace(" ", "T")).getTime() : 0;
+      if (timeA !== timeB) return timeA - timeB;
+      return (Number(a.id) || 0) - (Number(b.id) || 0);
+    });
+
+    groups[dateKey].forEach((order, index) => {
+      const seq = String(index + 1).padStart(2, '0');
+      order.daily_bc_num = `BC-${seq}`;
+    });
+  });
+
+  return rawOrders;
+}
+
 function updateCounts() {
+  const todayStr = getTodayLocalDateStr();
+  const todaysOrders = cachedOrders.filter(o => getLocalDateStr(o.created_at) === todayStr);
+
   const counts = {
-    all: cachedOrders.length,
+    all: todaysOrders.length,
     pending: 0,
     preparing: 0,
     ready: 0,
@@ -128,7 +193,7 @@ function updateCounts() {
     cancelled: 0
   };
 
-  cachedOrders.forEach(o => {
+  todaysOrders.forEach(o => {
     const st = normalizeStatus(o.order_status);
     if (counts[st] !== undefined) {
       counts[st]++;
@@ -174,8 +239,20 @@ function renderOrdersUI() {
 
   const searchVal = (document.getElementById("pos-search")?.value || "").toLowerCase().trim();
   const typeFilter = document.getElementById("pos-type-filter")?.value || "all";
+  const todayStr = getTodayLocalDateStr();
 
-  let filtered = cachedOrders.filter(o => {
+  // Filter 1: Today's Orders Only
+  let todaysOrders = cachedOrders.filter(o => getLocalDateStr(o.created_at) === todayStr);
+
+  // Sort Today's Orders: Newest First
+  todaysOrders.sort((a, b) => {
+    const timeA = a.created_at ? new Date(a.created_at.includes("T") ? a.created_at : a.created_at.replace(" ", "T")).getTime() : 0;
+    const timeB = b.created_at ? new Date(b.created_at.includes("T") ? b.created_at : b.created_at.replace(" ", "T")).getTime() : 0;
+    if (timeB !== timeA) return timeB - timeA;
+    return (Number(b.id) || 0) - (Number(a.id) || 0);
+  });
+
+  let filtered = todaysOrders.filter(o => {
     const normSt = normalizeStatus(o.order_status);
 
     if (currentFilter !== "all" && normSt !== currentFilter) {
@@ -190,11 +267,13 @@ function renderOrdersUI() {
 
     if (searchVal) {
       const orderIdStr = String(o.id || "").toLowerCase();
+      const dailyNumStr = String(o.daily_bc_num || "").toLowerCase();
       const custName = String(o.customer_name || "").toLowerCase();
       const phone = String(o.phone || "").toLowerCase();
       const notes = String(o.notes || "").toLowerCase();
 
       const match = orderIdStr.includes(searchVal) ||
+                    dailyNumStr.includes(searchVal) ||
                     custName.includes(searchVal) ||
                     phone.includes(searchVal) ||
                     notes.includes(searchVal);
@@ -204,13 +283,13 @@ function renderOrdersUI() {
     return true;
   });
 
-  if (cachedOrders.length === 0) {
-    renderEmptyState("No orders yet.", "Customer orders placed on the web menu will appear here automatically.");
+  if (todaysOrders.length === 0) {
+    renderEmptyState("No orders today.", "Customer orders placed on the web menu today will appear here automatically.");
     return;
   }
 
   if (filtered.length === 0) {
-    renderEmptyState("No matching orders.", "Try adjusting your search query or filter tab.");
+    renderEmptyState("No matching orders for today.", "Try adjusting your search query or status filter tab.");
     return;
   }
 
@@ -247,7 +326,8 @@ function renderErrorState(title) {
 }
 
 function createOrderCardHTML(order) {
-  const normId = String(order.id).startsWith("BC-") ? String(order.id) : `BC-${order.id}`;
+  const dailyBcNum = order.daily_bc_num || `BC-${order.id}`;
+  const d1Id = order.id;
   const rawStatus = normalizeStatus(order.order_status);
   const rawPayment = normalizePayment(order.payment_status);
   const isDelivery = String(order.type || "").toLowerCase().includes("deliv");
@@ -300,7 +380,8 @@ function createOrderCardHTML(order) {
       <div class="card-top">
         <div>
           <div class="order-id-title">
-            <span>#${normId}</span>
+            <span>${escapeHTML(dailyBcNum)}</span>
+            <span style="font-size: 0.78rem; font-weight: 600; color: #9CA3AF;">(D1 ID: #${d1Id})</span>
           </div>
           <div class="order-time">${timeFormatted}</div>
         </div>
