@@ -489,7 +489,14 @@
           <span>🎋 Bamboo Chicken</span>
         </a>
         <span class="pos-badge">Cashier Terminal</span>
-        <span style="background: rgba(253, 184, 19, 0.15); color: #FDB813; border: 1px solid rgba(253, 184, 19, 0.3); font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 20px;">📅 Today's View</span>
+        <div style="display: flex; background: #23232A; padding: 3px; border-radius: 8px; border: 1px solid #32323D;">
+          <button type="button" class="btn-pos" id="btn-view-today" style="background: #FDB813; color: #121214; border: none; font-size: 0.8rem; padding: 5px 12px;" onclick="switchView('today')">
+            📅 Today's Orders
+          </button>
+          <button type="button" class="btn-pos" id="btn-view-history" style="background: transparent; color: #9CA3AF; border: none; font-size: 0.8rem; padding: 5px 12px;" onclick="switchView('history')">
+            📜 History
+          </button>
+        </div>
       </div>
 
       <div class="pos-status-bar">
@@ -497,10 +504,6 @@
           <span class="dot" id="status-dot"></span>
           <span id="status-text">Connected to D1</span>
         </div>
-
-        <button type="button" class="btn-pos" id="btn-history" onclick="showToast('📜 History module entry point (Phase 2B Step 2)')">
-          <span>📜</span> History
-        </button>
 
         <button type="button" class="btn-pos" id="btn-toggle-sound" onclick="toggleSoundAlert()">
           <span id="sound-icon">🔔</span> Sound: ON
@@ -543,6 +546,12 @@
         <div class="search-input-wrap">
           <span class="search-icon">🔍</span>
           <input type="text" id="pos-search" class="search-input" placeholder="Search by Order #, Customer Name, or Phone..." oninput="renderOrdersUI()">
+        </div>
+
+        <div id="history-date-wrap" style="display: none; align-items: center; gap: 8px;">
+          <span style="font-size: 0.85rem; font-weight: 600; color: #9CA3AF;">Date:</span>
+          <input type="date" id="history-date-picker" class="select-input" onchange="renderOrdersUI()">
+          <button type="button" class="btn-pos" onclick="clearHistoryDateFilter()">Show All Dates</button>
         </div>
 
         <select id="pos-type-filter" class="select-input" onchange="renderOrdersUI()">
