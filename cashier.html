@@ -1,966 +1,403 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cashier Terminal | Bamboo Chicken</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Bamboo Chicken | System Upgrade</title>
+
   <style>
-    body {
-      background-color: #121214;
-      color: #F3F4F6;
-      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
-    .pos-header {
-      background: #1A1A1E;
-      border-bottom: 1px solid #2A2A30;
-      padding: 14px 24px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    :root {
+      --yellow: #ffd21c;
+      --orange: #f47b20;
+      --black: #111111;
+      --white: #ffffff;
+      --soft: #fff9df;
     }
 
-    .pos-header-inner {
-      max-width: 1400px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .pos-brand-logo {
-      font-family: 'Outfit', sans-serif;
-      font-weight: 800;
-      font-size: 1.35rem;
-      color: #FFFFFF;
+    body {
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at 15% 15%, rgba(255,210,28,.20), transparent 28%),
+        radial-gradient(circle at 85% 85%, rgba(244,123,32,.16), transparent 30%),
+        var(--soft);
+      color: var(--black);
       display: flex;
       align-items: center;
-      gap: 8px;
-      text-decoration: none;
+      justify-content: center;
+      overflow: hidden;
     }
 
-    .pos-badge {
-      background: #FDB813;
-      color: #121214;
-      font-size: 0.72rem;
-      font-weight: 800;
-      padding: 3px 8px;
-      border-radius: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .view-toggle-wrap {
-      display: flex;
-      background: #23232A;
-      padding: 3px;
-      border-radius: 8px;
-      border: 1px solid #32323D;
-    }
-
-    .pos-status-bar {
+    .page {
+      width: 100%;
+      max-width: 720px;
+      min-height: 100vh;
+      padding: 28px 20px;
       display: flex;
       align-items: center;
-      gap: 12px;
-      font-size: 0.85rem;
+      justify-content: center;
+      position: relative;
     }
 
-    .status-indicator {
+    /* Decorative background shapes */
+
+    .shape {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(1px);
+      opacity: .7;
+      pointer-events: none;
+    }
+
+    .shape.one {
+      width: 180px;
+      height: 180px;
+      background: var(--yellow);
+      top: -90px;
+      left: -70px;
+    }
+
+    .shape.two {
+      width: 150px;
+      height: 150px;
+      background: var(--orange);
+      bottom: -75px;
+      right: -55px;
+    }
+
+    .card {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      background: rgba(255,255,255,.94);
+      border: 2px solid rgba(17,17,17,.08);
+      border-radius: 30px;
+      padding: 42px 28px 32px;
+      text-align: center;
+      box-shadow:
+        0 25px 70px rgba(0,0,0,.12),
+        0 5px 20px rgba(244,123,32,.08);
+      backdrop-filter: blur(10px);
+    }
+
+    .logo-wrap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 82px;
+      height: 82px;
+      background: var(--yellow);
+      border-radius: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 25px rgba(255,210,28,.35);
+      font-size: 42px;
+    }
+
+    .status {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: #23232A;
-      padding: 6px 12px;
-      border-radius: 20px;
-      border: 1px solid #32323D;
-      font-weight: 600;
+      background: #f4f4f4;
+      border-radius: 50px;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
     }
 
     .dot {
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: #10B981;
-      display: inline-block;
+      background: var(--orange);
+      animation: pulse 1.5s infinite;
     }
 
-    .dot.error {
-      background: #EF4444;
-    }
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+      }
 
-    .btn-pos {
-      background: #23232A;
-      color: #E5E7EB;
-      border: 1px solid #32323D;
-      padding: 8px 14px;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s ease;
-    }
-
-    .btn-pos:hover {
-      background: #2D2D36;
-      border-color: #4B4B58;
-      color: #FFFFFF;
-    }
-
-    .btn-pos-primary {
-      background: #FDB813;
-      color: #121214;
-      border: none;
-      font-weight: 700;
-    }
-
-    .btn-pos-primary:hover {
-      background: #e5a40f;
-    }
-
-    .pos-main {
-      max-width: 1400px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 24px;
-      flex: 1;
-      box-sizing: border-box;
-    }
-
-    /* Today's Operational Summary Bar */
-    .summary-bar {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .summary-card {
-      background: #1A1A1E;
-      border: 1px solid #2A2A30;
-      border-radius: 12px;
-      padding: 14px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .summary-label {
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: #9CA3AF;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .summary-value {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.6rem;
-      font-weight: 800;
-      color: #FFFFFF;
-    }
-
-    .summary-card.card-new { border-left: 4px solid #FDB813; }
-    .summary-card.card-new .summary-value { color: #FDB813; }
-
-    .summary-card.card-prep { border-left: 4px solid #60A5FA; }
-    .summary-card.card-prep .summary-value { color: #60A5FA; }
-
-    .summary-card.card-ready { border-left: 4px solid #34D399; }
-    .summary-card.card-ready .summary-value { color: #34D399; }
-
-    .summary-card.card-completed { border-left: 4px solid #9CA3AF; }
-    .summary-card.card-completed .summary-value { color: #9CA3AF; }
-
-    .summary-card.card-cancelled { border-left: 4px solid #F87171; }
-    .summary-card.card-cancelled .summary-value { color: #F87171; }
-
-    /* Toolbar */
-    .pos-toolbar {
-      background: #1A1A1E;
-      border: 1px solid #2A2A30;
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .filter-tabs {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-      border-bottom: 1px solid #2A2A30;
-    }
-
-    .filter-tab {
-      background: transparent;
-      color: #9CA3AF;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-size: 0.88rem;
-      font-weight: 700;
-      cursor: pointer;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s ease;
-    }
-
-    .filter-tab:hover {
-      color: #F3F4F6;
-      background: rgba(255,255,255,0.05);
-    }
-
-    .filter-tab.active {
-      background: #FDB813;
-      color: #121214;
-    }
-
-    .tab-count {
-      background: rgba(0,0,0,0.2);
-      padding: 2px 7px;
-      border-radius: 12px;
-      font-size: 0.75rem;
-    }
-
-    .filter-tab.active .tab-count {
-      background: rgba(0,0,0,0.15);
-      color: #121214;
-    }
-
-    .search-row {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .search-input-wrap {
-      flex: 1;
-      min-width: 240px;
-      position: relative;
-    }
-
-    .search-input {
-      width: 100%;
-      background: #121214;
-      border: 1px solid #32323D;
-      color: #FFFFFF;
-      padding: 10px 14px 10px 38px;
-      border-radius: 8px;
-      font-size: 0.88rem;
-      font-family: inherit;
-      box-sizing: border-box;
-    }
-
-    .search-input:focus {
-      outline: none;
-      border-color: #FDB813;
-    }
-
-    .search-icon {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #6B7280;
-    }
-
-    .select-input {
-      background: #121214;
-      border: 1px solid #32323D;
-      color: #FFFFFF;
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-size: 0.88rem;
-      font-family: inherit;
-      cursor: pointer;
-    }
-
-    .select-input:focus {
-      outline: none;
-      border-color: #FDB813;
-    }
-
-    .orders-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-      gap: 20px;
-    }
-
-    @media (max-width: 480px) {
-      .orders-grid {
-        grid-template-columns: 1fr;
+      50% {
+        transform: scale(1.5);
+        opacity: .45;
       }
     }
 
-    /* Order Card */
-    .order-card {
-      background: #1A1A1E;
-      border: 1px solid #2A2A30;
-      border-radius: 16px;
-      padding: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-      position: relative;
+    h1 {
+      font-size: clamp(36px, 8vw, 64px);
+      line-height: .95;
+      letter-spacing: -0.055em;
+      font-weight: 900;
+      margin-bottom: 18px;
     }
 
-    .order-card.new-order {
-      border: 2px solid #FDB813;
-      box-shadow: 0 0 18px rgba(253, 184, 19, 0.4);
-      animation: pulseNewOrder 2s infinite alternate ease-in-out;
+    h1 span {
+      color: var(--orange);
     }
 
-    @keyframes pulseNewOrder {
-      0% { box-shadow: 0 0 8px rgba(253, 184, 19, 0.3); border-color: #FDB813; }
-      100% { box-shadow: 0 0 24px rgba(253, 184, 19, 0.75); border-color: #FFE082; }
+    .message {
+      max-width: 490px;
+      margin: 0 auto;
+      color: #666;
+      font-size: 16px;
+      line-height: 1.6;
     }
 
-    .card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      border-bottom: 1px dashed #2A2A30;
-      padding-bottom: 12px;
+    .countdown-label {
+      margin-top: 34px;
+      margin-bottom: 12px;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #888;
     }
 
-    .order-id-title {
-      font-family: 'Outfit', sans-serif;
+    .countdown {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      max-width: 460px;
+      margin: 0 auto;
+    }
+
+    .time-box {
+      background: var(--black);
+      color: white;
+      border-radius: 18px;
+      padding: 18px 8px 14px;
+      min-width: 0;
+    }
+
+    .time {
+      display: block;
+      font-size: clamp(32px, 8vw, 48px);
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -.04em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .unit {
+      display: block;
+      margin-top: 7px;
+      color: #aaa;
+      font-size: 9px;
       font-weight: 800;
-      font-size: 1.25rem;
-      color: #FFFFFF;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .order-time {
-      font-size: 0.78rem;
-      color: #9CA3AF;
-      margin-top: 2px;
-    }
-
-    .order-type-badge {
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 0.78rem;
-      font-weight: 700;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .type-delivery {
-      background: rgba(255, 90, 0, 0.15);
-      color: #FF7A30;
-      border: 1px solid rgba(255, 90, 0, 0.3);
-    }
-
-    .type-pickup {
-      background: rgba(59, 130, 246, 0.15);
-      color: #60A5FA;
-      border: 1px solid rgba(59, 130, 246, 0.3);
-    }
-
-    .customer-info {
-      background: #121214;
-      border-radius: 10px;
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      font-size: 0.85rem;
-    }
-
-    .cust-name {
-      font-weight: 700;
-      color: #FFFFFF;
-    }
-
-    .cust-phone {
-      color: #FDB813;
-      text-decoration: none;
-      font-weight: 600;
-    }
-
-    .cust-phone:hover {
-      text-decoration: underline;
-    }
-
-    .cust-address {
-      color: #9CA3AF;
-      font-size: 0.8rem;
-      word-break: break-word;
-    }
-
-    .items-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      max-height: 180px;
-      overflow-y: auto;
-      padding-right: 4px;
-    }
-
-    .item-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      font-size: 0.86rem;
-      gap: 12px;
-    }
-
-    .item-qty-name {
-      display: flex;
-      gap: 8px;
-      color: #E5E7EB;
-    }
-
-    .item-qty {
-      font-weight: 800;
-      color: #FDB813;
-    }
-
-    .item-price {
-      font-weight: 700;
-      color: #FFFFFF;
-      white-space: nowrap;
-    }
-
-    .totals-box {
-      border-top: 1px dashed #2A2A30;
-      padding-top: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 0.84rem;
-    }
-
-    .grand-total-row {
-      display: flex;
-      justify-content: space-between;
-      font-family: 'Outfit', sans-serif;
-      font-weight: 800;
-      font-size: 1.15rem;
-      color: #FFFFFF;
-      margin-top: 2px;
-      padding-top: 6px;
-      border-top: 1px solid #2A2A30;
-    }
-
-    .payment-method-tag {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #23232A;
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-size: 0.8rem;
-      color: #D1D5DB;
-    }
-
-    .badge-status {
-      padding: 3px 8px;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: 800;
+      letter-spacing: .15em;
       text-transform: uppercase;
     }
 
-    .badge-pending { background: rgba(245, 158, 11, 0.2); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.4); }
-    .badge-preparing { background: rgba(59, 130, 246, 0.2); color: #60A5FA; border: 1px solid rgba(59, 130, 246, 0.4); }
-    .badge-ready { background: rgba(16, 185, 129, 0.2); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.4); }
-    .badge-completed { background: rgba(107, 114, 128, 0.2); color: #9CA3AF; border: 1px solid rgba(107, 114, 128, 0.4); }
-    .badge-cancelled { background: rgba(239, 68, 68, 0.2); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.4); }
-
-    .badge-paid { background: rgba(16, 185, 129, 0.2); color: #34D399; }
-    .badge-unpaid { background: rgba(239, 68, 68, 0.2); color: #F87171; }
-
-    /* Operational Action Area */
-    .action-area {
-      border-top: 1px solid #2A2A30;
-      padding-top: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .btn-action {
-      width: 100%;
-      padding: 10px 14px;
-      border-radius: 10px;
-      font-weight: 800;
-      font-size: 0.9rem;
-      font-family: 'Outfit', sans-serif;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      cursor: pointer;
-      border: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.2s ease;
-    }
-
-    .btn-action-accept {
-      background: #FDB813;
-      color: #121214;
-    }
-
-    .btn-action-accept:hover {
-      background: #e5a40f;
-    }
-
-    .btn-action-ready {
-      background: #3B82F6;
-      color: #FFFFFF;
-    }
-
-    .btn-action-ready:hover {
-      background: #2563EB;
-    }
-
-    .btn-action-complete {
-      background: #10B981;
-      color: #FFFFFF;
-    }
-
-    .btn-action-complete:hover {
-      background: #059669;
-    }
-
-    .action-done-label {
-      text-align: center;
-      padding: 8px;
-      background: #23232A;
-      border-radius: 8px;
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: #9CA3AF;
-    }
-
-    .btn-cancel-link {
-      background: transparent;
-      border: none;
-      color: #9CA3AF;
-      font-size: 0.78rem;
-      cursor: pointer;
-      text-decoration: underline;
-      text-align: center;
-      margin-top: 2px;
-    }
-
-    .btn-cancel-link:hover {
-      color: #F87171;
-    }
-
-    /* History Layout & Compact Rows */
-    .history-container {
-      grid-column: 1 / -1;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-
-    .history-date-group {
-      background: #1A1A1E;
-      border: 1px solid #2A2A30;
-      border-radius: 14px;
-      overflow: hidden;
-    }
-
-    .history-date-header {
-      background: #23232A;
-      padding: 12px 18px;
-      border-bottom: 1px solid #2A2A30;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .history-date-title {
-      font-family: 'Outfit', sans-serif;
-      font-weight: 800;
-      font-size: 1.05rem;
-      color: #FFFFFF;
-      letter-spacing: 0.5px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .history-date-count {
-      background: #32323D;
-      color: #FDB813;
-      padding: 4px 10px;
+    .progress {
+      height: 7px;
+      background: #eee;
       border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 700;
-    }
-
-    .history-orders-list {
-      display: flex;
-      flex-direction: column;
-      divide-y: 1px solid #23232A;
-    }
-
-    .history-order-row {
-      padding: 12px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      border-bottom: 1px solid #23232A;
-      cursor: pointer;
-      transition: background 0.15s ease;
-    }
-
-    .history-order-row:last-child {
-      border-bottom: none;
-    }
-
-    .history-order-row:hover {
-      background: #23232D;
-    }
-
-    .row-left {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-      flex: 1;
-    }
-
-    .row-bc-num {
-      font-family: 'Outfit', sans-serif;
-      font-weight: 800;
-      font-size: 1.05rem;
-      color: #FFFFFF;
-      min-width: 70px;
-    }
-
-    .row-time {
-      font-size: 0.84rem;
-      color: #9CA3AF;
-      min-width: 80px;
-    }
-
-    .row-customer {
-      font-weight: 600;
-      color: #E5E7EB;
-      font-size: 0.88rem;
-      min-width: 110px;
-    }
-
-    .row-phone {
-      color: #FDB813;
-      font-size: 0.82rem;
-      min-width: 100px;
-    }
-
-    .row-right {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      white-space: nowrap;
-    }
-
-    .row-total {
-      font-family: 'Outfit', sans-serif;
-      font-weight: 800;
-      font-size: 1.05rem;
-      color: #FDB813;
-    }
-
-    /* Modal Styling */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.78);
-      backdrop-filter: blur(4px);
-      z-index: 2000;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-
-    .modal-overlay.active {
-      display: flex;
-    }
-
-    .modal-content {
-      background: #1A1A1E;
-      border: 1px solid #32323D;
-      border-radius: 16px;
-      width: 100%;
-      max-width: 560px;
-      max-height: 88vh;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+      margin: 28px auto 22px;
+      max-width: 460px;
       overflow: hidden;
-      animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    @keyframes modalFadeIn {
-      from { opacity: 0; transform: scale(0.96); }
-      to { opacity: 1; transform: scale(1); }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(
+        90deg,
+        var(--yellow),
+        var(--orange)
+      );
+      border-radius: inherit;
+      transition: width 1s linear;
     }
 
-    .modal-header {
-      padding: 16px 20px;
-      border-bottom: 1px solid #2A2A30;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #23232A;
+    .footer {
+      font-size: 12px;
+      color: #999;
+      margin-top: 22px;
     }
 
-    .modal-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.2rem;
-      font-weight: 800;
-      color: #FFFFFF;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .footer strong {
+      color: var(--black);
     }
 
-    .modal-close-btn {
-      background: #32323D;
-      border: none;
-      color: #9CA3AF;
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      font-size: 1.3rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.15s ease;
-    }
+    @media (max-width: 480px) {
+      .page {
+        padding: 18px 14px;
+      }
 
-    .modal-close-btn:hover {
-      background: #3A3A48;
-      color: #FFFFFF;
-    }
+      .card {
+        padding: 34px 18px 26px;
+        border-radius: 25px;
+      }
 
-    .modal-body {
-      padding: 20px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
+      .logo-wrap {
+        width: 70px;
+        height: 70px;
+        font-size: 35px;
+      }
 
-    .state-banner {
-      background: #1A1A1E;
-      border: 1px solid #2A2A30;
-      border-radius: 16px;
-      padding: 48px 24px;
-      text-align: center;
-      grid-column: 1 / -1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-    }
+      .message {
+        font-size: 14px;
+      }
 
-    .state-icon {
-      font-size: 3rem;
-    }
+      .time-box {
+        padding: 15px 5px 12px;
+        border-radius: 15px;
+      }
 
-    .state-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #FFFFFF;
-    }
-
-    .state-desc {
-      color: #9CA3AF;
-      font-size: 0.9rem;
-      max-width: 400px;
-    }
-
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: #1F1F24;
-      color: #FFFFFF;
-      border: 1px solid #3A3A45;
-      padding: 12px 20px;
-      border-radius: 10px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-      font-size: 0.88rem;
-      font-weight: 600;
-      z-index: 1000;
-      display: none;
+      .countdown {
+        gap: 7px;
+      }
     }
   </style>
 </head>
+
 <body>
 
-  <!-- POS Header -->
-  <header class="pos-header">
-    <div class="pos-header-inner">
-      <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-        <a href="/" class="pos-brand-logo">
-          <span>🎋 Bamboo Chicken</span>
-        </a>
-        <span class="pos-badge">Cashier Terminal</span>
-        <div class="view-toggle-wrap">
-          <button type="button" class="btn-pos" id="btn-view-today" style="background: #FDB813; color: #121214; border: none; font-size: 0.8rem; padding: 5px 12px;" onclick="switchView('today')">
-            📅 Today's Orders
-          </button>
-          <button type="button" class="btn-pos" id="btn-view-history" style="background: transparent; color: #9CA3AF; border: none; font-size: 0.8rem; padding: 5px 12px;" onclick="switchView('history')">
-            📜 History
-          </button>
-        </div>
+  <main class="page">
+
+    <div class="shape one"></div>
+    <div class="shape two"></div>
+
+    <section class="card">
+
+      <!-- Temporary visual mark.
+           Replace with official Bamboo Chicken logo when available. -->
+      <div class="logo-wrap">
+        🍗
       </div>
 
-      <div class="pos-status-bar">
-        <div class="status-indicator">
-          <span class="dot" id="status-dot"></span>
-          <span id="status-text">Connected to D1</span>
-        </div>
-
-        <button type="button" class="btn-pos" id="btn-toggle-sound" onclick="toggleSoundAlert()">
-          <span id="sound-icon">🔔</span> Sound: ON
-        </button>
-
-        <button type="button" class="btn-pos btn-pos-primary" onclick="fetchOrdersManual()">
-          <span>🔄</span> Refresh
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- POS Main Content -->
-  <main class="pos-main">
-    
-    <!-- Today Summary Bar -->
-    <div class="summary-bar" id="summary-bar">
-      <div class="summary-card">
-        <span class="summary-label">Today's Orders</span>
-        <span class="summary-value" id="summary-total">0</span>
-      </div>
-      <div class="summary-card card-new">
-        <span class="summary-label">⏳ New / Pending</span>
-        <span class="summary-value" id="summary-pending">0</span>
-      </div>
-      <div class="summary-card card-prep">
-        <span class="summary-label">🔥 Preparing</span>
-        <span class="summary-value" id="summary-preparing">0</span>
-      </div>
-      <div class="summary-card card-ready">
-        <span class="summary-label">✅ Ready</span>
-        <span class="summary-value" id="summary-ready">0</span>
-      </div>
-      <div class="summary-card card-completed">
-        <span class="summary-label">🎉 Completed</span>
-        <span class="summary-value" id="summary-completed">0</span>
-      </div>
-      <div class="summary-card card-cancelled">
-        <span class="summary-label">❌ Cancelled</span>
-        <span class="summary-value" id="summary-cancelled">0</span>
-      </div>
-    </div>
-
-    <!-- Filter Toolbar -->
-    <div class="pos-toolbar">
-      <div class="filter-tabs">
-        <button type="button" class="filter-tab active" data-filter="all" onclick="setFilter('all')">
-          All Orders <span class="tab-count" id="count-all">0</span>
-        </button>
-        <button type="button" class="filter-tab" data-filter="pending" onclick="setFilter('pending')">
-          ⏳ New / Pending <span class="tab-count" id="count-pending">0</span>
-        </button>
-        <button type="button" class="filter-tab" data-filter="preparing" onclick="setFilter('preparing')">
-          🔥 Preparing <span class="tab-count" id="count-preparing">0</span>
-        </button>
-        <button type="button" class="filter-tab" data-filter="ready" onclick="setFilter('ready')">
-          ✅ Ready <span class="tab-count" id="count-ready">0</span>
-        </button>
-        <button type="button" class="filter-tab" data-filter="completed" onclick="setFilter('completed')">
-          🎉 Completed <span class="tab-count" id="count-completed">0</span>
-        </button>
-        <button type="button" class="filter-tab" data-filter="cancelled" onclick="setFilter('cancelled')">
-          ❌ Cancelled <span class="tab-count" id="count-cancelled">0</span>
-        </button>
+      <div class="status">
+        <span class="dot"></span>
+        System Upgrade
       </div>
 
-      <div class="search-row">
-        <div class="search-input-wrap">
-          <span class="search-icon">🔍</span>
-          <input type="text" id="pos-search" class="search-input" placeholder="Search by Order #, Customer Name, or Phone..." oninput="renderOrdersUI()">
+      <h1>
+        Bamboo Chicken<br>
+        <span>is upgrading.</span>
+      </h1>
+
+      <p class="message">
+        We're making things better behind the scenes.
+        Please wait while we complete the upgrade.
+      </p>
+
+      <div class="countdown-label">
+        We'll be back in
+      </div>
+
+      <div class="countdown">
+
+        <div class="time-box">
+          <span class="time" id="hours">24</span>
+          <span class="unit">Hours</span>
         </div>
 
-        <div id="history-date-wrap" style="display: none; align-items: center; gap: 6px; flex-wrap: wrap;">
-          <span style="font-size: 0.82rem; font-weight: 600; color: #9CA3AF;">Filter Date:</span>
-          <button type="button" class="btn-pos" onclick="shiftHistoryDate(-1)" title="Previous Day" style="padding: 6px 10px;">◀</button>
-          <input type="date" id="history-date-picker" class="select-input" style="padding: 6px 10px; font-size: 0.85rem;" onchange="renderOrdersUI()">
-          <button type="button" class="btn-pos" onclick="shiftHistoryDate(1)" title="Next Day" style="padding: 6px 10px;">▶</button>
-          <button type="button" class="btn-pos" onclick="clearHistoryDateFilter()" style="font-size: 0.8rem; padding: 6px 10px;">Show All Dates</button>
+        <div class="time-box">
+          <span class="time" id="minutes">00</span>
+          <span class="unit">Minutes</span>
         </div>
 
-        <select id="pos-type-filter" class="select-input" onchange="renderOrdersUI()">
-          <option value="all">All Types (Pickup & Delivery)</option>
-          <option value="delivery">🛵 Delivery Only</option>
-          <option value="pickup">🛍️ Pickup Only</option>
-        </select>
-      </div>
-    </div>
+        <div class="time-box">
+          <span class="time" id="seconds">00</span>
+          <span class="unit">Seconds</span>
+        </div>
 
-    <!-- Orders Grid -->
-    <div class="orders-grid" id="orders-container"></div>
+      </div>
+
+      <div class="progress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+      <p class="footer">
+        <strong>Crispy & Juicy, Taste the Bamboo Magic!</strong>
+      </p>
+
+    </section>
 
   </main>
 
-  <div class="toast" id="pos-toast"></div>
 
-  <!-- Order Details Modal -->
-  <div class="modal-overlay" id="order-details-modal" onclick="closeOrderDetailsModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <div id="modal-order-title" class="modal-title">📋 Order Details</div>
-        <button type="button" class="modal-close-btn" onclick="closeOrderDetailsModal()">&times;</button>
-      </div>
-      <div class="modal-body" id="modal-order-body">
-        <!-- Content dynamically injected -->
-      </div>
-    </div>
-  </div>
+  <script>
+    /*
+      24-HOUR COUNTDOWN
+      The timer is stored in localStorage so refreshing the page
+      does NOT reset it.
+    */
 
-  <script src="/js/cashier.js"></script>
+    const DURATION = 24 * 60 * 60 * 1000;
+
+    let endTime = localStorage.getItem("bambooUpgradeEnd");
+
+    if (!endTime) {
+      endTime = Date.now() + DURATION;
+      localStorage.setItem("bambooUpgradeEnd", endTime);
+    }
+
+    endTime = Number(endTime);
+
+    const hoursEl = document.getElementById("hours");
+    const minutesEl = document.getElementById("minutes");
+    const secondsEl = document.getElementById("seconds");
+    const progressBar = document.getElementById("progressBar");
+
+    function updateCountdown() {
+
+      const now = Date.now();
+      let remaining = endTime - now;
+
+      if (remaining <= 0) {
+        remaining = 0;
+      }
+
+      const totalSeconds = Math.floor(remaining / 1000);
+
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      hoursEl.textContent = String(hours).padStart(2, "0");
+      minutesEl.textContent = String(minutes).padStart(2, "0");
+      secondsEl.textContent = String(seconds).padStart(2, "0");
+
+      const elapsed = DURATION - remaining;
+      const percentage = Math.min(
+        100,
+        Math.max(0, (elapsed / DURATION) * 100)
+      );
+
+      progressBar.style.width = percentage + "%";
+
+      if (remaining <= 0) {
+        clearInterval(timer);
+
+        document.querySelector(".status").innerHTML =
+          '<span class="dot"></span> Upgrade Complete';
+
+        document.querySelector("h1").innerHTML =
+          'Bamboo Chicken<br><span>is back!</span>';
+
+        document.querySelector(".message").textContent =
+          "The system upgrade is complete. Welcome back!";
+
+        localStorage.removeItem("bambooUpgradeEnd");
+      }
+    }
+
+    updateCountdown();
+
+    const timer = setInterval(updateCountdown, 1000);
+  </script>
+
 </body>
 </html>
-
