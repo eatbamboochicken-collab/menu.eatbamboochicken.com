@@ -7,34 +7,158 @@ const API_BASE = "https://bamboo-orders-api.warstreett.workers.dev";
 const POLL_INTERVAL_MS = 4000;
 const TARGET_TIMEZONE = "Africa/Harare";
 
+// Strict forward status rank hierarchy
+const STATUS_RANK = {
+  pending: 1,
+  preparing: 2,
+  ready: 3,
+  completed: 4,
+  cancelled: 5
+};
+
 let cachedOrders = [];
 let knownOrderIds = new Set();
-let updatingOrders = new Set();
+let inFlightUpdates = new Map(); // orderId -> { targetStatus, startedAt }
+let confirmedStatusMap = new Map(); // orderId -> { status, confirmedAt }
+let activeModalOrderId = null;
+let currentAppVersion = null;
+let isUpdatingApp = false;
 let isFirstLoad = true;
 let currentFilter = "all";
 let currentMode = "today"; // 'today' or 'history'
 let soundEnabled = true;
 let isFetching = false;
+let queuedFetchWaiters = [];
 
 document.addEventListener("DOMContentLoaded", () => {
   initCashier();
 });
 
 function initCashier() {
+  initAppVersionTracking();
   fetchOrders();
-  setInterval(fetchOrders, POLL_INTERVAL_MS);
+  setInterval(() => {
+    fetchOrders({ force: false });
+  }, POLL_INTERVAL_MS);
+  setInterval(checkApplicationVersion, 45000);
 }
 
-// Fetch Orders from Cloudflare Worker + D1
-async function fetchOrders() {
-  if (isFetching) return;
-  isFetching = true;
+/**
+ * Initialize application version tracking to automatically detect new builds/deployments.
+ */
+async function initAppVersionTracking() {
+  try {
+    const res = await fetch(`/version.json?_t=${Date.now()}`, { cache: "no-store" });
+    if (res.ok) {
+      const data = await res.json();
+      currentAppVersion = data.buildTime || data.version || "1.0.0";
+    }
+  } catch (e) {
+    currentAppVersion = "1.0.0";
+  }
+}
 
+/**
+ * Periodically check if a newer application version has been deployed.
+ * If detected and the terminal is idle (no in-flight updates), safely reloads the terminal.
+ */
+async function checkApplicationVersion() {
+  if (inFlightUpdates.size > 0 || isUpdatingApp) return;
+
+  try {
+    const res = await fetch(`/version.json?_t=${Date.now()}`, { cache: "no-store" });
+    if (!res.ok) return;
+    const data = await res.json();
+    const serverVersion = data.buildTime || data.version;
+
+    if (currentAppVersion && serverVersion && String(serverVersion) !== String(currentAppVersion)) {
+      if (inFlightUpdates.size === 0 && !isUpdatingApp) {
+        isUpdatingApp = true;
+        console.log(`[Bamboo Terminal] New version deployed: ${serverVersion}. Updating terminal...`);
+        showToast("🚀 New cashier version detected. Updating terminal...");
+        setTimeout(() => {
+          window.location.reload();
+        }, 1200);
+      }
+    } else if (!currentAppVersion && serverVersion) {
+      currentAppVersion = serverVersion;
+    }
+  } catch (e) {
+    // Non-blocking check
+  }
+}
+
+/**
+ * Reconcile incoming server orders with local confirmed status and active in-flight PATCHes.
+ * Guarantees that a stale background GET or race condition can NEVER downgrade a confirmed status,
+ * while seamlessly reflecting forward status transitions made across other cashier terminals.
+ */
+function reconcileOrders(serverOrders) {
+  if (!Array.isArray(serverOrders)) return cachedOrders;
+
+  const processed = processOrdersData(serverOrders);
+  const now = Date.now();
+  const CONFIRMATION_TTL_MS = 60000;
+
+  const reconciled = processed.map(serverOrder => {
+    const oidStr = String(serverOrder.id);
+    const serverNormStatus = normalizeStatus(serverOrder.order_status);
+    const serverRank = STATUS_RANK[serverNormStatus] || 1;
+
+    // 1. If an update is actively in flight for this order, preserve target status
+    if (inFlightUpdates.has(oidStr)) {
+      const inFlight = inFlightUpdates.get(oidStr);
+      return {
+        ...serverOrder,
+        order_status: inFlight.targetStatus
+      };
+    }
+
+    // 2. If we have a locally confirmed status from a recent successful PATCH on this terminal
+    if (confirmedStatusMap.has(oidStr)) {
+      const confirmed = confirmedStatusMap.get(oidStr);
+      const confirmedNorm = normalizeStatus(confirmed.status);
+      const confirmedRank = STATUS_RANK[confirmedNorm] || 1;
+      const isFreshConfirmation = (now - (confirmed.confirmedAt || 0)) < CONFIRMATION_TTL_MS;
+
+      // If server rank is equal or higher (progressed locally or from another terminal)
+      if (serverRank >= confirmedRank || !isFreshConfirmation) {
+        confirmedStatusMap.set(oidStr, { status: serverOrder.order_status, confirmedAt: now });
+        return serverOrder;
+      } else {
+        // Server returned older/stale status within TTL window: PRESERVE our higher confirmed status
+        return {
+          ...serverOrder,
+          order_status: confirmed.status
+        };
+      }
+    }
+
+    // 3. Normal case: record server status as authoritative
+    confirmedStatusMap.set(oidStr, { status: serverOrder.order_status, confirmedAt: now });
+    return serverOrder;
+  });
+
+  return reconciled;
+}
+
+// Fetch Orders from Cloudflare Worker + D1 with anti-stale cache busting
+async function fetchOrders({ force = false } = {}) {
+  if (isFetching) {
+    if (force) {
+      return new Promise(resolve => queuedFetchWaiters.push(resolve)).then(() => fetchOrders({ force: false }));
+    }
+    return;
+  }
+
+  isFetching = true;
   const statusDot = document.getElementById("status-dot");
   const statusText = document.getElementById("status-text");
 
   try {
-    const res = await fetch(`${API_BASE}/orders`);
+    const res = await fetch(`${API_BASE}/orders?_t=${Date.now()}`, {
+      headers: { "Cache-Control": "no-cache" }
+    });
 
     if (!res.ok) {
       throw new Error(`HTTP Error ${res.status}`);
@@ -69,7 +193,7 @@ async function fetchOrders() {
     }
 
     isFirstLoad = false;
-    cachedOrders = processOrdersData(data);
+    cachedOrders = reconcileOrders(data);
     updateCounts();
     renderOrdersUI();
 
@@ -84,12 +208,14 @@ async function fetchOrders() {
     }
   } finally {
     isFetching = false;
+    const waiters = queuedFetchWaiters.splice(0, queuedFetchWaiters.length);
+    waiters.forEach(fn => fn());
   }
 }
 
-window.fetchOrdersManual = function() {
+window.fetchOrdersManual = async function() {
   showToast("🔄 Syncing with D1...");
-  fetchOrders();
+  await fetchOrders({ force: true });
 };
 
 window.toggleSoundAlert = function() {
@@ -312,7 +438,7 @@ function updateCounts() {
 
 window.updateOrderStatus = async function(orderId, newStatus) {
   const oidStr = String(orderId);
-  if (updatingOrders.has(oidStr)) return;
+  if (inFlightUpdates.has(oidStr)) return;
 
   const order = cachedOrders.find(o => String(o.id) === oidStr);
   if (!order) {
@@ -347,7 +473,8 @@ window.updateOrderStatus = async function(orderId, newStatus) {
     return;
   }
 
-  updatingOrders.add(oidStr);
+  // Register in-flight update lock to prevent double clicks and race conditions
+  inFlightUpdates.set(oidStr, { targetStatus: newStatus, startedAt: Date.now() });
 
   const oldStatus = order.order_status;
 
@@ -369,19 +496,31 @@ window.updateOrderStatus = async function(orderId, newStatus) {
       throw new Error(`HTTP ${res.status}`);
     }
 
+    const resJson = await res.json().catch(() => ({}));
+    if (resJson && resJson.success === false) {
+      throw new Error(resJson.error || "Update rejected by server");
+    }
+
+    // Authoritatively record confirmed status in local memory
+    confirmedStatusMap.set(oidStr, { status: newStatus, confirmedAt: Date.now() });
+
     showToast(`✅ Order #${order.daily_bc_num || orderId} updated to ${newStatus.toUpperCase()}`);
-    await fetchOrders();
+
+    // Unlock and force an authoritative fresh sync with D1
+    inFlightUpdates.delete(oidStr);
+    await fetchOrders({ force: true });
   } catch (err) {
     console.error("Failed to update order status:", err);
-    showToast("⚠️ Could not update order. Please check network connection.");
+    showToast(`⚠️ Could not update order #${order.daily_bc_num || orderId}. Please check network connection.`);
+    
+    // Unlock and revert to previous confirmed status on error
+    inFlightUpdates.delete(oidStr);
     if (order && oldStatus) {
       order.order_status = oldStatus;
+      confirmedStatusMap.set(oidStr, { status: oldStatus, confirmedAt: Date.now() });
       updateCounts();
       renderOrdersUI();
     }
-  } finally {
-    updatingOrders.delete(oidStr);
-    renderOrdersUI();
   }
 };
 
@@ -520,6 +659,14 @@ function renderOrdersUI() {
 
     container.innerHTML = historyHTML;
   }
+
+  // Live synchronize open modal with latest production state
+  if (activeModalOrderId) {
+    const modal = document.getElementById("order-details-modal");
+    if (modal && modal.classList.contains("active")) {
+      renderModalContent(activeModalOrderId);
+    }
+  }
 }
 
 function createCompactHistoryRowHTML(order) {
@@ -562,6 +709,22 @@ function createCompactHistoryRowHTML(order) {
 }
 
 window.openOrderDetailsModal = function(orderId) {
+  activeModalOrderId = String(orderId);
+  renderModalContent(activeModalOrderId);
+  const modal = document.getElementById("order-details-modal");
+  if (modal) modal.classList.add("active");
+};
+
+window.closeOrderDetailsModal = function(e) {
+  if (e && e.target !== e.currentTarget && !e.target.classList.contains("modal-close-btn")) {
+    return;
+  }
+  activeModalOrderId = null;
+  const modal = document.getElementById("order-details-modal");
+  if (modal) modal.classList.remove("active");
+};
+
+function renderModalContent(orderId) {
   const order = cachedOrders.find(o => String(o.id) === String(orderId));
   if (!order) return;
 
@@ -617,6 +780,8 @@ window.openOrderDetailsModal = function(orderId) {
     titleEl.textContent = `📋 Order #${dailyBcNum} Details`;
   }
 
+  const isUpdating = inFlightUpdates.has(String(order.id));
+
   bodyEl.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; background: #23232A; padding: 12px; border-radius: 10px;">
       <div>
@@ -661,23 +826,13 @@ window.openOrderDetailsModal = function(orderId) {
     </div>
 
     <div style="display: flex; gap: 10px; margin-top: 8px;">
-      ${rawStatus === 'pending' ? `<button type="button" class="btn-action btn-action-accept" onclick="closeOrderDetailsModal(); updateOrderStatus(${order.id}, 'preparing')">⚡ ACCEPT ORDER</button>` : ''}
-      ${rawStatus === 'preparing' ? `<button type="button" class="btn-action btn-action-ready" onclick="closeOrderDetailsModal(); updateOrderStatus(${order.id}, 'ready')">✅ MARK READY</button>` : ''}
-      ${rawStatus === 'ready' ? `<button type="button" class="btn-action btn-action-complete" onclick="closeOrderDetailsModal(); updateOrderStatus(${order.id}, 'completed')">🎉 MARK COMPLETED</button>` : ''}
+      ${rawStatus === 'pending' ? `<button type="button" class="btn-action btn-action-accept" ${isUpdating ? 'disabled style="opacity:0.65; cursor:wait;"' : ''} onclick="closeOrderDetailsModal(); updateOrderStatus(${order.id}, 'preparing')">${isUpdating ? '⏳ ACCEPTING...' : '⚡ ACCEPT ORDER'}</button>` : ''}
+      ${rawStatus === 'preparing' ? `<button type="button" class="btn-action btn-action-ready" ${isUpdating ? 'disabled style="opacity:0.65; cursor:wait;"' : ''} onclick="closeOrderDetailsModal(); updateOrderStatus(${order.id}, 'ready')">${isUpdating ? '⏳ UPDATING...' : '✅ MARK READY'}</button>` : ''}
+      ${rawStatus === 'ready' ? `<button type="button" class="btn-action btn-action-complete" ${isUpdating ? 'disabled style="opacity:0.65; cursor:wait;"' : ''} onclick="closeOrderDetailsModal(); updateOrderStatus(${order.id}, 'completed')">${isUpdating ? '⏳ UPDATING...' : '🎉 MARK COMPLETED'}</button>` : ''}
       <button type="button" class="btn-pos" style="width: 100%; padding: 10px; font-weight: 700;" onclick="closeOrderDetailsModal()">Close Details</button>
     </div>
   `;
-
-  modal.classList.add("active");
-};
-
-window.closeOrderDetailsModal = function(e) {
-  if (e && e.target !== e.currentTarget && !e.target.classList.contains("modal-close-btn")) {
-    return;
-  }
-  const modal = document.getElementById("order-details-modal");
-  if (modal) modal.classList.remove("active");
-};
+}
 
 function renderEmptyState(title, desc) {
   const container = document.getElementById("orders-container");
@@ -757,7 +912,7 @@ function createOrderCardHTML(order) {
 
   const isNew = rawStatus === "pending";
   const grandTotal = parseFloat(order.total || 0);
-  const isUpdating = updatingOrders.has(String(order.id));
+  const isUpdating = inFlightUpdates.has(String(order.id));
 
   // Operational Action Area
   let actionHTML = "";

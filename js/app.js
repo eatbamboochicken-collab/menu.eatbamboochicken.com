@@ -1176,9 +1176,16 @@ window.setPaymentMethod = function(method) {
   });
 };
 
+function getDeliveryFee(subtotal, orderMethod) {
+  if (orderMethod !== "delivery") {
+    return 0.00;
+  }
+  return 3.00;
+}
+
 function updateCheckoutSummaries() {
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const deliveryFee = currentOrderMethod === "delivery" ? 3.00 : 0.00;
+  const deliveryFee = getDeliveryFee(subtotal, currentOrderMethod);
   const grandTotal = subtotal + deliveryFee;
 
   const step1Subtotal = document.getElementById("step1-subtotal");
@@ -1188,9 +1195,15 @@ function updateCheckoutSummaries() {
   const step3Total = document.getElementById("step3-total");
 
   if (step1Subtotal) step1Subtotal.textContent = `$${subtotal.toFixed(2)}`;
-  if (step1Total) step1Total.textContent = `$${grandTotal.toFixed(2)}`;
+  if (step1Total) step1Total.textContent = `$${subtotal.toFixed(2)}`;
   if (step3Subtotal) step3Subtotal.textContent = `$${subtotal.toFixed(2)}`;
-  if (step3Delivery) step3Delivery.textContent = deliveryFee > 0 ? `$${deliveryFee.toFixed(2)}` : "FREE";
+  if (step3Delivery) {
+    if (currentOrderMethod === "delivery") {
+      step3Delivery.textContent = deliveryFee > 0 ? `$${deliveryFee.toFixed(2)}` : "FREE";
+    } else {
+      step3Delivery.textContent = "$0.00";
+    }
+  }
   if (step3Total) step3Total.textContent = `$${grandTotal.toFixed(2)}`;
 }
 
@@ -1353,7 +1366,7 @@ async function executeFinalOrderSubmission() {
     const customerName = nameInput ? nameInput.value.trim() : "";
     const customerPhone = phoneInput ? phoneInput.value.trim() : "";
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const deliveryFee = currentOrderMethod === "delivery" ? 3.00 : 0.00;
+    const deliveryFee = getDeliveryFee(subtotal, currentOrderMethod);
     const grandTotal = subtotal + deliveryFee;
     const paymentMethodStr = currentPaymentMethod || "Cash on Delivery";
     const specialNotes = notesInput && notesInput.value.trim() ? notesInput.value.trim() : "";
@@ -1441,6 +1454,10 @@ async function executeFinalOrderSubmission() {
       ? `\n📍 *GPS Location:* https://maps.google.com/?q=${capturedLocationData.latitude},${capturedLocationData.longitude}` 
       : "";
 
+    const deliveryFeeFormatted = currentOrderMethod === "delivery" 
+      ? (deliveryFee > 0 ? `$${deliveryFee.toFixed(2)}` : "FREE")
+      : "$0.00";
+
     const whatsappMessage = `🎋 *BAMBOO CHICKEN - NEW ORDER (${orderId})* 🎋
 ----------------------------------------
 👤 *CUSTOMER DETAILS:*
@@ -1453,7 +1470,9 @@ async function executeFinalOrderSubmission() {
 🛒 *ITEMS ORDERED:*
 ${itemsFormattedList}
 💵 *ORDER SUMMARY:*
-• *Grand Total:* $${grandTotal.toFixed(2)}
+• *Items Subtotal:* $${subtotal.toFixed(2)}
+• *Delivery Fee:* ${deliveryFeeFormatted}
+• *TOTAL:* $${grandTotal.toFixed(2)}
 ----------------------------------------
 Thank you for ordering with Bamboo Chicken! 🍗✨`;
 
@@ -1893,7 +1912,7 @@ window.showOrderSuccessScreen = function() {
     
     if (successOrderTotalValue) {
       const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-      const deliveryFee = currentOrderMethod === "delivery" ? 3.00 : 0.00;
+      const deliveryFee = getDeliveryFee(subtotal, currentOrderMethod);
       const grandTotal = subtotal + deliveryFee;
       successOrderTotalValue.textContent = `$${grandTotal.toFixed(2)}`;
     }
