@@ -29,6 +29,7 @@ let currentMode = "today"; // 'today' or 'history'
 let soundEnabled = true;
 let isFetching = false;
 let queuedFetchWaiters = [];
+let lastSuccessfulSyncTime = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   initCashier();
@@ -41,6 +42,47 @@ function initCashier() {
     fetchOrders({ force: false });
   }, POLL_INTERVAL_MS);
   setInterval(checkApplicationVersion, 45000);
+  setInterval(updateSyncTimeDisplay, 1000);
+  setInterval(updateOrderAgesLive, 15000);
+}
+
+/**
+ * Update the "Last synced X sec ago" indicator in the terminal header.
+ */
+function updateSyncTimeDisplay() {
+  const syncEl = document.getElementById("sync-time-text");
+  if (!syncEl) return;
+
+  if (!lastSuccessfulSyncTime) {
+    syncEl.textContent = "Syncing...";
+    return;
+  }
+
+  const elapsedSec = Math.floor((Date.now() - lastSuccessfulSyncTime) / 1000);
+  if (elapsedSec < 3) {
+    syncEl.textContent = "Last synced just now";
+  } else if (elapsedSec < 60) {
+    syncEl.textContent = `Last synced ${elapsedSec}s ago`;
+  } else {
+    const elapsedMin = Math.floor(elapsedSec / 60);
+    syncEl.textContent = `Last synced ${elapsedMin}m ago`;
+  }
+}
+
+/**
+ * Periodically refreshes order age badges on active screen.
+ */
+function updateOrderAgesLive() {
+  const ageElements = document.querySelectorAll("[data-created-at]");
+  ageElements.forEach(el => {
+    const createdAt = el.getAttribute("data-created-at");
+    if (createdAt) {
+      const ageText = getOrderAge(createdAt);
+      if (ageText) {
+        el.textContent = `⏱️ ${ageText}`;
+      }
+    }
+  });
 }
 
 /**
@@ -191,6 +233,8 @@ async function fetchOrders({ force = false } = {}) {
     }
 
     isFirstLoad = false;
+    lastSuccessfulSyncTime = Date.now();
+    updateSyncTimeDisplay();
     cachedOrders = reconcileOrders(data);
     updateCounts();
     renderOrdersUI();
@@ -393,11 +437,103 @@ function formatHistoryDateHeader(dateStr) {
   return dateStr.toUpperCase();
 }
 
-function updateCounts() {
-  const viewOrders = getActiveOrdersForCurrentView();
+/**
+ * Calculate human-readable order age from creation timestamp.
+ * Examples: "just now", "2 min ago", "15 min ago", "1 hr ago", "3 hrs ago"
+ */
+function getOrderAge(dateInput) {
+  if (!dateInput) return "";
+  try {
+    const str = String(dateInput).trim();
+    const isoStr = str.includes("T") ? str : str.replace(" ", "T") + (str.includes("Z") ? "" : "Z");
+    const d = new Date(isoStr);
+    const createdTime = d.getTime();
+    if (isNaN(createdTime)) return "";
+    const now = Date.now();
+    const diffMs = Math.max(0, now - createdTime);
+    const diffSec = Math.floor(diffMs / 1000);
+    if (diffSec < 45) return "just now";
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return `${diffMin} min ago`;
+    const diffHrs = Math.floor(diffMin / 60);
+    if (diffHrs < 24) return `${diffHrs} hr${diffHrs > 1 ? 's' : ''} ago`;
+    const diffDays = Math.floor(diffHrs / 24);
+    return `${diffDays}d ago`;
+  } catch (e) {
+    return "";
+  }
+}
 
-  const counts = {
-    all: viewOrders.length,
+/**
+ * Render the dedicated "Needs Attention" operational alert section for New/Pending orders.
+ */
+function renderAttentionSection() {
+  const container = document.getElementById("attention-container");
+  if (!container) return;
+
+  if (currentMode !== "today") {
+    container.innerHTML = "";
+    return;
+  }
+
+  const todayStr = getTodayLocalDateStr();
+  const todayOrders = cachedOrders.filter(o => getLocalDateStr(o.created_at) === todayStr);
+  const pendingOrders = todayOrders.filter(o => normalizeStatus(o.order_status) === "pending");
+
+  if (pendingOrders.length === 0) {
+    container.innerHTML = "";
+    return;
+  }
+
+  // Sort pending orders oldest first (orders waiting longest require immediate attention)
+  pendingOrders.sort((a, b) => {
+    const timeA = a.created_at ? new Date(a.created_at.includes("T") ? a.created_at : a.created_at.replace(" ", "T") + (a.created_at.includes("Z") ? "" : "Z")).getTime() : 0;
+    const timeB = b.created_at ? new Date(b.created_at.includes("T") ? b.created_at : b.created_at.replace(" ", "T") + (b.created_at.includes("Z") ? "" : "Z")).getTime() : 0;
+    if (timeA !== timeB) return timeA - timeB;
+    return (Number(a.id) || 0) - (Number(b.id) || 0);
+  });
+
+  const count = pendingOrders.length;
+  const countLabel = count === 1 ? "1 New Order" : `${count} New Orders`;
+  
+  const pillsHTML = pendingOrders.slice(0, 4).map(o => {
+    const dailyBc = o.daily_bc_num || `BC-${o.id}`;
+    const age = getOrderAge(o.created_at);
+    const custName = escapeHTML(o.customer_name || "Customer");
+    return `<span style="background: rgba(0,0,0,0.3); border: 1px solid rgba(253,184,19,0.35); padding: 3px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; color: #FFFFFF; display: inline-flex; align-items: center; gap: 4px;">#${dailyBc} (${custName}${age ? ` • ${age}` : ''})</span>`;
+  }).join(" ");
+
+  const moreBadge = count > 4 ? `<span style="font-size: 0.8rem; color: #FDB813; font-weight: 700;">+${count - 4} more</span>` : "";
+
+  container.innerHTML = `
+    <div class="attention-banner">
+      <div class="attention-left">
+        <div class="attention-icon-box">⚡</div>
+        <div>
+          <div class="attention-title">
+            <span>${countLabel} Requiring Immediate Acceptance</span>
+          </div>
+          <div class="attention-subtitle">
+            ${pillsHTML} ${moreBadge}
+          </div>
+        </div>
+      </div>
+      <div class="attention-actions">
+        <button type="button" class="btn-attention-action" onclick="setFilter('pending')">
+          ⚡ Focus New Orders (${count})
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function updateCounts() {
+  const todayStr = getTodayLocalDateStr();
+  // Today's Operational Summary Bar strictly calculates from Today's Orders dataset
+  const todayOrders = cachedOrders.filter(o => getLocalDateStr(o.created_at) === todayStr);
+
+  const todayCounts = {
+    all: todayOrders.length,
     pending: 0,
     preparing: 0,
     ready: 0,
@@ -405,10 +541,10 @@ function updateCounts() {
     cancelled: 0
   };
 
-  viewOrders.forEach(o => {
+  todayOrders.forEach(o => {
     const st = normalizeStatus(o.order_status);
-    if (counts[st] !== undefined) {
-      counts[st]++;
+    if (todayCounts[st] !== undefined) {
+      todayCounts[st]++;
     }
   });
 
@@ -417,21 +553,37 @@ function updateCounts() {
     if (el) el.textContent = val;
   };
 
-  // Update Toolbar Tab Badges
-  setElText("count-all", counts.all);
-  setElText("count-pending", counts.pending);
-  setElText("count-preparing", counts.preparing);
-  setElText("count-ready", counts.ready);
-  setElText("count-completed", counts.completed);
-  setElText("count-cancelled", counts.cancelled);
+  // Update Operational Summary Bar (Strictly Today's dataset)
+  setElText("summary-total", todayCounts.all);
+  setElText("summary-pending", todayCounts.pending);
+  setElText("summary-preparing", todayCounts.preparing);
+  setElText("summary-ready", todayCounts.ready);
+  setElText("summary-completed", todayCounts.completed);
+  setElText("summary-cancelled", todayCounts.cancelled);
 
-  // Update Operational Summary Bar
-  setElText("summary-total", counts.all);
-  setElText("summary-pending", counts.pending);
-  setElText("summary-preparing", counts.preparing);
-  setElText("summary-ready", counts.ready);
-  setElText("summary-completed", counts.completed);
-  setElText("summary-cancelled", counts.cancelled);
+  // Tab counts reflect the active view (Today or History)
+  const viewOrders = getActiveOrdersForCurrentView();
+  const tabCounts = {
+    all: viewOrders.length,
+    pending: 0,
+    preparing: 0,
+    ready: 0,
+    completed: 0,
+    cancelled: 0
+  };
+  viewOrders.forEach(o => {
+    const st = normalizeStatus(o.order_status);
+    if (tabCounts[st] !== undefined) {
+      tabCounts[st]++;
+    }
+  });
+
+  setElText("count-all", tabCounts.all);
+  setElText("count-pending", tabCounts.pending);
+  setElText("count-preparing", tabCounts.preparing);
+  setElText("count-ready", tabCounts.ready);
+  setElText("count-completed", tabCounts.completed);
+  setElText("count-cancelled", tabCounts.cancelled);
 }
 
 window.updateOrderStatus = async function(orderId, newStatus) {
@@ -547,6 +699,8 @@ function normalizePayment(statusStr) {
 }
 
 function renderOrdersUI() {
+  renderAttentionSection();
+
   const container = document.getElementById("orders-container");
   if (!container) return;
 
@@ -672,6 +826,7 @@ function createCompactHistoryRowHTML(order) {
   const rawStatus = normalizeStatus(order.order_status);
   const isDelivery = String(order.type || "").toLowerCase().includes("deliv");
   const grandTotal = parseFloat(order.total || 0);
+  const age = getOrderAge(order.created_at);
 
   let timeFormatted = "";
   if (order.created_at) {
@@ -689,6 +844,7 @@ function createCompactHistoryRowHTML(order) {
       <div class="row-left">
         <span class="row-bc-num">#${escapeHTML(dailyBcNum)}</span>
         <span class="row-time">⏰ ${escapeHTML(timeFormatted)}</span>
+        ${age ? `<span class="order-age-badge" style="font-size: 0.72rem;">⏱️ ${escapeHTML(age)}</span>` : ''}
         <span class="row-customer">👤 ${escapeHTML(order.customer_name || 'Customer')}</span>
         <span class="row-phone">📞 ${escapeHTML(order.phone || 'No phone')}</span>
         <span class="order-type-badge ${isDelivery ? 'type-delivery' : 'type-pickup'}" style="font-size: 0.72rem; padding: 2px 8px;">
@@ -736,6 +892,7 @@ function renderModalContent(orderId) {
   const rawPayment = normalizePayment(order.payment_status);
   const isDelivery = String(order.type || "").toLowerCase().includes("deliv");
   const grandTotal = parseFloat(order.total || 0);
+  const age = getOrderAge(order.created_at);
 
   let fullTimeFormatted = "";
   if (order.created_at) {
@@ -784,7 +941,10 @@ function renderModalContent(orderId) {
     <div style="display: flex; justify-content: space-between; align-items: center; background: #23232A; padding: 12px; border-radius: 10px;">
       <div>
         <div style="font-size: 0.8rem; color: #9CA3AF;">Order Time</div>
-        <div style="font-weight: 700; color: #FFFFFF; font-size: 0.95rem;">${escapeHTML(fullTimeFormatted)}</div>
+        <div style="font-weight: 700; color: #FFFFFF; font-size: 0.95rem;">
+          ${escapeHTML(fullTimeFormatted)}
+          ${age ? `<span class="order-age-badge" style="margin-left: 6px;">⏱️ ${escapeHTML(age)}</span>` : ''}
+        </div>
       </div>
       <span class="order-type-badge ${isDelivery ? 'type-delivery' : 'type-pickup'}">
         ${isDelivery ? '🛵 Delivery' : '🛍️ Pickup'}
@@ -866,6 +1026,7 @@ function createOrderCardHTML(order) {
   const rawStatus = normalizeStatus(order.order_status);
   const rawPayment = normalizePayment(order.payment_status);
   const isDelivery = String(order.type || "").toLowerCase().includes("deliv");
+  const age = getOrderAge(order.created_at);
 
   let itemsArray = [];
   if (Array.isArray(order.items)) {
@@ -961,12 +1122,15 @@ function createOrderCardHTML(order) {
     `;
   }
 
+  const ageBadgeHTML = age ? `<span class="order-age-badge ${isNew ? 'age-recent' : ''}" data-created-at="${escapeHTML(order.created_at || '')}">⏱️ ${escapeHTML(age)}</span>` : "";
+
   return `
-    <div class="order-card ${isNew ? 'new-order' : ''}" id="card-${order.id}">
+    <div class="order-card status-${rawStatus} ${isNew ? 'new-order' : ''}" id="card-${order.id}">
       <div class="card-top">
         <div>
           <div class="order-id-title">
             <span>#${escapeHTML(dailyBcNum)}</span>
+            ${ageBadgeHTML}
           </div>
           <div class="order-time">${timeFormatted}</div>
         </div>
@@ -999,7 +1163,7 @@ function createOrderCardHTML(order) {
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
           <span style="font-size: 0.8rem; color: #9CA3AF;">Status:</span>
           <span class="badge-status badge-${rawStatus}">
-            ${rawStatus.toUpperCase()}
+            ${rawStatus === 'pending' ? '⚡ AWAITING ACCEPTANCE' : rawStatus.toUpperCase()}
           </span>
         </div>
 
