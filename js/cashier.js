@@ -156,9 +156,7 @@ async function fetchOrders({ force = false } = {}) {
   const statusText = document.getElementById("status-text");
 
   try {
-    const res = await fetch(`${API_BASE}/orders?_t=${Date.now()}`, {
-      headers: { "Cache-Control": "no-cache" }
-    });
+    const res = await fetch(`${API_BASE}/orders?_t=${Date.now()}`);
 
     if (!res.ok) {
       throw new Error(`HTTP Error ${res.status}`);
