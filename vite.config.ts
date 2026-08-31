@@ -16,6 +16,11 @@ export default defineConfig(() => {
             if (url.pathname === '/cashier' || url.pathname === '/cashier/' || url.pathname.startsWith('/cashier?')) {
               req.url = '/cashier.html' + url.search;
             }
+            if (url.pathname === '/cashier.html' || url.pathname === '/version.json') {
+              res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+              res.setHeader('Pragma', 'no-cache');
+              res.setHeader('Expires', '0');
+            }
             next();
           });
         },
