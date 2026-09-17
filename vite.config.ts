@@ -12,14 +12,13 @@ export default defineConfig(() => {
         name: 'cashier-route-plugin',
         configureServer(server: any) {
           server.middlewares.use((req: any, res: any, next: any) => {
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+
             const url = new URL(req.url || '/', 'http://localhost');
             if (url.pathname === '/cashier' || url.pathname === '/cashier/' || url.pathname.startsWith('/cashier?')) {
               req.url = '/cashier.html' + url.search;
-            }
-            if (url.pathname === '/cashier.html' || url.pathname === '/version.json') {
-              res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-              res.setHeader('Pragma', 'no-cache');
-              res.setHeader('Expires', '0');
             }
             next();
           });
@@ -41,7 +40,7 @@ export default defineConfig(() => {
     },
     server: {
       hmr: process.env.DISABLE_HMR !== 'true',
-      watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      watch: {},
     },
   };
 });

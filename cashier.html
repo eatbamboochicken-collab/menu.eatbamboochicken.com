@@ -622,16 +622,56 @@
       font-size: 0.84rem;
     }
 
+    .breakdown-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+      color: #9CA3AF;
+      font-weight: 600;
+    }
+
+    .breakdown-label {
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      font-size: 0.76rem;
+      color: #9CA3AF;
+    }
+
+    .breakdown-value {
+      font-weight: 700;
+      color: #E5E7EB;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .breakdown-row.delivery-row .breakdown-value {
+      color: #FDB813;
+    }
+
     .grand-total-row {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       font-family: 'Outfit', sans-serif;
       font-weight: 800;
       font-size: 1.15rem;
       color: #FFFFFF;
       margin-top: 2px;
-      padding-top: 6px;
+      padding-top: 8px;
       border-top: 1px solid #2A2A30;
+    }
+
+    .grand-total-label {
+      font-size: 0.88rem;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      color: #FFFFFF;
+    }
+
+    .grand-total-value {
+      font-size: 1.25rem;
+      color: #FDB813;
+      font-weight: 800;
     }
 
     .payment-method-tag {
@@ -659,8 +699,8 @@
     .badge-completed { background: rgba(107, 114, 128, 0.2); color: #9CA3AF; border: 1px solid rgba(107, 114, 128, 0.4); }
     .badge-cancelled { background: rgba(239, 68, 68, 0.2); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.4); }
 
-    .badge-paid { background: rgba(16, 185, 129, 0.2); color: #34D399; }
-    .badge-unpaid { background: rgba(239, 68, 68, 0.2); color: #F87171; }
+    .badge-paid { background: rgba(16, 185, 129, 0.2); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .badge-unpaid { background: rgba(239, 68, 68, 0.2); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.4); }
 
     /* Operational Action Area */
     .action-area {
@@ -1132,7 +1172,7 @@
     </div>
   </div>
 
-  <script src="/js/cashier.js?v=2.0.3"></script>
+  <script src="/js/cashier.js?v=2.0.4"></script>
 </body>
 </html>
 
