@@ -8,188 +8,90 @@ const API_BASE = "https://bamboo-orders-api.warstreett.workers.dev";
 
 // Global Menu Database
 const MENU_DATA = [
-  // ⭐ Value Combos
-  {
-    id: "classic-meal",
-    category: "value-combos",
-    name: "Classic Meal",
-    price: 5.00,
-    description: "🍔 Burger • 🍗 1 Piece Chicken • 🍟 Small Chips • 🥤 FREE 50c Drink",
-    comboIncludes: ["Burger", "1 Piece Chicken", "Small Chips", "FREE 50c Drink"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Chicken%20burger.jpg",
-    details: "Burger, 1 piece chicken, small chips and a free 50c drink."
-  },
-  {
-    id: "bamboo-duo",
-    category: "value-combos",
-    name: "Bamboo Duo",
-    price: 4.00,
-    description: "🍢 2 Bamboo Chicken • 🍟 Chips • 🥤 FREE 50c Drink",
-    comboIncludes: ["2 Bamboo Chicken", "Chips", "FREE 50c Drink"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Bamboo%20chicken.jpg",
-    details: "2 Bamboo Chicken sticks, chips and a free 50c drink."
-  },
-  {
-    id: "wrap-combo",
-    category: "value-combos",
-    name: "Wrap Combo",
-    price: 4.00,
-    description: "🌯 Chicken Wrap • 🍟 Medium Chips • 💧 FREE Water",
-    comboIncludes: ["Chicken Wrap", "Medium Chips", "FREE Water"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Chicken%20wrape.jpeg",
-    details: "Chicken wrap, medium chips and free bottled water."
-  },
-  {
-    id: "shawarma-feast",
-    category: "value-combos",
-    name: "Shawarma Feast",
-    price: 6.00,
-    description: "🌯 Shawarma • 🍗 2 Chicken Pieces • 🥤 FREE Tall Drink",
-    comboIncludes: ["Shawarma", "2 Chicken Pieces", "FREE Tall Drink"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/2%20piecer.jpg",
-    details: "Shawarma, 2 chicken pieces and a free tall drink."
-  },
-  {
-    id: "bamboo-value",
-    category: "value-combos",
-    name: "Bamboo Value",
-    price: 3.50,
-    description: "🥟 Bamboo Pie • 🍢 Bamboo Chicken • 🍟 Small Chips • 💧 FREE Water",
-    comboIncludes: ["Bamboo Pie", "Bamboo Chicken", "Small Chips", "FREE Water"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/bamboo_pie_3.webp",
-    details: "Bamboo pie, Bamboo Chicken stick, small chips and free bottled water."
-  },
-  {
-    id: "fillet-combo",
-    category: "value-combos",
-    name: "Fillet Combo",
-    price: 3.00,
-    description: "🍗 Chicken Fillet • 🍟 Small Chips • 🥤 FREE Drink",
-    comboIncludes: ["Chicken Fillet", "Small Chips", "FREE Drink"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Chicken%20fillet.jpg",
-    details: "Chicken fillet, small chips and a free drink."
-  },
-
-  // 🍳 Breakfast
-  {
-    id: "egg-sandwich",
-    category: "breakfast",
-    name: "Egg Sandwich",
-    price: 1.00,
-    description: "Fried egg and lettuce on toasted bread.",
-    comboIncludes: ["Fried Egg", "Fresh Lettuce", "Toasted Bread"],
-    image: "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=600&q=80",
-    details: "Fried egg and lettuce on toasted bread."
-  },
-  {
-    id: "polony-sandwich",
-    category: "breakfast",
-    name: "Polony Sandwich",
-    price: 1.00,
-    description: "Sliced polony and cheese on toasted bread.",
-    comboIncludes: ["Sliced Polony", "Cheese", "Toasted Bread"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Polony%20sandwich.jpg",
-    details: "Sliced polony and cheese on toasted bread."
-  },
-
-  // 🍗 Bamboo Specials / Fried Chicken
+  // 🍗 CHICKEN & MORE
   {
     id: "bamboo-chicken",
-    category: "bamboo-specials",
+    category: "chicken-and-more",
     name: "Bamboo Chicken",
-    price: 1.50,
+    price: 2.00,
     description: "Chicken served on a bamboo stick.",
     comboIncludes: ["Grilled Bamboo Chicken Stick"],
     image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Bamboo%20chicken.jpg",
     details: "Chicken served on a bamboo stick."
   },
   {
-    id: "one-piecer",
-    category: "bamboo-specials",
+    id: "bamboo-chicken-chips",
+    category: "chicken-and-more",
+    name: "Bamboo Chicken with Small Chips",
+    price: 2.50,
+    description: "Bamboo Chicken stick served with a portion of small crispy chips.",
+    comboIncludes: ["Grilled Bamboo Chicken Stick", "Small Crispy Chips"],
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Bamboo%20chicken.jpg",
+    details: "Bamboo Chicken stick served with a portion of small crispy chips."
+  },
+  {
+    id: "chicken-more-1-piecer",
+    category: "chicken-and-more",
     name: "1 Piecer",
-    price: 2.00,
+    price: 2.50,
     description: "1 piece of fried chicken served with chips.",
     comboIncludes: ["1 Piece Fried Chicken", "Small Chips"],
     image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/1%20piecer.jpg",
     details: "1 piece of fried chicken served with chips."
   },
   {
-    id: "two-piecer",
-    category: "bamboo-specials",
-    name: "2 Piecer",
-    price: 3.50,
-    description: "2 pieces of fried chicken served with chips.",
-    comboIncludes: ["2 Pieces Fried Chicken", "Small Chips"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/2%20piecer.jpg",
-    details: "2 pieces of fried chicken served with chips."
+    id: "chicken-bones",
+    category: "chicken-and-more",
+    name: "Chicken Bones",
+    price: 1.00,
+    description: "Seasoned chicken wing pieces and riblets.",
+    comboIncludes: ["Seasoned Wing Pieces & Riblets"],
+    image: "https://images.unsplash.com/photo-1585325701165-351af916e5ec?auto=format&fit=crop&w=600&q=80",
+    details: "Seasoned chicken wing pieces and riblets."
   },
   {
-    id: "three-piecer",
-    category: "bamboo-specials",
-    name: "3 Piecer",
-    price: 4.50,
-    description: "3 pieces of fried chicken served with chips.",
-    comboIncludes: ["3 Pieces Fried Chicken", "Small Chips"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/3%20piecer.jpg",
-    details: "3 pieces of fried chicken served with chips."
+    id: "bamboo-pie",
+    category: "chicken-and-more",
+    name: "Bamboo Pie",
+    price: 1.50,
+    description: "A savoury baked pie.",
+    comboIncludes: ["Chicken & Mushroom Baked Pie"],
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/bamboo_pie_3.webp",
+    details: "A savoury baked pie filled with chicken and mushroom."
   },
   {
-    id: "eight-piece-bucket",
-    category: "bamboo-specials",
-    name: "8 Piece Bucket",
-    price: 9.00,
-    description: "8 pieces of fried chicken. Chicken only.",
-    comboIncludes: ["8 Pieces Fried Chicken"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/8%20piecer%20bucket.jpg",
-    details: "An 8-piece bucket of fried chicken. Chicken only (no chips)."
-  },
-
-  // 🍱 Lunch & Dinner Specials
-  {
-    id: "fried-rice-meal",
-    category: "lunch-specials",
-    name: "Fried Rice Meal",
+    id: "chicken-fillet",
+    category: "chicken-and-more",
+    name: "Chicken Fillet",
     price: 3.00,
-    description: "Fried rice served with chicken nuggets and coleslaw.",
-    comboIncludes: ["Fried Rice", "Chicken Nuggets", "Coleslaw"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Fried%20rice.jpg",
-    details: "Fried rice served with chicken nuggets and coleslaw."
+    description: "Chicken breast fillet.",
+    comboIncludes: ["Grilled Chicken Breast Fillet"],
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Chicken%20fillet.jpg",
+    details: "Chicken breast fillet."
   },
   {
-    id: "sadza-chicken",
-    category: "lunch-specials",
-    name: "Sadza & Chicken",
+    id: "chicken-wrap",
+    category: "chicken-and-more",
+    name: "Chicken Wrap",
     price: 3.00,
-    description: "Sadza served with chicken stew and fresh vegetables.",
-    comboIncludes: ["Hot Fluffy Sadza", "Chicken Stew", "Fresh Vegetables"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Sadza%20and%20chicken.jpg",
-    details: "Sadza served with chicken stew and fresh vegetables."
+    description: "Chicken strips, lettuce, tomatoes and dressing wrapped in a tortilla.",
+    comboIncludes: ["Chicken Strips", "Lettuce & Tomatoes", "Dressing", "Tortilla Wrap"],
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Chicken%20wrape.jpeg",
+    details: "Chicken strips, lettuce, tomatoes and dressing wrapped in a tortilla."
   },
   {
-    id: "sadza-beef",
-    category: "lunch-specials",
-    name: "Sadza & Beef",
+    id: "shawarma",
+    category: "chicken-and-more",
+    name: "Shawarma",
     price: 3.00,
-    description: "Sadza served with beef stew and fresh vegetables.",
-    comboIncludes: ["Hot Fluffy Sadza", "Beef Stew", "Fresh Vegetables"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/bamboo_sadza_beef.webp",
-    details: "Sadza served with beef stew and fresh vegetables."
+    description: "Sliced chicken wrapped in pita bread with garlic sauce.",
+    comboIncludes: ["Sliced Roasted Chicken", "Garlic Sauce", "Pita Bread"],
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Chicken%20wrape.jpeg",
+    details: "Sliced chicken wrapped in pita bread with garlic sauce."
   },
-  {
-    id: "sadza-chicken-backbone",
-    category: "lunch-specials",
-    name: "Sadza & Big Chicken Backbone",
-    price: 2.00,
-    description: "Sadza served with a big chicken backbone and fresh vegetables.",
-    comboIncludes: ["Hot Fluffy Sadza", "Big Chicken Backbone", "Fresh Vegetables"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Sadza%20and%20chicken.jpg",
-    details: "Sadza served with a big chicken backbone and fresh vegetables."
-  },
-
-  // 🍔 Burgers & Wraps
   {
     id: "chicken-burger",
-    category: "burgers-wraps",
+    category: "chicken-and-more",
     name: "Chicken Burger",
     price: 3.00,
     description: "Chicken patty with lettuce and mayonnaise on a bun.",
@@ -199,7 +101,7 @@ const MENU_DATA = [
   },
   {
     id: "boss-burger",
-    category: "burgers-wraps",
+    category: "chicken-and-more",
     name: "Boss Burger",
     price: 5.50,
     description: "Double chicken fillet burger with cheese, lettuce and sauce.",
@@ -207,61 +109,85 @@ const MENU_DATA = [
     image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Boss%20burger.jpg",
     details: "Double chicken fillet burger with cheese, lettuce and sauce."
   },
+
+  // 🍱 MEALS
   {
-    id: "chicken-wrap",
-    category: "burgers-wraps",
-    name: "Chicken Wrap",
+    id: "sadza-beef",
+    category: "meals",
+    name: "Sadza Beef",
     price: 3.00,
-    description: "Chicken strips, lettuce, tomatoes and dressing wrapped in a tortilla.",
-    comboIncludes: ["Chicken Strips", "Lettuce & Tomatoes", "Dressing", "Tortilla Wrap"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Chicken%20wrape.jpeg",
-    details: "Chicken strips, lettuce, tomatoes and dressing wrapped in a tortilla."
+    description: "Sadza served with beef stew and fresh vegetables.",
+    comboIncludes: ["Hot Fluffy Sadza", "Beef Stew", "Fresh Vegetables"],
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/bamboo_sadza_beef.webp",
+    details: "Sadza served with beef stew and fresh vegetables."
   },
   {
-    id: "chicken-fillet",
-    category: "burgers-wraps",
-    name: "Chicken Fillet",
+    id: "sadza-chicken",
+    category: "meals",
+    name: "Sadza Chicken",
     price: 3.00,
-    description: "Chicken breast fillet.",
-    comboIncludes: ["Grilled Chicken Breast Fillet"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Chicken%20fillet.jpg",
-    details: "Chicken breast fillet."
+    description: "Sadza served with chicken stew and fresh vegetables.",
+    comboIncludes: ["Hot Fluffy Sadza", "Chicken Stew", "Fresh Vegetables"],
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Sadza%20and%20chicken.jpg",
+    details: "Sadza served with chicken stew and fresh vegetables."
   },
   {
-    id: "shawarma",
-    category: "burgers-wraps",
-    name: "Shawarma",
+    id: "fried-rice",
+    category: "meals",
+    name: "Fried Rice",
     price: 3.00,
-    description: "Sliced chicken wrapped in pita bread with garlic sauce.",
-    comboIncludes: ["Sliced Roasted Chicken", "Garlic Sauce", "Pita Bread"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Chicken%20wrape.jpeg",
-    details: "Sliced chicken wrapped in pita bread with garlic sauce."
+    description: "Seasoned fried rice served with chicken and coleslaw.",
+    comboIncludes: ["Seasoned Fried Rice", "Chicken", "Coleslaw"],
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Fried%20rice.jpg",
+    details: "Seasoned fried rice served with chicken and coleslaw."
   },
 
-  // 🎋 Bamboo Specials
+  // 🍗 CHICKEN PIECES
   {
-    id: "bamboo-pie",
-    category: "bamboo-specials",
-    name: "Bamboo Pie",
-    price: 1.50,
-    description: "A savoury baked pie.",
-    comboIncludes: ["Chicken & Mushroom Baked Pie"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/bamboo_pie_3.webp",
-    details: "A savoury baked pie filled with chicken and mushroom."
+    id: "chicken-pieces-1-piecer",
+    category: "chicken-pieces",
+    name: "1 Piecer",
+    price: 2.50,
+    description: "1 piece of fried chicken served with chips.",
+    comboIncludes: ["1 Piece Fried Chicken", "Small Chips"],
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/1%20piecer.jpg",
+    details: "1 piece of fried chicken served with chips."
   },
   {
-    id: "chicken-bones",
-    category: "bamboo-specials",
-    name: "Chicken Bones",
-    price: 1.50,
-    description: "Seasoned chicken wing pieces and riblets.",
-    comboIncludes: ["Seasoned Wing Pieces & Riblets"],
-    image: "https://images.unsplash.com/photo-1585325701165-351af916e5ec?auto=format&fit=crop&w=600&q=80",
-    details: "Seasoned chicken wing pieces and riblets."
+    id: "chicken-pieces-2-piecer",
+    category: "chicken-pieces",
+    name: "2 Piecer",
+    price: 3.50,
+    description: "2 pieces of fried chicken served with chips.",
+    comboIncludes: ["2 Pieces Fried Chicken", "Small Chips"],
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/2%20piecer.jpg",
+    details: "2 pieces of fried chicken served with chips."
   },
+  {
+    id: "chicken-pieces-3-piecer",
+    category: "chicken-pieces",
+    name: "3 Piecer",
+    price: 4.50,
+    description: "3 pieces of fried chicken served with chips.",
+    comboIncludes: ["3 Pieces Fried Chicken", "Chips"],
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/3%20piecer.jpg",
+    details: "3 pieces of fried chicken served with chips."
+  },
+  {
+    id: "chicken-pieces-8-piece-bucket",
+    category: "chicken-pieces",
+    name: "8 Piece Bucket",
+    price: 9.00,
+    description: "8 pieces of fried chicken. Chicken only.",
+    comboIncludes: ["8 Pieces Fried Chicken"],
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/8%20piecer%20bucket.jpg",
+    details: "8 pieces of fried chicken. Chicken only."
+  },
+
+  // 🥗 SALADS
   {
     id: "garden-salad",
-    category: "bamboo-specials",
+    category: "salads",
     name: "Garden Salad",
     price: 1.50,
     description: "Mixed greens, cucumbers and tomatoes with dressing.",
@@ -269,27 +195,149 @@ const MENU_DATA = [
     image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80",
     details: "Mixed greens, cucumbers and tomatoes with dressing."
   },
-
-  // 🍟 Chips
   {
-    id: "small-chips",
-    category: "chips",
-    name: "Small Chips",
+    id: "coleslaw",
+    category: "salads",
+    name: "Coleslaw",
+    price: 0.50,
+    description: "Fresh shredded cabbage and carrots in creamy dressing.",
+    comboIncludes: ["Shredded Cabbage & Carrots", "Creamy Dressing"],
+    image: "https://images.unsplash.com/photo-1625944525533-473f1a3d54e7?auto=format&fit=crop&w=600&q=80",
+    details: "Fresh shredded cabbage and carrots in creamy dressing."
+  },
+  {
+    id: "chicken-salad",
+    category: "salads",
+    name: "Chicken Salad",
+    price: 3.00,
+    description: "Tender chicken strips served on a bed of fresh garden salad.",
+    comboIncludes: ["Tender Chicken Strips", "Fresh Garden Greens", "Salad Dressing"],
+    image: "https://images.unsplash.com/photo-1546793665-c74683f339c1?auto=format&fit=crop&w=600&q=80",
+    details: "Tender chicken strips served on a bed of fresh garden salad."
+  },
+
+  // 🍟 SIDES
+  {
+    id: "plain-chips-small",
+    category: "sides",
+    name: "Plain Chips (Small)",
     price: 1.00,
-    description: "A small portion of seasoned potato chips.",
+    description: "A small portion of golden seasoned potato chips.",
     comboIncludes: ["Small Portion Seasoned Chips"],
     image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Snall%20chips.jpg",
-    details: "A small portion of seasoned potato chips."
+    details: "A small portion of golden seasoned potato chips."
   },
   {
     id: "mega-chips",
-    category: "chips",
+    category: "sides",
     name: "Mega Chips",
     price: 2.00,
-    description: "A large portion of seasoned potato chips.",
+    description: "A large portion of golden seasoned potato chips.",
     comboIncludes: ["Large Portion Seasoned Chips"],
     image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Mega%20chips.jpeg",
-    details: "A large portion of seasoned potato chips."
+    details: "A large portion of golden seasoned potato chips."
+  },
+
+  // 🥤 DRINKS
+  {
+    id: "coca-cola-300ml",
+    category: "drinks",
+    name: "Coca-Cola — 300ml",
+    price: 0.50,
+    description: "Chilled Coca-Cola 300ml bottle.",
+    comboIncludes: ["Coca-Cola 300ml"],
+    image: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80",
+    details: "Chilled Coca-Cola 300ml bottle."
+  },
+  {
+    id: "coca-cola-500ml",
+    category: "drinks",
+    name: "Coca-Cola — 500ml",
+    price: 1.00,
+    description: "Chilled Coca-Cola 500ml bottle.",
+    comboIncludes: ["Coca-Cola 500ml"],
+    image: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80",
+    details: "Chilled Coca-Cola 500ml bottle."
+  },
+  {
+    id: "fanta-300ml",
+    category: "drinks",
+    name: "Fanta — 300ml",
+    price: 0.50,
+    description: "Chilled Fanta Orange 300ml bottle.",
+    comboIncludes: ["Fanta Orange 300ml"],
+    image: "https://images.unsplash.com/photo-1624517452488-04869289c4ca?auto=format&fit=crop&w=600&q=80",
+    details: "Chilled Fanta Orange 300ml bottle."
+  },
+  {
+    id: "fanta-500ml",
+    category: "drinks",
+    name: "Fanta — 500ml",
+    price: 1.00,
+    description: "Chilled Fanta Orange 500ml bottle.",
+    comboIncludes: ["Fanta Orange 500ml"],
+    image: "https://images.unsplash.com/photo-1624517452488-04869289c4ca?auto=format&fit=crop&w=600&q=80",
+    details: "Chilled Fanta Orange 500ml bottle."
+  },
+  {
+    id: "sprite-300ml",
+    category: "drinks",
+    name: "Sprite — 300ml",
+    price: 0.50,
+    description: "Chilled Sprite 300ml bottle.",
+    comboIncludes: ["Sprite 300ml"],
+    image: "https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?auto=format&fit=crop&w=600&q=80",
+    details: "Chilled Sprite 300ml bottle."
+  },
+  {
+    id: "sprite-500ml",
+    category: "drinks",
+    name: "Sprite — 500ml",
+    price: 1.00,
+    description: "Chilled Sprite 500ml bottle.",
+    comboIncludes: ["Sprite 500ml"],
+    image: "https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?auto=format&fit=crop&w=600&q=80",
+    details: "Chilled Sprite 500ml bottle."
+  },
+  {
+    id: "fruit-yogurt",
+    category: "drinks",
+    name: "Fruit Yogurt",
+    price: 2.50,
+    description: "Chilled, creamy fruit yogurt.",
+    comboIncludes: ["Chilled Fruit Yogurt"],
+    image: "https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=600&q=80",
+    details: "Chilled, creamy fruit yogurt drink."
+  },
+  {
+    id: "aloe-vera",
+    category: "drinks",
+    name: "Aloe Vera",
+    price: 2.50,
+    description: "Refreshing Aloe Vera drink with natural pulp.",
+    comboIncludes: ["Refreshing Aloe Vera"],
+    image: "https://images.unsplash.com/photo-1556881286-fc6915169721?auto=format&fit=crop&w=600&q=80",
+    details: "Refreshing Aloe Vera drink with natural pulp."
+  },
+  {
+    id: "ice-tea",
+    category: "drinks",
+    name: "Ice Tea",
+    price: 1.50,
+    description: "Chilled lemon iced tea.",
+    comboIncludes: ["Chilled Lemon Ice Tea"],
+    image: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=600&q=80",
+    details: "Chilled lemon iced tea."
+  },
+  {
+    id: "minute-maid-delight",
+    category: "drinks",
+    name: "Minute Maid Delight",
+    price: 1.00,
+    description: "Refreshing Minute Maid fruit juice.",
+    comboIncludes: ["Minute Maid Fruit Drink"],
+    image: "https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=600&q=80",
+    details: "Refreshing Minute Maid fruit juice."
   }
 ];
 
@@ -297,6 +345,14 @@ const MENU_DATA = [
 let currentCategory = "all";
 let searchQuery = "";
 let cart = JSON.parse(localStorage.getItem("bamboo_cart")) || [];
+// Clean obsolete items from cart if any exist
+if (Array.isArray(cart)) {
+  const validIds = new Set(MENU_DATA.map(m => m.id));
+  cart = cart.filter(item => {
+    const baseId = item.id ? item.id.split('-')[0] : '';
+    return validIds.has(item.id) || MENU_DATA.some(m => m.id.startsWith(baseId));
+  });
+}
 let selectedProduct = null;
 let modalCurrentQty = 1;
 let currentOrderMethod = "delivery"; // 'delivery' or 'collection'
@@ -355,7 +411,7 @@ const cartBadges = document.querySelectorAll(".cart-badge");
 let unavailableMenuItems = [];
 
 // Initialize Application
-document.addEventListener("DOMContentLoaded", () => {
+function initBambooApp() {
   setupNavbarScroll();
   generateCategoryPills();
   renderMenu();
@@ -367,7 +423,8 @@ document.addEventListener("DOMContentLoaded", () => {
     window.updateRestaurantStatus();
     setInterval(window.updateRestaurantStatus, 30000);
   }
-});
+}
+
 
 // Scroll Listener for Navbar Elevation, Depth Lag and Smooth Shift
 let lastScrollY = window.scrollY;
@@ -420,13 +477,13 @@ function setupNavbarScroll() {
 // Generate the horizontal scrollable Category Pill buttons
 function generateCategoryPills() {
   const categories = [
-    { id: "all", name: "All Magic", icon: "✨" },
-    { id: "value-combos", name: "Value Combos", icon: "⭐" },
-    { id: "breakfast", name: "Breakfast", icon: "🍳" },
-    { id: "burgers-wraps", name: "Burgers & Wraps", icon: "🍔" },
-    { id: "lunch-specials", name: "Lunch & Dinner Specials", icon: "🍱" },
-    { id: "bamboo-specials", name: "Bamboo Specials", icon: "🎋" },
-    { id: "chips", name: "Chips", icon: "🍟" }
+    { id: "all", name: "All Menu", icon: "✨" },
+    { id: "chicken-and-more", name: "Chicken & More", icon: "🍗" },
+    { id: "meals", name: "Meals", icon: "🍱" },
+    { id: "chicken-pieces", name: "Chicken Pieces", icon: "🍗" },
+    { id: "salads", name: "Salads", icon: "🥗" },
+    { id: "sides", name: "Sides", icon: "🍟" },
+    { id: "drinks", name: "Drinks", icon: "🥤" }
   ];
 
   categoryContainer.innerHTML = "";
@@ -483,9 +540,9 @@ function renderMenu() {
       return false;
     }
 
-    // Category check: "all" displays everything except value-combos
+    // Category check: "all" displays all authoritative menu items
     const matchesCategory = currentCategory === "all" 
-      ? item.category !== "value-combos" 
+      ? true 
       : item.category === currentCategory;
     
     // Search query check
@@ -574,7 +631,7 @@ function renderMenu() {
 // Dynamic calculation function for Bamboo Chicken
 window.calculateBambooChickenPrice = function(isChecked) {
   const item = MENU_DATA.find(i => i.id === "bamboo-chicken");
-  if (!item) return 1.50;
+  if (!item) return 2.00;
   
   const basePrice = item.price;
   const addOnPrice = (isChecked && item.optionPrice) ? item.optionPrice : 0;
@@ -872,12 +929,12 @@ window.confirmModalAddToCart = function() {
 
 function getCategoryPill(category) {
   switch (category) {
-    case "value-combos": return "⭐ VALUE COMBO";
-    case "breakfast": return "🍳 BREAKFAST";
-    case "lunch-specials": return "🍱 LUNCH & DINNER SPECIALS";
-    case "burgers-wraps": return "🍔 BURGERS & WRAPS";
-    case "bamboo-specials": return "🎋 BAMBOO SPECIALS";
-    case "chips": return "🍟 CHIPS";
+    case "chicken-and-more": return "🍗 CHICKEN & MORE";
+    case "meals": return "🍱 MEALS";
+    case "chicken-pieces": return "🍗 CHICKEN PIECES";
+    case "salads": return "🥗 SALADS";
+    case "sides": return "🍟 SIDES";
+    case "drinks": return "🥤 DRINKS";
     default: return `✨ ${category.toUpperCase().replace("-", " ")}`;
   }
 }
@@ -1124,15 +1181,121 @@ document.addEventListener("focusin", function(e) {
   }
 });
 
+window.DELIVERY_AREAS = [
+  { id: "cbd", name: "Harare CBD", fee: 2.00, keywords: ["cbd", "central", "first street", "samora", "nelson mandela", "jason moyo", "kwame", "robert mugabe", "angwa", "innez", "chinhoyi", "leopold takawira", "speke", "rotton row", "fourth street", "fifth street", "roadport"] },
+  { id: "avenues", name: "Avenues", fee: 2.00, keywords: ["avenues", "avenue", "baines", "fife", "herbert chitepo", "livingstone", "chinamano", "mazowe", "harare hospital", "selous"] },
+  { id: "braeside", name: "Braeside", fee: 3.00, keywords: ["braeside", "dieppe"] },
+  { id: "belvedere", name: "Belvedere", fee: 3.00, keywords: ["belvedere", "fallow", "princes"] },
+  { id: "mt_pleasant", name: "Mt Pleasant", fee: 3.00, keywords: ["mt pleasant", "mount pleasant", "norfolk", "pendennis", "bond"] },
+  { id: "uz", name: "UZ (University of Zimbabwe)", fee: 3.00, keywords: ["uz", "university of zimbabwe", "churchill"] },
+  { id: "cranborne", name: "Cranborne", fee: 3.00, keywords: ["cranborne"] },
+  { id: "graniteside", name: "Graniteside", fee: 3.00, keywords: ["graniteside", "kelvin", "cripps"] },
+  { id: "newlands", name: "Newlands", fee: 3.50, keywords: ["newlands", "enterprise", "swan"] },
+  { id: "greencroft", name: "Greencroft", fee: 4.00, keywords: ["greencroft", "lomagundi"] },
+  { id: "madokero", name: "Madokero", fee: 4.00, keywords: ["madokero"] },
+  { id: "sam_levys", name: "Sam Levy's / Borrowdale", fee: 4.50, keywords: ["sam levy", "sam levy's", "borrowdale", "ballantyne"] },
+  { id: "westgate", name: "Westgate", fee: 5.00, keywords: ["westgate"] },
+  { id: "other", name: "Other Harare Suburb ($3.00)", fee: 3.00, keywords: [] }
+];
+
+let selectedDeliveryAreaId = "cbd";
+let isFreeDeliveryPromoActive = false;
+
+window.setFreeDeliveryPromo = function(active) {
+  isFreeDeliveryPromoActive = Boolean(active);
+  updateCheckoutSummaries();
+};
+
+window.getCustomerFinancialBreakdown = function() {
+  const foodSubtotal = cart.reduce((sum, item) => sum + (parseFloat(item.price) || 0) * (parseInt(item.quantity) || 1), 0);
+  const isDelivery = currentOrderMethod === "delivery";
+  const isPickup = !isDelivery;
+
+  let deliveryFee = 0.00;
+  let deliveryFeeLabel = "$0.00";
+  let areaName = "Harare CBD";
+
+  if (isPickup) {
+    deliveryFee = 0.00;
+    deliveryFeeLabel = "PICKUP";
+  } else {
+    const areaSelect = document.getElementById("checkout-delivery-area");
+    const chosenAreaId = areaSelect ? areaSelect.value : selectedDeliveryAreaId;
+    let matched = window.DELIVERY_AREAS.find(a => a.id === chosenAreaId);
+
+    if (!matched) {
+      matched = window.DELIVERY_AREAS[0];
+    }
+
+    areaName = matched.name;
+    const baseFee = matched.fee;
+
+    if (isFreeDeliveryPromoActive) {
+      deliveryFee = 0.00;
+      deliveryFeeLabel = "FREE — Lunch Promotion";
+    } else {
+      deliveryFee = baseFee;
+      deliveryFeeLabel = `$${deliveryFee.toFixed(2)}`;
+    }
+  }
+
+  const grandTotal = foodSubtotal + deliveryFee;
+  const paymentMethod = currentPaymentMethod || "Cash";
+  const isCash = String(paymentMethod).toLowerCase() === "cash" || String(paymentMethod).toLowerCase().includes("cod") || String(paymentMethod).toLowerCase() === "cash on delivery";
+
+  const totalLabel = isCash ? "TOTAL TO PAY" : "TOTAL";
+  const paymentMethodDisplay = isCash ? "Cash on Delivery" : paymentMethod;
+
+  return {
+    foodSubtotal,
+    deliveryFee,
+    deliveryFeeLabel,
+    grandTotal,
+    isDelivery,
+    isPickup,
+    isCash,
+    paymentMethod,
+    paymentMethodDisplay,
+    totalLabel,
+    areaName
+  };
+};
+
+window.onDeliveryAreaChange = function() {
+  const areaSelect = document.getElementById("checkout-delivery-area");
+  if (areaSelect) {
+    areaSelect.dataset.userManuallySelected = "true";
+    selectedDeliveryAreaId = areaSelect.value;
+  }
+  updateCheckoutSummaries();
+};
+
+window.onDeliveryAddressInput = function() {
+  const addressInput = document.getElementById("checkout-address");
+  const areaSelect = document.getElementById("checkout-delivery-area");
+  
+  if (addressInput && areaSelect && areaSelect.dataset.userManuallySelected !== "true") {
+    const addressVal = addressInput.value.trim().toLowerCase();
+    if (addressVal) {
+      const autoMatched = window.DELIVERY_AREAS.find(a => a.keywords.some(k => addressVal.includes(k)));
+      if (autoMatched && areaSelect.value !== autoMatched.id) {
+        areaSelect.value = autoMatched.id;
+        selectedDeliveryAreaId = autoMatched.id;
+      }
+    }
+  }
+  updateCheckoutSummaries();
+};
+
 window.setOrderMethod = function(method) {
   currentOrderMethod = method;
   
   const deliveryBtn = document.getElementById("type-btn-delivery");
   const collectionBtn = document.getElementById("type-btn-collection");
   const deliveryGroup = document.getElementById("group-delivery-address");
+  const areaGroup = document.getElementById("group-delivery-area");
   const branchGroup = document.getElementById("group-collection-branch");
   const timeGroup = document.getElementById("group-collection-time");
-  
   const addressInput = document.getElementById("checkout-address");
   
   if (method === "delivery") {
@@ -1142,6 +1305,10 @@ window.setOrderMethod = function(method) {
     if (deliveryGroup) {
       deliveryGroup.classList.remove("hidden");
       deliveryGroup.style.display = "block";
+    }
+    if (areaGroup) {
+      areaGroup.classList.remove("hidden");
+      areaGroup.style.display = "block";
     }
     if (addressInput) addressInput.setAttribute("required", "required");
     
@@ -1154,6 +1321,10 @@ window.setOrderMethod = function(method) {
     if (deliveryGroup) {
       deliveryGroup.classList.add("hidden");
       deliveryGroup.style.display = "none";
+    }
+    if (areaGroup) {
+      areaGroup.classList.add("hidden");
+      areaGroup.style.display = "none";
     }
     if (addressInput) addressInput.removeAttribute("required");
     
@@ -1174,37 +1345,72 @@ window.setPaymentMethod = function(method) {
       btn.classList.toggle("active", pm === method);
     }
   });
+
+  updateCheckoutSummaries();
 };
 
 function getDeliveryFee(subtotal, orderMethod) {
-  if (orderMethod !== "delivery") {
-    return 0.00;
-  }
-  return 3.00;
+  const breakdown = window.getCustomerFinancialBreakdown();
+  return breakdown.deliveryFee;
 }
 
 function updateCheckoutSummaries() {
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const deliveryFee = getDeliveryFee(subtotal, currentOrderMethod);
-  const grandTotal = subtotal + deliveryFee;
+  const breakdown = window.getCustomerFinancialBreakdown();
 
+  // Step 1 Elements
   const step1Subtotal = document.getElementById("step1-subtotal");
+  const step1Delivery = document.getElementById("step1-delivery");
+  const step1DeliveryLabel = document.getElementById("step1-delivery-label");
   const step1Total = document.getElementById("step1-total");
-  const step3Subtotal = document.getElementById("step3-subtotal");
-  const step3Delivery = document.getElementById("step3-delivery");
-  const step3Total = document.getElementById("step3-total");
+  const step1TotalLabel = document.getElementById("step1-total-label");
 
-  if (step1Subtotal) step1Subtotal.textContent = `$${subtotal.toFixed(2)}`;
-  if (step1Total) step1Total.textContent = `$${subtotal.toFixed(2)}`;
-  if (step3Subtotal) step3Subtotal.textContent = `$${subtotal.toFixed(2)}`;
-  if (step3Delivery) {
-    if (currentOrderMethod === "delivery") {
-      step3Delivery.textContent = deliveryFee > 0 ? `$${deliveryFee.toFixed(2)}` : "FREE";
+  if (step1Subtotal) step1Subtotal.textContent = `$${breakdown.foodSubtotal.toFixed(2)}`;
+  if (step1Delivery) step1Delivery.textContent = breakdown.deliveryFeeLabel;
+  if (step1DeliveryLabel) step1DeliveryLabel.textContent = breakdown.isPickup ? "Delivery" : "Delivery fee";
+  if (step1Total) step1Total.textContent = `$${breakdown.grandTotal.toFixed(2)}`;
+  if (step1TotalLabel) step1TotalLabel.textContent = breakdown.totalLabel;
+
+  // Step 2 Elements
+  const step2DeliveryFeeVal = document.getElementById("step2-delivery-fee-val");
+  if (step2DeliveryFeeVal) {
+    if (breakdown.isDelivery) {
+      step2DeliveryFeeVal.textContent = `${breakdown.deliveryFeeLabel} (${breakdown.areaName})`;
     } else {
-      step3Delivery.textContent = "$0.00";
+      step2DeliveryFeeVal.textContent = "PICKUP (No delivery fee)";
     }
   }
-  if (step3Total) step3Total.textContent = `$${grandTotal.toFixed(2)}`;
+
+  // Step 3 Elements
+  const step3Subtotal = document.getElementById("step3-subtotal");
+  const step3Delivery = document.getElementById("step3-delivery");
+  const step3DeliveryLabel = document.getElementById("step3-delivery-label");
+  const step3Total = document.getElementById("step3-total");
+  const step3TotalLabel = document.getElementById("step3-total-label");
+  const step3PaymentMethodDisplay = document.getElementById("step3-payment-method-display");
+  const btnSubmitOrderText = document.getElementById("btn-submit-order-text");
+
+  if (step3Subtotal) step3Subtotal.textContent = `$${breakdown.foodSubtotal.toFixed(2)}`;
+  if (step3Delivery) step3Delivery.textContent = breakdown.deliveryFeeLabel;
+  if (step3DeliveryLabel) step3DeliveryLabel.textContent = breakdown.isPickup ? "Delivery" : "Delivery fee";
+  if (step3Total) step3Total.textContent = `$${breakdown.grandTotal.toFixed(2)}`;
+  if (step3TotalLabel) step3TotalLabel.textContent = breakdown.totalLabel;
+  if (step3PaymentMethodDisplay) step3PaymentMethodDisplay.textContent = breakdown.paymentMethodDisplay;
+  if (btnSubmitOrderText) {
+    btnSubmitOrderText.textContent = breakdown.isCash 
+      ? `Place Order • Pay $${breakdown.grandTotal.toFixed(2)} on Delivery` 
+      : `Place Order • $${breakdown.grandTotal.toFixed(2)}`;
+  }
+
+  // Cart Sidebar Elements
+  const cartSummarySubtotal = document.getElementById("cart-summary-subtotal");
+  const cartSummaryDelivery = document.getElementById("cart-summary-delivery");
+  const cartSummaryGrand = document.getElementById("cart-summary-grand");
+  const cartGrandLabel = document.getElementById("cart-grand-label");
+
+  if (cartSummarySubtotal) cartSummarySubtotal.textContent = `$${breakdown.foodSubtotal.toFixed(2)}`;
+  if (cartSummaryDelivery) cartSummaryDelivery.textContent = breakdown.deliveryFeeLabel;
+  if (cartSummaryGrand) cartSummaryGrand.textContent = `$${breakdown.grandTotal.toFixed(2)}`;
+  if (cartGrandLabel) cartGrandLabel.textContent = breakdown.totalLabel;
 }
 
 // Location state
@@ -1365,11 +1571,10 @@ async function executeFinalOrderSubmission() {
 
     const customerName = nameInput ? nameInput.value.trim() : "";
     const customerPhone = phoneInput ? phoneInput.value.trim() : "";
-    const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const deliveryFee = getDeliveryFee(subtotal, currentOrderMethod);
-    const grandTotal = subtotal + deliveryFee;
-    const paymentMethodStr = currentPaymentMethod || "Cash on Delivery";
+    const breakdown = window.getCustomerFinancialBreakdown();
     const specialNotes = notesInput && notesInput.value.trim() ? notesInput.value.trim() : "";
+    const addressVal = addressInput ? addressInput.value.trim() : "";
+    const branchVal = branchSelect ? branchSelect.value : "Roadport Main Branch";
 
     const apiPayload = {
       customer_name: customerName,
@@ -1378,12 +1583,13 @@ async function executeFinalOrderSubmission() {
         name: item.name,
         qty: item.quantity,
         quantity: item.quantity,
-        price: item.price,
+        price: parseFloat(item.price),
         options: item.customization || ""
       })),
-      total: parseFloat(grandTotal.toFixed(2)),
-      notes: specialNotes || (currentOrderMethod === "delivery" ? `Delivery: ${addressInput ? addressInput.value.trim() : ''}` : `Pickup at ${branchSelect ? branchSelect.value : ''}`),
-      payment_method: paymentMethodStr,
+      total: parseFloat(breakdown.grandTotal.toFixed(2)),
+      delivery_fee: parseFloat(breakdown.deliveryFee.toFixed(2)),
+      notes: specialNotes || (breakdown.isDelivery ? `Delivery (${breakdown.areaName}): ${addressVal}` : `Pickup at ${branchVal}`),
+      payment_method: breakdown.paymentMethodDisplay,
       type: currentOrderMethod,
       order_status: "new",
       status: "new",
@@ -1454,30 +1660,26 @@ async function executeFinalOrderSubmission() {
       ? `\n📍 *GPS Location:* https://maps.google.com/?q=${capturedLocationData.latitude},${capturedLocationData.longitude}` 
       : "";
 
-    const deliveryFeeFormatted = currentOrderMethod === "delivery" 
-      ? (deliveryFee > 0 ? `$${deliveryFee.toFixed(2)}` : "FREE")
-      : "$0.00";
-
     const whatsappMessage = `🎋 *BAMBOO CHICKEN - NEW ORDER (${orderId})* 🎋
 ----------------------------------------
 👤 *CUSTOMER DETAILS:*
 • *Name:* ${customerName}
 • *Phone:* ${customerPhone}
-• *Type:* ${currentOrderMethod.toUpperCase()}
-• *Payment:* ${paymentMethodStr}
-• *Notes/Address:* ${specialNotes || (currentOrderMethod === "delivery" ? (addressInput ? addressInput.value.trim() : 'Delivery') : (branchSelect ? branchSelect.value : 'Pickup'))}${locationDetails}
+• *Type:* ${breakdown.isDelivery ? `DELIVERY (${breakdown.areaName})` : 'PICKUP'}
+• *Payment Method:* ${breakdown.paymentMethodDisplay}
+• *Address/Branch:* ${breakdown.isDelivery ? addressVal : branchVal}${locationDetails}
 
 🛒 *ITEMS ORDERED:*
 ${itemsFormattedList}
 💵 *ORDER SUMMARY:*
-• *Items Subtotal:* $${subtotal.toFixed(2)}
-• *Delivery Fee:* ${deliveryFeeFormatted}
-• *TOTAL:* $${grandTotal.toFixed(2)}
+• *Food Subtotal:* $${breakdown.foodSubtotal.toFixed(2)}
+• *Delivery Fee:* ${breakdown.deliveryFeeLabel}
+• *${breakdown.totalLabel}:* $${breakdown.grandTotal.toFixed(2)}
 ----------------------------------------
 Thank you for ordering with Bamboo Chicken! 🍗✨`;
 
     const encodedText = encodeURIComponent(whatsappMessage);
-    const whatsappUrl = `https://wa.me/263789951127?text=${encodedText}`;
+    const whatsappUrl = `https://wa.me/263790040778?text=${encodedText}`;
     latestWhatsAppUrl = whatsappUrl;
 
     // Safely attempt WhatsApp opening
@@ -1551,7 +1753,7 @@ window.handleOpenWhatsAppFromSuccess = function() {
   if (latestWhatsAppUrl) {
     window.open(latestWhatsAppUrl, "_blank");
   } else {
-    window.open("https://wa.me/263789951127", "_blank");
+    window.open("https://wa.me/263790040778", "_blank");
   }
 };
 
@@ -1580,7 +1782,8 @@ window.handleSaveLocationChoice = function(shouldSave) {
   }
 };
 
-window.syncCartUI = function() {
+window.syncCartUI = syncCartUI;
+function syncCartUI() {
   // Update Cart Badge on header
   const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
   
@@ -1597,10 +1800,12 @@ window.syncCartUI = function() {
   const floatingCartQty = document.getElementById("floating-cart-qty");
   const floatingCartTotal = document.getElementById("floating-cart-total");
   const floatingCartBtn = document.getElementById("floating-cart");
-  const subtotalSum = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const breakdown = typeof window.getCustomerFinancialBreakdown === "function" 
+    ? window.getCustomerFinancialBreakdown() 
+    : { foodSubtotal: 0, grandTotal: 0, deliveryFeeLabel: "$2.00", totalLabel: "TOTAL" };
 
   if (floatingCartQty) floatingCartQty.textContent = totalQuantity;
-  if (floatingCartTotal) floatingCartTotal.textContent = `$${subtotalSum.toFixed(2)}`;
+  if (floatingCartTotal) floatingCartTotal.textContent = `$${breakdown.foodSubtotal.toFixed(2)}`;
   if (floatingCartBtn) {
     if (totalQuantity > 0) {
       floatingCartBtn.style.display = "flex";
@@ -1637,9 +1842,9 @@ window.syncCartUI = function() {
       </div>
     `;
     
-    cartSummaryQty.textContent = "0";
-    cartSummarySubtotal.textContent = "$0.00";
-    cartSummaryGrand.textContent = "$0.00";
+    if (cartSummaryQty) cartSummaryQty.textContent = "0";
+    if (cartSummarySubtotal) cartSummarySubtotal.textContent = "$0.00";
+    if (cartSummaryGrand) cartSummaryGrand.textContent = "$0.00";
   } else {
     let subtotal = 0;
 
@@ -1685,10 +1890,12 @@ window.syncCartUI = function() {
       cartSidebarBodyInner.appendChild(cartItemEl);
     });
 
-    cartSummaryQty.textContent = totalQuantity;
-    cartSummarySubtotal.textContent = `$${subtotal.toFixed(2)}`;
-    cartSummaryGrand.textContent = `$${subtotal.toFixed(2)}`;
+    if (cartSummaryQty) cartSummaryQty.textContent = totalQuantity;
+    if (cartSummarySubtotal) cartSummarySubtotal.textContent = `$${subtotal.toFixed(2)}`;
+    if (cartSummaryGrand) cartSummaryGrand.textContent = `$${breakdown.grandTotal.toFixed(2)}`;
   }
+
+  updateCheckoutSummaries();
 };
 
 window.updateCartItemQty = function(cartItemId, delta) {
@@ -1947,3 +2154,10 @@ window.closeCheckoutSuccessAndReset = function() {
   if (timeInput) timeInput.value = "";
   if (notesInput) notesInput.value = "";
 };
+
+// Initialize Application after all definitions
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initBambooApp);
+} else {
+  initBambooApp();
+}
