@@ -802,10 +802,11 @@
     }
 
     .btn-dispatched-badge {
-      display: inline-flex;
+      display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 3px;
       width: 100%;
       padding: 9px 12px;
       border-radius: 10px;
@@ -817,6 +818,15 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
       box-sizing: border-box;
+      text-align: center;
+    }
+
+    .btn-dispatched-sub {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #A7F3D0;
+      text-transform: none;
+      letter-spacing: normal;
     }
 
     .action-done-label {
@@ -1243,6 +1253,135 @@
   </div>
 
   <script src="/js/cashier.js?v=2.1.0"></script>
+  <script>
+    /**
+     * Bamboo Chicken Cashier — Dispatch to Shopystreet Riders Controller
+     * Directly communicates with the existing Bamboo Orders Worker:
+     * POST https://bamboo-orders-api.warstreett.workers.dev/orders/{orderId}/dispatch-delivery
+     */
+    (function() {
+      const BAMBOO_API_BASE = "https://bamboo-orders-api.warstreett.workers.dev";
+
+      window.sendToRiders = async function(orderId) {
+        const oidStr = String(orderId);
+
+        // Guard against in-flight double clicks
+        if (window.inFlightDispatch && window.inFlightDispatch.has(oidStr)) {
+          return;
+        }
+
+        const order = (window.cachedOrders || []).find(o => String(o.id) === oidStr);
+        if (!order) {
+          if (typeof window.showToast === "function") window.showToast("⚠️ Order not found.");
+          return;
+        }
+
+        // DUPLICATE PROTECTION:
+        // If order already contains delivery_job_id or confirmed in map, do not send again
+        const existingJobId = order.delivery_job_id || (window.confirmedDeliveryJobMap && window.confirmedDeliveryJobMap.get(oidStr));
+        if (existingJobId) {
+          if (typeof window.showToast === "function") {
+            window.showToast("⚠️ Order #" + (order.daily_bc_num || order.id) + " already sent to riders (Job #" + existingJobId + ").");
+          }
+          return;
+        }
+
+        // Manual cashier confirmation step
+        const orderDisplay = order.daily_bc_num || ("#" + order.id);
+        const confirmMsg = "Send this order to Shopystreet Riders?\n\n" +
+          "Order: " + orderDisplay + "\n" +
+          "Customer: " + (order.customer_name || "Customer") + "\n" +
+          "Destination: " + (order.notes || "Harare");
+
+        if (!window.confirm(confirmMsg)) {
+          return;
+        }
+
+        // Re-check duplicate protection after modal prompt
+        if (order.delivery_job_id || (window.confirmedDeliveryJobMap && window.confirmedDeliveryJobMap.get(oidStr))) {
+          return;
+        }
+
+        // LOADING STATE:
+        // Temporarily disable the button, show sending/loading state, prevent double-clicks
+        if (!window.inFlightDispatch) window.inFlightDispatch = new Map();
+        window.inFlightDispatch.set(oidStr, Date.now());
+
+        if (typeof window.renderOrdersUI === "function") window.renderOrdersUI();
+        if (window.activeModalOrderId === order.id && typeof window.renderOrderDetailsModalContent === "function") {
+          window.renderOrderDetailsModalContent(order);
+        }
+
+        if (typeof window.showToast === "function") {
+          window.showToast("🚀 Sending order " + orderDisplay + " to Shopystreet Riders...");
+        }
+
+        try {
+          // Call the existing Bamboo Orders Worker endpoint
+          const res = await fetch(BAMBOO_API_BASE + "/orders/" + orderId + "/dispatch-delivery", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            }
+          });
+
+          // SUCCESS CONFIRMATION & FAILURE HANDLING:
+          // The cashier must wait for the actual response from the Bamboo Worker.
+          // Do NOT change the button to SENT TO RIDERS merely because the browser request was sent.
+          let resJson = null;
+          try {
+            resJson = await res.json();
+          } catch(parseErr) {
+            throw new Error("Invalid response from Bamboo Worker (HTTP " + res.status + ")");
+          }
+
+          if (!res.ok || !resJson || resJson.success === false || resJson.ok === false) {
+            const errorMsg = (resJson && (resJson.error || resJson.message)) || ("Worker returned HTTP " + res.status);
+            throw new Error(errorMsg);
+          }
+
+          // Must return confirmed Shopystreet delivery job ID. Do not create frontend-generated IDs.
+          const realDeliveryJobId = resJson.delivery_job_id || resJson.job_id || (resJson.data && (resJson.data.delivery_job_id || resJson.data.id));
+
+          if (!realDeliveryJobId) {
+            throw new Error("Worker confirmed response but missing valid delivery_job_id from Shopystreet");
+          }
+
+          // SUCCESS:
+          order.delivery_job_id = realDeliveryJobId;
+          if (!window.confirmedDeliveryJobMap) window.confirmedDeliveryJobMap = new Map();
+          window.confirmedDeliveryJobMap.set(oidStr, realDeliveryJobId);
+
+          if (typeof window.showToast === "function") {
+            window.showToast("✅ SENT TO RIDERS! Delivery Job: #" + realDeliveryJobId);
+          }
+
+          // Force fresh sync with D1
+          if (typeof window.fetchOrders === "function") {
+            window.fetchOrders({ force: true });
+          }
+        } catch(err) {
+          console.error("[Cashier Dispatch Error]", err);
+
+          // FAILURE:
+          // Do NOT show SENT TO RIDERS.
+          // Show a clear dispatch failure message.
+          // Keep SEND TO RIDERS available so the cashier can retry.
+          if (typeof window.showToast === "function") {
+            window.showToast("❌ Dispatch failed: " + (err.message || "Please check connection and retry."));
+          }
+        } finally {
+          // LOADING STATE TEARDOWN:
+          // Return button to SEND TO RIDERS (if failed) or SENT TO RIDERS (if succeeded)
+          if (window.inFlightDispatch) window.inFlightDispatch.delete(oidStr);
+          if (typeof window.renderOrdersUI === "function") window.renderOrdersUI();
+          if (window.activeModalOrderId === order.id && typeof window.renderOrderDetailsModalContent === "function") {
+            window.renderOrderDetailsModalContent(order);
+          }
+        }
+      };
+    })();
+  </script>
 </body>
 </html>
 
