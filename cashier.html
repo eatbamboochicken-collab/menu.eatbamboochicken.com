@@ -548,6 +548,39 @@
       border: 1px solid rgba(59, 130, 246, 0.3);
     }
 
+    /* Order Source Badges */
+    .order-source-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .order-source-badge.source-menu {
+      background: rgba(255, 255, 255, 0.08);
+      color: #D1D5DB;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    .order-source-badge.source-select {
+      background: linear-gradient(135deg, rgba(253, 184, 19, 0.22), rgba(245, 158, 11, 0.32));
+      color: #FDB813;
+      border: 1px solid rgba(253, 184, 19, 0.65);
+      box-shadow: 0 0 10px rgba(253, 184, 19, 0.2);
+    }
+
+    .order-source-badge.source-uz {
+      background: rgba(99, 102, 241, 0.18);
+      color: #A5B4FC;
+      border: 1px solid rgba(99, 102, 241, 0.45);
+    }
+
     .customer-info {
       background: #121214;
       border-radius: 10px;
@@ -577,6 +610,7 @@
       color: #9CA3AF;
       font-size: 0.8rem;
       word-break: break-word;
+      white-space: pre-line;
     }
 
     .items-list {
@@ -754,6 +788,35 @@
 
     .btn-action-complete:hover {
       background: #059669;
+    }
+
+    .btn-action-dispatch {
+      background: linear-gradient(135deg, #FF5A00 0%, #E04800 100%);
+      color: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(255, 90, 0, 0.25);
+    }
+
+    .btn-action-dispatch:hover {
+      background: linear-gradient(135deg, #FF6A1A 0%, #C93E00 100%);
+      transform: translateY(-1px);
+    }
+
+    .btn-dispatched-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 0.82rem;
+      background: rgba(16, 185, 129, 0.15);
+      color: #10B981;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-sizing: border-box;
     }
 
     .action-done-label {
@@ -1144,6 +1207,13 @@
           <button type="button" class="btn-pos" onclick="clearHistoryDateFilter()" style="font-size: 0.8rem; padding: 6px 10px;">Show All Dates</button>
         </div>
 
+        <select id="pos-source-filter" class="select-input" onchange="onSourceFilterChange()">
+          <option value="all">ALL SOURCES</option>
+          <option value="menu">🎋 MENU</option>
+          <option value="select">⭐ SELECT</option>
+          <option value="uz">🎓 UZ</option>
+        </select>
+
         <select id="pos-type-filter" class="select-input" onchange="renderOrdersUI()">
           <option value="all">All Types (Pickup & Delivery)</option>
           <option value="delivery">🛵 Delivery Only</option>
@@ -1172,7 +1242,7 @@
     </div>
   </div>
 
-  <script src="/js/cashier.js?v=2.0.4"></script>
+  <script src="/js/cashier.js?v=2.1.0"></script>
 </body>
 </html>
 
