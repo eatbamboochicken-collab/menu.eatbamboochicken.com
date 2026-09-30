@@ -20,6 +20,8 @@ let cachedOrders = [];
 let knownOrderIds = new Set();
 let inFlightUpdates = new Map(); // orderId -> { targetStatus, startedAt }
 let confirmedStatusMap = new Map(); // orderId -> { status, confirmedAt }
+let inFlightDispatch = new Map(); // orderId -> startedAt
+let confirmedDeliveryJobMap = new Map(); // orderId -> deliveryJobId
 let activeModalOrderId = null;
 let currentAppVersion = null;
 let isUpdatingApp = false;
@@ -178,6 +180,16 @@ function reconcileOrders(serverOrders) {
 
     // 3. Normal case: record server status as authoritative
     confirmedStatusMap.set(oidStr, { status: serverOrder.order_status, confirmedAt: now });
+
+    // 4. Preserve locally confirmed delivery_job_id if server has not reflected it yet
+    if (confirmedDeliveryJobMap.has(oidStr)) {
+      if (!serverOrder.delivery_job_id) {
+        serverOrder.delivery_job_id = confirmedDeliveryJobMap.get(oidStr);
+      }
+    } else if (serverOrder.delivery_job_id) {
+      confirmedDeliveryJobMap.set(oidStr, serverOrder.delivery_job_id);
+    }
+
     return serverOrder;
   });
 
@@ -340,6 +352,18 @@ window.setFilter = function(filter) {
   renderOrdersUI();
 };
 
+window.onSourceFilterChange = function() {
+  updateCounts();
+  renderOrdersUI();
+};
+
+window.setSourceFilter = function(source) {
+  const el = document.getElementById("pos-source-filter");
+  if (el) el.value = source;
+  updateCounts();
+  renderOrdersUI();
+};
+
 /**
  * Utility functions for Date & Daily BC Sequence Numbers
  */
@@ -381,6 +405,8 @@ function processOrdersData(rawOrders) {
 
   const groups = {};
   rawOrders.forEach(o => {
+    // Ensure source is strictly preserved and normalized
+    o.source = normalizeOrderSource(o.source);
     const dateKey = getLocalDateStr(o.created_at) || "unknown";
     if (!groups[dateKey]) groups[dateKey] = [];
     groups[dateKey].push(o);
@@ -478,7 +504,11 @@ function renderAttentionSection() {
 
   const todayStr = getTodayLocalDateStr();
   const todayOrders = cachedOrders.filter(o => getLocalDateStr(o.created_at) === todayStr);
-  const pendingOrders = todayOrders.filter(o => normalizeStatus(o.order_status) === "pending");
+  const sourceFilter = (document.getElementById("pos-source-filter")?.value || "all").toLowerCase().trim();
+  let pendingOrders = todayOrders.filter(o => normalizeStatus(o.order_status) === "pending");
+  if (sourceFilter !== "all") {
+    pendingOrders = pendingOrders.filter(o => normalizeOrderSource(o.source) === sourceFilter);
+  }
 
   if (pendingOrders.length === 0) {
     container.innerHTML = "";
@@ -500,7 +530,8 @@ function renderAttentionSection() {
     const dailyBc = o.daily_bc_num || `BC-${o.id}`;
     const age = getOrderAge(o.created_at);
     const custName = escapeHTML(o.customer_name || "Customer");
-    return `<span style="background: rgba(0,0,0,0.3); border: 1px solid rgba(253,184,19,0.35); padding: 3px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; color: #FFFFFF; display: inline-flex; align-items: center; gap: 4px;">#${dailyBc} (${custName}${age ? ` • ${age}` : ''})</span>`;
+    const sourceBadge = getSourceBadgeHTML(o.source);
+    return `<span style="background: rgba(0,0,0,0.3); border: 1px solid rgba(253,184,19,0.35); padding: 3px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; color: #FFFFFF; display: inline-flex; align-items: center; gap: 6px;">#${dailyBc} ${sourceBadge} (${custName}${age ? ` • ${age}` : ''})</span>`;
   }).join(" ");
 
   const moreBadge = count > 4 ? `<span style="font-size: 0.8rem; color: #FDB813; font-weight: 700;">+${count - 4} more</span>` : "";
@@ -561,17 +592,22 @@ function updateCounts() {
   setElText("summary-completed", todayCounts.completed);
   setElText("summary-cancelled", todayCounts.cancelled);
 
-  // Tab counts reflect the active view (Today or History)
+  // Tab counts reflect active view (Today or History) and source filter
   const viewOrders = getActiveOrdersForCurrentView();
+  const sourceFilter = (document.getElementById("pos-source-filter")?.value || "all").toLowerCase().trim();
+  const filteredViewOrders = (sourceFilter === "all")
+    ? viewOrders
+    : viewOrders.filter(o => normalizeOrderSource(o.source) === sourceFilter);
+
   const tabCounts = {
-    all: viewOrders.length,
+    all: filteredViewOrders.length,
     pending: 0,
     preparing: 0,
     ready: 0,
     completed: 0,
     cancelled: 0
   };
-  viewOrders.forEach(o => {
+  filteredViewOrders.forEach(o => {
     const st = normalizeStatus(o.order_status);
     if (tabCounts[st] !== undefined) {
       tabCounts[st]++;
@@ -678,6 +714,84 @@ window.cancelOrderPrompt = function(orderId, bcNum) {
   window.updateOrderStatus(orderId, "cancelled");
 };
 
+/**
+ * Dispatch an order to Shopystreet Riders via Bamboo Worker.
+ * Explicitly cashier-controlled, with confirmation step, double-click protection,
+ * and loading/success/error handling.
+ */
+window.sendToRiders = async function(orderId) {
+  const oidStr = String(orderId);
+  if (inFlightDispatch.has(oidStr)) return;
+
+  const order = cachedOrders.find(o => String(o.id) === oidStr);
+  if (!order) {
+    showToast("⚠️ Order not found.");
+    return;
+  }
+
+  // Prevent duplicate dispatch if order already has a delivery_job_id
+  if (order.delivery_job_id || confirmedDeliveryJobMap.has(oidStr)) {
+    const existingJobId = order.delivery_job_id || confirmedDeliveryJobMap.get(oidStr);
+    showToast(`⚠️ Order #${order.daily_bc_num || order.id} has already been sent to riders (Job #${existingJobId}).`);
+    return;
+  }
+
+  // Confirmation step: Ask cashier explicitly
+  const confirmed = confirm(`Send this order to Shopystreet Riders?\n\nOrder: #${order.daily_bc_num || order.id}\nCustomer: ${order.customer_name || 'Customer'}\nDestination: ${order.notes || 'Harare'}`);
+  if (!confirmed) {
+    return;
+  }
+
+  // Guard against race conditions after confirm prompt
+  if (order.delivery_job_id || confirmedDeliveryJobMap.has(oidStr)) {
+    return;
+  }
+
+  // Set in-flight dispatch lock & show loading state
+  inFlightDispatch.set(oidStr, Date.now());
+  renderOrdersUI();
+  if (activeModalOrderId === order.id) {
+    renderOrderDetailsModalContent(order);
+  }
+
+  showToast(`🚀 Sending order #${order.daily_bc_num || order.id} to Shopystreet Riders...`);
+
+  try {
+    const res = await fetch(`${API_BASE}/orders/${orderId}/dispatch-delivery`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    });
+
+    const resJson = await res.json().catch(() => ({}));
+
+    if (!res.ok || resJson.success === false || resJson.ok === false) {
+      const errMsg = resJson.error || `Server returned status ${res.status}`;
+      throw new Error(errMsg);
+    }
+
+    const deliveryJobId = resJson.delivery_job_id || resJson.job_id || resJson.id || (resJson.data && resJson.data.id) || "DISPATCHED";
+
+    // Save returned delivery_job_id
+    order.delivery_job_id = deliveryJobId;
+    confirmedDeliveryJobMap.set(oidStr, deliveryJobId);
+
+    showToast(`✅ Order #${order.daily_bc_num || order.id} SENT TO RIDERS! (Job #${deliveryJobId})`);
+
+    // Force an authoritative fresh sync with D1
+    await fetchOrders({ force: true });
+  } catch (err) {
+    console.error("Failed to send order to riders:", err);
+    // If dispatch fails, show a clear error and allow the cashier to retry
+    showToast(`❌ Dispatch failed: ${err.message || 'Please check connection and retry.'}`);
+  } finally {
+    inFlightDispatch.delete(oidStr);
+    renderOrdersUI();
+    if (activeModalOrderId === order.id) {
+      renderOrderDetailsModalContent(order);
+    }
+  }
+};
+
 function normalizeStatus(statusStr) {
   if (!statusStr) return "pending";
   const s = String(statusStr).toLowerCase().trim();
@@ -698,6 +812,193 @@ function normalizePayment(statusStr) {
   return "pending";
 }
 
+/**
+ * Normalizes order source channel ('menu', 'select', 'uz').
+ * Defaults to 'menu' for omitted or historical orders.
+ */
+function normalizeOrderSource(sourceStr) {
+  if (!sourceStr) return "menu";
+  const s = String(sourceStr).toLowerCase().trim();
+  if (s === "select") return "select";
+  if (s === "uz") return "uz";
+  return "menu";
+}
+
+/**
+ * Returns clean, professional HTML badge for order channel source.
+ */
+function getSourceBadgeHTML(sourceStr) {
+  const norm = normalizeOrderSource(sourceStr);
+  if (norm === "select") {
+    return `<span class="order-source-badge source-select" title="Order Source: Bamboo Chicken Select">⭐ SELECT</span>`;
+  }
+  if (norm === "uz") {
+    return `<span class="order-source-badge source-uz" title="Order Source: Bamboo Chicken UZ">🎓 UZ</span>`;
+  }
+  return `<span class="order-source-badge source-menu" title="Order Source: Bamboo Chicken Web Menu">🎋 MENU</span>`;
+}
+
+/**
+ * Safely parses order items array, handling raw arrays, single JSON strings,
+ * or doubly encoded JSON strings from older historical orders.
+ */
+function parseOrderItems(itemsInput) {
+  if (Array.isArray(itemsInput)) return itemsInput;
+  if (!itemsInput) return [];
+  let current = itemsInput;
+  for (let i = 0; i < 2; i++) {
+    if (typeof current === "string") {
+      try {
+        current = JSON.parse(current);
+      } catch (e) {
+        break;
+      }
+    }
+  }
+  return Array.isArray(current) ? current : [];
+}
+
+/**
+ * Calculates authoritative financial breakdown for an order:
+ * 1. Food Subtotal: Sum of (item price * item quantity)
+ * 2. Delivery Fee: Actual fee for destination, $0.00 / FREE, or PICKUP / $0.00
+ * 3. Total Customer Amount: Verified grand total
+ * 4. Contextual accounting labels: TOTAL TO COLLECT, TOTAL CASH RECEIVED, TOTAL PAID
+ */
+function getOrderFinancialBreakdown(order) {
+  if (!order) {
+    return {
+      foodSubtotal: 0,
+      deliveryFee: 0,
+      deliveryFeeLabel: "$0.00",
+      grandTotal: 0,
+      isDelivery: false,
+      isPickup: true,
+      isCash: true,
+      isPaid: false,
+      paymentMethod: "Cash",
+      paymentStatus: "pending",
+      paymentStatusDisplay: "PAYMENT PENDING",
+      totalLabel: "TOTAL",
+      orderSource: "menu"
+    };
+  }
+
+  const orderSource = normalizeOrderSource(order.source);
+  const isSelectOrder = (orderSource === "select");
+
+  const itemsArray = parseOrderItems(order.items);
+
+  // 1. Food Subtotal
+  let calculatedFoodSubtotal = 0;
+  itemsArray.forEach(item => {
+    const qty = parseFloat(item.quantity || item.qty || 1);
+    const price = parseFloat(item.price || 0);
+    calculatedFoodSubtotal += (qty * price);
+  });
+  calculatedFoodSubtotal = Math.round(calculatedFoodSubtotal * 100) / 100;
+
+  // 2. Authoritative Total
+  let rawTotal = parseFloat(order.total || 0);
+  if (isNaN(rawTotal)) rawTotal = 0;
+  rawTotal = Math.round(rawTotal * 100) / 100;
+
+  // Detect Delivery vs Pickup (Select orders are STRICTLY DELIVERY ONLY)
+  const typeStr = String(order.type || "").toLowerCase().trim();
+  const notesStr = String(order.notes || "").toLowerCase().trim();
+  const isExplicitPickup = !isSelectOrder && (typeStr.includes("pick") || (!typeStr.includes("deliv") && notesStr.startsWith("pickup")));
+  const isExplicitDelivery = isSelectOrder || typeStr.includes("deliv") || notesStr.startsWith("delivery") || notesStr.includes("delivery:");
+  const isDelivery = isSelectOrder || isExplicitDelivery || (!isExplicitPickup && (rawTotal - calculatedFoodSubtotal > 0.001));
+  const isPickup = isSelectOrder ? false : !isDelivery;
+
+  // 3. Delivery Fee
+  let deliveryFee = 0;
+  let hasExplicitFee = false;
+  if (order.delivery_fee !== undefined && order.delivery_fee !== null && !isNaN(parseFloat(order.delivery_fee))) {
+    deliveryFee = Math.round(parseFloat(order.delivery_fee) * 100) / 100;
+    hasExplicitFee = true;
+  }
+
+  let foodSubtotal = calculatedFoodSubtotal;
+
+  if (isPickup) {
+    deliveryFee = 0;
+    if (foodSubtotal === 0 && rawTotal > 0) {
+      foodSubtotal = rawTotal;
+    }
+  } else {
+    // Delivery Order
+    if (!hasExplicitFee) {
+      if (rawTotal > 0 && foodSubtotal > 0 && rawTotal >= foodSubtotal) {
+        deliveryFee = Math.round((rawTotal - foodSubtotal) * 100) / 100;
+      } else if (rawTotal === 0 && foodSubtotal > 0) {
+        deliveryFee = 0;
+      }
+    }
+  }
+
+  let grandTotal = rawTotal;
+  if (grandTotal === 0 && foodSubtotal > 0) {
+    grandTotal = Math.round((foodSubtotal + deliveryFee) * 100) / 100;
+  }
+  if (foodSubtotal === 0 && grandTotal > 0) {
+    foodSubtotal = Math.max(0, Math.round((grandTotal - deliveryFee) * 100) / 100);
+  }
+
+  // 4. Payment method & status analysis
+  const paymentMethod = String(order.payment_method || "Cash").trim();
+  const paymentMethodLower = paymentMethod.toLowerCase();
+  const rawPaymentStatus = normalizePayment(order.payment_status);
+  const isCash = (paymentMethodLower === "cash" ||
+                  paymentMethodLower === "cod" ||
+                  paymentMethodLower === "cash on delivery" ||
+                  paymentMethodLower.startsWith("cash ") ||
+                  paymentMethodLower.endsWith(" cash")) &&
+                 !paymentMethodLower.includes("ecocash");
+  const isPaid = rawPaymentStatus === "paid";
+
+  let deliveryFeeLabel = `$${deliveryFee.toFixed(2)}`;
+  if (isPickup) {
+    deliveryFeeLabel = "PICKUP / $0.00";
+  } else if (deliveryFee === 0) {
+    deliveryFeeLabel = "FREE";
+  }
+
+  let totalLabel = "TOTAL";
+  let paymentStatusDisplay = isPaid ? "PAID" : "PAYMENT PENDING";
+
+  if (isCash) {
+    if (isPaid) {
+      totalLabel = isDelivery ? "TOTAL CASH RECEIVED" : "TOTAL PAID";
+    } else {
+      totalLabel = "TOTAL TO COLLECT";
+    }
+  } else {
+    // Prepaid payment methods (EcoCash, InnBucks, Card, Swipe)
+    if (isPaid) {
+      totalLabel = "TOTAL PAID";
+    } else {
+      totalLabel = "TOTAL (PREPAID PENDING)";
+    }
+  }
+
+  return {
+    foodSubtotal,
+    deliveryFee,
+    deliveryFeeLabel,
+    grandTotal,
+    isDelivery,
+    isPickup,
+    isCash,
+    isPaid,
+    paymentMethod,
+    paymentStatus: rawPaymentStatus,
+    paymentStatusDisplay,
+    totalLabel,
+    orderSource
+  };
+}
+
 function renderOrdersUI() {
   renderAttentionSection();
 
@@ -706,6 +1007,7 @@ function renderOrdersUI() {
 
   const searchVal = (document.getElementById("pos-search")?.value || "").toLowerCase().trim();
   const typeFilter = document.getElementById("pos-type-filter")?.value || "all";
+  const sourceFilter = (document.getElementById("pos-source-filter")?.value || "all").toLowerCase().trim();
 
   let baseOrders = getActiveOrdersForCurrentView();
 
@@ -716,10 +1018,15 @@ function renderOrdersUI() {
       return false;
     }
 
-    const oType = String(o.type || "pickup").toLowerCase();
+    const orderSource = normalizeOrderSource(o.source);
+    if (sourceFilter !== "all" && orderSource !== sourceFilter) {
+      return false;
+    }
+
+    const breakdown = getOrderFinancialBreakdown(o);
     if (typeFilter !== "all") {
-      if (typeFilter === "delivery" && !oType.includes("deliv")) return false;
-      if (typeFilter === "pickup" && oType.includes("deliv")) return false;
+      if (typeFilter === "delivery" && !breakdown.isDelivery) return false;
+      if (typeFilter === "pickup" && breakdown.isDelivery) return false;
     }
 
     if (searchVal) {
@@ -728,12 +1035,14 @@ function renderOrdersUI() {
       const custName = String(o.customer_name || "").toLowerCase();
       const phone = String(o.phone || "").toLowerCase();
       const notes = String(o.notes || "").toLowerCase();
+      const sourceStr = String(orderSource || "").toLowerCase();
 
       const match = orderIdStr.includes(searchVal) ||
                     dailyNumStr.includes(searchVal) ||
                     custName.includes(searchVal) ||
                     phone.includes(searchVal) ||
-                    notes.includes(searchVal);
+                    notes.includes(searchVal) ||
+                    sourceStr.includes(searchVal);
       if (!match) return false;
     }
 
@@ -824,8 +1133,7 @@ function renderOrdersUI() {
 function createCompactHistoryRowHTML(order) {
   const dailyBcNum = order.daily_bc_num || `BC-${order.id}`;
   const rawStatus = normalizeStatus(order.order_status);
-  const isDelivery = String(order.type || "").toLowerCase().includes("deliv");
-  const grandTotal = parseFloat(order.total || 0);
+  const breakdown = getOrderFinancialBreakdown(order);
   const age = getOrderAge(order.created_at);
 
   let timeFormatted = "";
@@ -845,14 +1153,20 @@ function createCompactHistoryRowHTML(order) {
         <span class="row-bc-num">#${escapeHTML(dailyBcNum)}</span>
         <span class="row-time">⏰ ${escapeHTML(timeFormatted)}</span>
         ${age ? `<span class="order-age-badge" style="font-size: 0.72rem;">⏱️ ${escapeHTML(age)}</span>` : ''}
+        ${getSourceBadgeHTML(order.source)}
         <span class="row-customer">👤 ${escapeHTML(order.customer_name || 'Customer')}</span>
         <span class="row-phone">📞 ${escapeHTML(order.phone || 'No phone')}</span>
-        <span class="order-type-badge ${isDelivery ? 'type-delivery' : 'type-pickup'}" style="font-size: 0.72rem; padding: 2px 8px;">
-          ${isDelivery ? '🛵 Delivery' : '🛍️ Pickup'}
+        <span class="order-type-badge ${breakdown.isDelivery ? 'type-delivery' : 'type-pickup'}" style="font-size: 0.72rem; padding: 2px 8px;">
+          ${breakdown.isDelivery ? '🛵 Delivery' : '🛍️ Pickup'}
         </span>
       </div>
       <div class="row-right">
-        <span class="row-total">$${grandTotal.toFixed(2)}</span>
+        <div style="text-align: right; line-height: 1.2;">
+          <span class="row-total" style="display: block;">$${breakdown.grandTotal.toFixed(2)}</span>
+          <span style="font-size: 0.72rem; color: #9CA3AF; font-weight: 600;">
+            Food $${breakdown.foodSubtotal.toFixed(2)} ${breakdown.isDelivery ? `+ Del ${escapeHTML(breakdown.deliveryFeeLabel)}` : ''}
+          </span>
+        </div>
         <span class="badge-status badge-${rawStatus}">${rawStatus.toUpperCase()}</span>
         <button type="button" class="btn-pos" style="font-size: 0.78rem; padding: 4px 10px;" onclick="event.stopPropagation(); openOrderDetailsModal(${order.id})">
           👁️ Details
@@ -889,9 +1203,7 @@ function renderModalContent(orderId) {
 
   const dailyBcNum = order.daily_bc_num || `BC-${order.id}`;
   const rawStatus = normalizeStatus(order.order_status);
-  const rawPayment = normalizePayment(order.payment_status);
-  const isDelivery = String(order.type || "").toLowerCase().includes("deliv");
-  const grandTotal = parseFloat(order.total || 0);
+  const breakdown = getOrderFinancialBreakdown(order);
   const age = getOrderAge(order.created_at);
 
   let fullTimeFormatted = "";
@@ -906,12 +1218,7 @@ function renderModalContent(orderId) {
     }
   }
 
-  let itemsArray = [];
-  if (Array.isArray(order.items)) {
-    itemsArray = order.items;
-  } else if (typeof order.items === "string") {
-    try { itemsArray = JSON.parse(order.items); } catch (e) { itemsArray = []; }
-  }
+  const itemsArray = parseOrderItems(order.items);
 
   const itemsHTML = itemsArray.map(item => {
     const qty = item.quantity || item.qty || 1;
@@ -946,9 +1253,12 @@ function renderModalContent(orderId) {
           ${age ? `<span class="order-age-badge" style="margin-left: 6px;">⏱️ ${escapeHTML(age)}</span>` : ''}
         </div>
       </div>
-      <span class="order-type-badge ${isDelivery ? 'type-delivery' : 'type-pickup'}">
-        ${isDelivery ? '🛵 Delivery' : '🛍️ Pickup'}
-      </span>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        ${getSourceBadgeHTML(order.source)}
+        <span class="order-type-badge ${breakdown.isDelivery ? 'type-delivery' : 'type-pickup'}">
+          ${breakdown.isDelivery ? '🛵 Delivery' : '🛍️ Pickup'}
+        </span>
+      </div>
     </div>
 
     <div class="customer-info" style="margin: 0;">
@@ -964,24 +1274,59 @@ function renderModalContent(orderId) {
       </div>
     </div>
 
-    <div class="totals-box" style="background: #23232A; padding: 12px; border-radius: 10px;">
-      <div class="payment-method-tag" style="background: transparent; padding: 0;">
-        <span>Payment: <strong>${escapeHTML(order.payment_method || 'Cash')}</strong></span>
-        <span class="badge-status ${rawPayment === 'paid' ? 'badge-paid' : 'badge-unpaid'}">
-          ${rawPayment.toUpperCase()}
+    <div class="totals-box" style="background: #23232A; padding: 14px; border-radius: 12px; border-top: none;">
+      <div class="breakdown-row" style="padding: 2px 0;">
+        <span class="breakdown-label" style="font-size: 0.82rem;">FOOD SUBTOTAL</span>
+        <span class="breakdown-value" style="font-size: 0.95rem;">$${breakdown.foodSubtotal.toFixed(2)}</span>
+      </div>
+      <div class="breakdown-row delivery-row" style="padding: 2px 0;">
+        <span class="breakdown-label" style="font-size: 0.82rem;">${breakdown.isPickup ? 'DELIVERY' : 'DELIVERY FEE'}</span>
+        <span class="breakdown-value" style="font-size: 0.95rem;">${escapeHTML(breakdown.deliveryFeeLabel)}</span>
+      </div>
+
+      <div class="grand-total-row" style="margin-top: 6px; padding-top: 10px;">
+        <span class="grand-total-label" style="font-size: 0.95rem;">${escapeHTML(breakdown.totalLabel)}</span>
+        <span class="grand-total-value" style="font-size: 1.4rem;">$${breakdown.grandTotal.toFixed(2)}</span>
+      </div>
+
+      <div class="payment-method-tag" style="background: #18181B; margin-top: 8px;">
+        <span>PAYMENT: <strong>${escapeHTML(breakdown.paymentMethod.toUpperCase())}</strong></span>
+        <span class="badge-status ${breakdown.isPaid ? 'badge-paid' : 'badge-unpaid'}">
+          ${escapeHTML(breakdown.paymentStatusDisplay)}
         </span>
       </div>
 
       <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
-        <span style="font-size: 0.85rem; color: #9CA3AF;">Current Status:</span>
-        <span class="badge-status badge-${rawStatus}">${rawStatus.toUpperCase()}</span>
+        <span style="font-size: 0.85rem; color: #9CA3AF;">ORDER SOURCE:</span>
+        ${getSourceBadgeHTML(order.source)}
       </div>
 
-      <div class="grand-total-row">
-        <span>Total Amount:</span>
-        <span style="color: #FDB813;">$${grandTotal.toFixed(2)}</span>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+        <span style="font-size: 0.85rem; color: #9CA3AF;">ORDER STATUS:</span>
+        <span class="badge-status badge-${rawStatus}">${rawStatus === 'pending' ? '⚡ AWAITING ACCEPTANCE' : rawStatus.toUpperCase()}</span>
       </div>
+
+      ${order.delivery_job_id ? `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding: 7px 12px; background: rgba(16, 185, 129, 0.12); border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.3);">
+          <span style="font-size: 0.85rem; color: #10B981; font-weight: 700;">🛵 SHOPYSTREET RIDER:</span>
+          <span style="font-size: 0.85rem; font-weight: 800; color: #A7F3D0;">SENT TO RIDERS (#${escapeHTML(String(order.delivery_job_id))})</span>
+        </div>
+      ` : ''}
     </div>
+
+    ${breakdown.isDelivery && rawStatus !== 'cancelled' ? `
+      <div style="margin-top: 10px;">
+        ${order.delivery_job_id ? `
+          <div class="btn-dispatched-badge" style="padding: 11px 14px; font-size: 0.88rem;">
+            <span>🛵</span> SENT TO RIDERS (#${escapeHTML(String(order.delivery_job_id))})
+          </div>
+        ` : `
+          <button type="button" class="btn-action btn-action-dispatch" ${isDispatching ? 'disabled style="opacity:0.65; cursor:wait;"' : ''} onclick="sendToRiders(${order.id})">
+            ${isDispatching ? '⏳ SENDING TO RIDERS...' : '🛵 SEND TO RIDERS'}
+          </button>
+        `}
+      </div>
+    ` : ''}
 
     <div style="display: flex; gap: 10px; margin-top: 8px;">
       ${rawStatus === 'pending' ? `<button type="button" class="btn-action btn-action-accept" ${isUpdating ? 'disabled style="opacity:0.65; cursor:wait;"' : ''} onclick="closeOrderDetailsModal(); updateOrderStatus(${order.id}, 'preparing')">${isUpdating ? '⏳ ACCEPTING...' : '⚡ ACCEPT ORDER'}</button>` : ''}
@@ -1024,20 +1369,10 @@ function renderErrorState(title) {
 function createOrderCardHTML(order) {
   const dailyBcNum = order.daily_bc_num || `BC-${order.id}`;
   const rawStatus = normalizeStatus(order.order_status);
-  const rawPayment = normalizePayment(order.payment_status);
-  const isDelivery = String(order.type || "").toLowerCase().includes("deliv");
+  const breakdown = getOrderFinancialBreakdown(order);
   const age = getOrderAge(order.created_at);
 
-  let itemsArray = [];
-  if (Array.isArray(order.items)) {
-    itemsArray = order.items;
-  } else if (typeof order.items === "string") {
-    try {
-      itemsArray = JSON.parse(order.items);
-    } catch (e) {
-      itemsArray = [];
-    }
-  }
+  const itemsArray = parseOrderItems(order.items);
 
   const itemsHTML = itemsArray.map(item => {
     const qty = item.quantity || item.qty || 1;
@@ -1070,18 +1405,37 @@ function createOrderCardHTML(order) {
   }
 
   const isNew = rawStatus === "pending";
-  const grandTotal = parseFloat(order.total || 0);
   const isUpdating = inFlightUpdates.has(String(order.id));
+  const isDispatching = inFlightDispatch.has(String(order.id));
+
+  // Rider Dispatch Action for Delivery Orders
+  let riderDispatchHTML = "";
+  if (breakdown.isDelivery && rawStatus !== "cancelled") {
+    if (order.delivery_job_id) {
+      riderDispatchHTML = `
+        <div class="btn-dispatched-badge" title="Dispatched to Shopystreet Riders">
+          <span>🛵</span> SENT TO RIDERS <span style="font-weight:700; color:#A7F3D0; font-size:0.75rem;">(#${escapeHTML(String(order.delivery_job_id))})</span>
+        </div>
+      `;
+    } else {
+      riderDispatchHTML = `
+        <button type="button" class="btn-action btn-action-dispatch" ${isDispatching ? 'disabled style="opacity:0.65; cursor:wait;"' : ''} onclick="sendToRiders(${order.id})">
+          ${isDispatching ? '⏳ SENDING TO RIDERS...' : '🛵 SEND TO RIDERS'}
+        </button>
+      `;
+    }
+  }
 
   // Operational Action Area
   let actionHTML = "";
   if (rawStatus === "pending") {
     actionHTML = `
       <div class="action-area">
+        ${riderDispatchHTML}
         <button type="button" class="btn-action btn-action-accept" ${isUpdating ? 'disabled style="opacity:0.65; cursor:wait;"' : ''} onclick="updateOrderStatus(${order.id}, 'preparing')">
           ${isUpdating ? '⏳ ACCEPTING...' : '⚡ ACCEPT ORDER'}
         </button>
-        <button type="button" class="btn-cancel-link" ${isUpdating ? 'disabled style="opacity:0.5;"' : ''} onclick="cancelOrderPrompt(${order.id}, '${dailyBcNum}')">
+        <button type="button" class="btn-cancel-link" ${isUpdating || isDispatching ? 'disabled style="opacity:0.5;"' : ''} onclick="cancelOrderPrompt(${order.id}, '${dailyBcNum}')">
           Cancel Order
         </button>
       </div>
@@ -1089,10 +1443,11 @@ function createOrderCardHTML(order) {
   } else if (rawStatus === "preparing") {
     actionHTML = `
       <div class="action-area">
+        ${riderDispatchHTML}
         <button type="button" class="btn-action btn-action-ready" ${isUpdating ? 'disabled style="opacity:0.65; cursor:wait;"' : ''} onclick="updateOrderStatus(${order.id}, 'ready')">
           ${isUpdating ? '⏳ UPDATING...' : '✅ MARK READY'}
         </button>
-        <button type="button" class="btn-cancel-link" ${isUpdating ? 'disabled style="opacity:0.5;"' : ''} onclick="cancelOrderPrompt(${order.id}, '${dailyBcNum}')">
+        <button type="button" class="btn-cancel-link" ${isUpdating || isDispatching ? 'disabled style="opacity:0.5;"' : ''} onclick="cancelOrderPrompt(${order.id}, '${dailyBcNum}')">
           Cancel Order
         </button>
       </div>
@@ -1100,10 +1455,11 @@ function createOrderCardHTML(order) {
   } else if (rawStatus === "ready") {
     actionHTML = `
       <div class="action-area">
+        ${riderDispatchHTML}
         <button type="button" class="btn-action btn-action-complete" ${isUpdating ? 'disabled style="opacity:0.65; cursor:wait;"' : ''} onclick="updateOrderStatus(${order.id}, 'completed')">
           ${isUpdating ? '⏳ UPDATING...' : '🎉 MARK COMPLETED'}
         </button>
-        <button type="button" class="btn-cancel-link" ${isUpdating ? 'disabled style="opacity:0.5;"' : ''} onclick="cancelOrderPrompt(${order.id}, '${dailyBcNum}')">
+        <button type="button" class="btn-cancel-link" ${isUpdating || isDispatching ? 'disabled style="opacity:0.5;"' : ''} onclick="cancelOrderPrompt(${order.id}, '${dailyBcNum}')">
           Cancel Order
         </button>
       </div>
@@ -1111,6 +1467,7 @@ function createOrderCardHTML(order) {
   } else if (rawStatus === "completed") {
     actionHTML = `
       <div class="action-area">
+        ${riderDispatchHTML}
         <div class="action-done-label">✓ Order Completed</div>
       </div>
     `;
@@ -1135,9 +1492,12 @@ function createOrderCardHTML(order) {
           <div class="order-time">${timeFormatted}</div>
         </div>
 
-        <span class="order-type-badge ${isDelivery ? 'type-delivery' : 'type-pickup'}">
-          ${isDelivery ? '🛵 Delivery' : '🛍️ Pickup'}
-        </span>
+        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end;">
+          ${getSourceBadgeHTML(order.source)}
+          <span class="order-type-badge ${breakdown.isDelivery ? 'type-delivery' : 'type-pickup'}">
+            ${breakdown.isDelivery ? '🛵 Delivery' : '🛍️ Pickup'}
+          </span>
+        </div>
       </div>
 
       <div class="customer-info">
@@ -1145,7 +1505,7 @@ function createOrderCardHTML(order) {
         <div>
           📞 <a href="tel:${escapeHTML(order.phone || '')}" class="cust-phone">${escapeHTML(order.phone || 'No phone')}</a>
         </div>
-        ${order.notes ? `<div class="cust-address">📍 ${escapeHTML(order.notes)}</div>` : ''}
+        ${order.notes ? `<div class="cust-address">📍 ${escapeHTML(order.notes)}</div>` : (breakdown.isDelivery ? `<div class="cust-address" style="color: #9CA3AF; font-style: italic;">📍 Delivery (No address notes provided)</div>` : '')}
       </div>
 
       <div class="items-list">
@@ -1153,23 +1513,37 @@ function createOrderCardHTML(order) {
       </div>
 
       <div class="totals-box">
+        <div class="breakdown-row">
+          <span class="breakdown-label">FOOD SUBTOTAL</span>
+          <span class="breakdown-value">$${breakdown.foodSubtotal.toFixed(2)}</span>
+        </div>
+        <div class="breakdown-row delivery-row">
+          <span class="breakdown-label">${breakdown.isPickup ? 'DELIVERY' : 'DELIVERY FEE'}</span>
+          <span class="breakdown-value">${escapeHTML(breakdown.deliveryFeeLabel)}</span>
+        </div>
+
+        <div class="grand-total-row">
+          <span class="grand-total-label">${escapeHTML(breakdown.totalLabel)}</span>
+          <span class="grand-total-value">$${breakdown.grandTotal.toFixed(2)}</span>
+        </div>
+
         <div class="payment-method-tag">
-          <span>Payment: <strong>${escapeHTML(order.payment_method || 'Cash')}</strong></span>
-          <span class="badge-status ${rawPayment === 'paid' ? 'badge-paid' : 'badge-unpaid'}">
-            ${rawPayment.toUpperCase()}
+          <span>PAYMENT: <strong>${escapeHTML(breakdown.paymentMethod.toUpperCase())}</strong></span>
+          <span class="badge-status ${breakdown.isPaid ? 'badge-paid' : 'badge-unpaid'}">
+            ${escapeHTML(breakdown.paymentStatusDisplay)}
           </span>
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
-          <span style="font-size: 0.8rem; color: #9CA3AF;">Status:</span>
+          <span style="font-size: 0.8rem; color: #9CA3AF;">CHANNEL:</span>
+          ${getSourceBadgeHTML(order.source)}
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+          <span style="font-size: 0.8rem; color: #9CA3AF;">STATUS:</span>
           <span class="badge-status badge-${rawStatus}">
             ${rawStatus === 'pending' ? '⚡ AWAITING ACCEPTANCE' : rawStatus.toUpperCase()}
           </span>
-        </div>
-
-        <div class="grand-total-row">
-          <span>Total:</span>
-          <span style="color: #FDB813;">$${grandTotal.toFixed(2)}</span>
         </div>
       </div>
 
