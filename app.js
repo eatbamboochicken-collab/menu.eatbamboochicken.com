@@ -6,18 +6,43 @@
 
 const API_BASE = "https://bamboo-orders-api.warstreett.workers.dev";
 
-// Global Menu Database
+// Global Menu Database (Bamboo Chicken Select)
 const MENU_DATA = [
-  // 🍗 CHICKEN & MORE
+  // ⭐ SIGNATURE MEALS
   {
     id: "bamboo-chicken",
-    category: "chicken-and-more",
+    category: "signature-meals",
     name: "Bamboo Chicken",
-    price: 2.00,
+    price: 3.00,
+    unit: "per stick",
     description: "Chicken served on a bamboo stick.",
     comboIncludes: ["Grilled Bamboo Chicken Stick"],
     image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Bamboo%20chicken.jpg",
     details: "Chicken served on a bamboo stick."
+  },
+  {
+    id: "bamboo-pie",
+    category: "signature-meals",
+    name: "Bamboo Pie",
+    price: 3.00,
+    unit: "per pie",
+    description: "A savoury baked pie.",
+    comboIncludes: ["Chicken & Mushroom Baked Pie"],
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/bamboo_pie_3.webp",
+    details: "A savoury baked pie filled with chicken and mushroom."
+  },
+
+  // 🍗 CHICKEN & MORE
+  {
+    id: "chicken-nuggets",
+    category: "chicken-and-more",
+    name: "Chicken Nuggets",
+    price: 3.00,
+    unit: "per 100g portion",
+    description: "Crispy chicken nuggets.",
+    comboIncludes: ["Crispy Chicken Nuggets (100g portion)"],
+    image: "https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=600&q=80",
+    details: "Crispy golden chicken nuggets."
   },
   {
     id: "bamboo-chicken-chips",
@@ -48,16 +73,6 @@ const MENU_DATA = [
     comboIncludes: ["Seasoned Wing Pieces & Riblets"],
     image: "https://images.unsplash.com/photo-1585325701165-351af916e5ec?auto=format&fit=crop&w=600&q=80",
     details: "Seasoned chicken wing pieces and riblets."
-  },
-  {
-    id: "bamboo-pie",
-    category: "chicken-and-more",
-    name: "Bamboo Pie",
-    price: 1.50,
-    description: "A savoury baked pie.",
-    comboIncludes: ["Chicken & Mushroom Baked Pie"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/bamboo_pie_3.webp",
-    details: "A savoury baked pie filled with chicken and mushroom."
   },
   {
     id: "chicken-fillet",
@@ -108,6 +123,54 @@ const MENU_DATA = [
     comboIncludes: ["2 Chicken Fillets", "Cheese", "Lettuce", "Boss Sauce", "Burger Bun"],
     image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Boss%20burger.jpg",
     details: "Double chicken fillet burger with cheese, lettuce and sauce."
+  },
+
+  // 🥟 COOKED DUMPLINGS
+  {
+    id: "chicken-dumplings",
+    category: "cooked-dumplings",
+    name: "Chicken Dumplings",
+    price: 5.00,
+    unit: "per pack of 5",
+    description: "Steamed chicken dumplings.",
+    comboIncludes: ["Steamed Chicken Dumplings (5 Pack)"],
+    image: "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?auto=format&fit=crop&w=600&q=80",
+    details: "Steamed chicken dumplings served with dipping sauce."
+  },
+  {
+    id: "beef-dumplings",
+    category: "cooked-dumplings",
+    name: "Beef Dumplings",
+    price: 5.00,
+    unit: "per pack of 5",
+    description: "Steamed beef dumplings.",
+    comboIncludes: ["Steamed Beef Dumplings (5 Pack)"],
+    image: "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&w=600&q=80",
+    details: "Steamed beef dumplings served with dipping sauce."
+  },
+
+  // 📦 FINISH-AT-HOME
+  {
+    id: "finish-at-home-chicken-dumpling-box",
+    category: "finish-at-home",
+    name: "Finish-at-Home Chicken Dumpling Box",
+    price: 10.00,
+    unit: "per box of 10",
+    description: "Ready to cook chicken dumplings at home.",
+    comboIncludes: ["Chicken Dumplings (Box of 10)"],
+    image: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=600&q=80",
+    details: "Ready to cook chicken dumplings at home."
+  },
+  {
+    id: "finish-at-home-beef-dumpling-box",
+    category: "finish-at-home",
+    name: "Finish-at-Home Beef Dumpling Box",
+    price: 10.00,
+    unit: "per box of 10",
+    description: "Ready to cook beef dumplings at home.",
+    comboIncludes: ["Beef Dumplings (Box of 10)"],
+    image: "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&w=600&q=80",
+    details: "Ready to cook beef dumplings at home."
   },
 
   // 🍱 MEALS
@@ -238,10 +301,32 @@ const MENU_DATA = [
     details: "A large portion of golden seasoned potato chips."
   },
 
-  // 🥤 DRINKS
+  // 🥤 DRINKS & EXTRAS
+  {
+    id: "select-ice-tea",
+    category: "drinks-and-extras",
+    name: "Select Ice Tea",
+    price: 3.00,
+    unit: "per bottle",
+    description: "Refreshing Select Ice Tea.",
+    comboIncludes: ["Chilled Select Ice Tea"],
+    image: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=600&q=80",
+    details: "Refreshing Select Ice Tea."
+  },
+  {
+    id: "soy-sauce",
+    category: "drinks-and-extras",
+    name: "Soy Sauce",
+    price: 3.00,
+    unit: "per full bottle",
+    description: "Full bottle of dipping soy sauce.",
+    comboIncludes: ["Soy Sauce (Full Bottle)"],
+    image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80",
+    details: "Full bottle of dipping soy sauce."
+  },
   {
     id: "coca-cola-300ml",
-    category: "drinks",
+    category: "drinks-and-extras",
     name: "Coca-Cola — 300ml",
     price: 0.50,
     description: "Chilled Coca-Cola 300ml bottle.",
@@ -251,7 +336,7 @@ const MENU_DATA = [
   },
   {
     id: "coca-cola-500ml",
-    category: "drinks",
+    category: "drinks-and-extras",
     name: "Coca-Cola — 500ml",
     price: 1.00,
     description: "Chilled Coca-Cola 500ml bottle.",
@@ -261,7 +346,7 @@ const MENU_DATA = [
   },
   {
     id: "fanta-300ml",
-    category: "drinks",
+    category: "drinks-and-extras",
     name: "Fanta — 300ml",
     price: 0.50,
     description: "Chilled Fanta Orange 300ml bottle.",
@@ -271,7 +356,7 @@ const MENU_DATA = [
   },
   {
     id: "fanta-500ml",
-    category: "drinks",
+    category: "drinks-and-extras",
     name: "Fanta — 500ml",
     price: 1.00,
     description: "Chilled Fanta Orange 500ml bottle.",
@@ -281,7 +366,7 @@ const MENU_DATA = [
   },
   {
     id: "sprite-300ml",
-    category: "drinks",
+    category: "drinks-and-extras",
     name: "Sprite — 300ml",
     price: 0.50,
     description: "Chilled Sprite 300ml bottle.",
@@ -291,7 +376,7 @@ const MENU_DATA = [
   },
   {
     id: "sprite-500ml",
-    category: "drinks",
+    category: "drinks-and-extras",
     name: "Sprite — 500ml",
     price: 1.00,
     description: "Chilled Sprite 500ml bottle.",
@@ -301,7 +386,7 @@ const MENU_DATA = [
   },
   {
     id: "fruit-yogurt",
-    category: "drinks",
+    category: "drinks-and-extras",
     name: "Fruit Yogurt",
     price: 2.50,
     description: "Chilled, creamy fruit yogurt.",
@@ -311,7 +396,7 @@ const MENU_DATA = [
   },
   {
     id: "aloe-vera",
-    category: "drinks",
+    category: "drinks-and-extras",
     name: "Aloe Vera",
     price: 2.50,
     description: "Refreshing Aloe Vera drink with natural pulp.",
@@ -320,18 +405,8 @@ const MENU_DATA = [
     details: "Refreshing Aloe Vera drink with natural pulp."
   },
   {
-    id: "ice-tea",
-    category: "drinks",
-    name: "Ice Tea",
-    price: 1.50,
-    description: "Chilled lemon iced tea.",
-    comboIncludes: ["Chilled Lemon Ice Tea"],
-    image: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=600&q=80",
-    details: "Chilled lemon iced tea."
-  },
-  {
     id: "minute-maid-delight",
-    category: "drinks",
+    category: "drinks-and-extras",
     name: "Minute Maid Delight",
     price: 1.00,
     description: "Refreshing Minute Maid fruit juice.",
@@ -499,12 +574,15 @@ function setupNavbarScroll() {
 function generateCategoryPills() {
   const categories = [
     { id: "all", name: "All Menu", icon: "✨" },
+    { id: "signature-meals", name: "Signature Meals", icon: "⭐" },
     { id: "chicken-and-more", name: "Chicken & More", icon: "🍗" },
+    { id: "cooked-dumplings", name: "Cooked Dumplings", icon: "🥟" },
+    { id: "finish-at-home", name: "Finish-at-Home", icon: "📦" },
     { id: "meals", name: "Meals", icon: "🍱" },
     { id: "chicken-pieces", name: "Chicken Pieces", icon: "🍗" },
     { id: "salads", name: "Salads", icon: "🥗" },
     { id: "sides", name: "Sides", icon: "🍟" },
-    { id: "drinks", name: "Drinks", icon: "🥤" }
+    { id: "drinks-and-extras", name: "Drinks & Extras", icon: "🥤" }
   ];
 
   categoryContainer.innerHTML = "";
@@ -562,7 +640,11 @@ function renderMenu() {
     }
 
     // Category check: "all" displays all authoritative menu items
-    return currentCategory === "all" ? true : item.category === currentCategory;
+    if (currentCategory === "all") return true;
+    if (currentCategory === "drinks-and-extras") {
+      return item.category === "drinks-and-extras" || item.category === "drinks";
+    }
+    return item.category === currentCategory;
   });
 
   // Handle Empty State
@@ -588,7 +670,7 @@ function renderMenu() {
           ${item.freeBadge ? `<div class="free-item-badge">${item.freeBadge}</div>` : ''}
         </div>
         <div class="menu-card-bottom-row">
-          <span class="menu-card-price" id="card-badge-price-${item.id}">$${item.price.toFixed(2)}</span>
+          <span class="menu-card-price" id="card-badge-price-${item.id}">$${item.price.toFixed(2)}${item.unit ? ` <span class="card-price-unit" style="font-size: 0.72rem; font-weight: 600; color: #7A6871; margin-left: 2px;">${item.unit}</span>` : ''}</span>
           <div class="menu-card-actions">
             <div class="card-qty-selector">
               <button type="button" class="card-qty-btn" onclick="event.stopPropagation(); changeCardQty('${item.id}', -1)" aria-label="Decrease quantity">−</button>
@@ -626,7 +708,7 @@ function renderMenu() {
 // Dynamic calculation function for Bamboo Chicken
 window.calculateBambooChickenPrice = function(isChecked) {
   const item = MENU_DATA.find(i => i.id === "bamboo-chicken");
-  if (!item) return 2.00;
+  if (!item) return 3.00;
   
   const basePrice = item.price;
   const addOnPrice = (isChecked && item.optionPrice) ? item.optionPrice : 0;
@@ -855,7 +937,7 @@ window.openDetailsModal = function(productId) {
     modalImgEl.alt = product.name;
   }
   if (modalFloatingPriceEl) {
-    modalFloatingPriceEl.textContent = `$${product.price.toFixed(2)}`;
+    modalFloatingPriceEl.innerHTML = `$${product.price.toFixed(2)}${product.unit ? ` <span style="font-size: 0.8rem; font-weight: 600; opacity: 0.85; margin-left: 3px;">${product.unit}</span>` : ''}`;
   }
   if (modalCategoryEl) {
     modalCategoryEl.textContent = getCategoryPill(product.category);
@@ -951,27 +1033,34 @@ window.confirmModalAddToCart = function() {
 
 function getCategoryPill(category) {
   switch (category) {
+    case "signature-meals": return "⭐ SIGNATURE MEALS";
     case "chicken-and-more": return "🍗 CHICKEN & MORE";
+    case "cooked-dumplings": return "🥟 COOKED DUMPLINGS";
+    case "finish-at-home": return "📦 FINISH-AT-HOME";
     case "meals": return "🍱 MEALS";
     case "chicken-pieces": return "🍗 CHICKEN PIECES";
     case "salads": return "🥗 SALADS";
     case "sides": return "🍟 SIDES";
-    case "drinks": return "🥤 DRINKS";
-    default: return `✨ ${category.toUpperCase().replace("-", " ")}`;
+    case "drinks-and-extras":
+    case "drinks": return "🥤 DRINKS & EXTRAS";
+    default: return `✨ ${category.toUpperCase().replace(/-/g, " ")}`;
   }
 }
 
 function getItemEmoji(name) {
   const n = name.toLowerCase();
-  if (n.includes("burger")) return "🍔";
-  if (n.includes("wrap") || n.includes("shawarma")) return "🌯";
+  if (n.includes("dumpling")) return "🥟";
+  if (n.includes("nugget")) return "🍗";
+  if (n.includes("sauce") || n.includes("soy")) return "🍶";
+  if (n.includes("tea")) return "🧋";
   if (n.includes("bamboo chicken") || n.includes("bamboo stick")) return "🍢";
   if (n.includes("bamboo pie") || n.includes("pie")) return "🥟";
-  if (n.includes("fillet")) return "🍗";
-  if (n.includes("piece") || n.includes("chicken") || n.includes("bucket") || n.includes("riblet")) return "🍗";
+  if (n.includes("burger")) return "🍔";
+  if (n.includes("wrap") || n.includes("shawarma")) return "🌯";
+  if (n.includes("fillet") || n.includes("piece") || n.includes("chicken") || n.includes("bucket") || n.includes("riblet")) return "🍗";
   if (n.includes("chips") || n.includes("fries")) return "🍟";
   if (n.includes("water")) return "💧";
-  if (n.includes("drink")) return "🥤";
+  if (n.includes("drink") || n.includes("cola") || n.includes("fanta") || n.includes("sprite") || n.includes("yogurt") || n.includes("juice")) return "🥤";
   if (n.includes("egg") || n.includes("sandwich") || n.includes("polony")) return "🥪";
   if (n.includes("sadza") || n.includes("stew")) return "🍲";
   if (n.includes("rice")) return "🍚";
@@ -2122,7 +2211,7 @@ function syncCartUI() {
           <h4 class="cart-item-name">${item.name}</h4>
           ${customizationTag}
           <div class="cart-item-price-row">
-            <span class="cart-item-unit-price">$${item.price.toFixed(2)} each</span>
+            <span class="cart-item-unit-price">$${item.price.toFixed(2)}${item.unit ? ` ${item.unit}` : ' each'}</span>
             <span class="cart-item-subtotal">$${itemSubtotal.toFixed(2)}</span>
           </div>
           
