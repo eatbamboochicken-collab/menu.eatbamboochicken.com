@@ -4,7 +4,7 @@
  * Strict API and Order Safety: Never caches live orders, payments, GPS or Cloudflare Workers APIs.
  */
 
-const CACHE_NAME = 'bamboo-chicken-shell-v1.1.0';
+const CACHE_NAME = 'bamboo-chicken-shell-v1.1.1';
 
 // Essential static application shell to precache
 const PRECACHE_ASSETS = [

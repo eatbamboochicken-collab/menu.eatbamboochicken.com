@@ -6,9 +6,77 @@
 
 const API_BASE = "https://bamboo-orders-api.warstreett.workers.dev";
 
-// Global Menu Database (Bamboo Chicken Select)
+// Historical menu references preserved for past order receipts and cashier records
+const HISTORICAL_MENU_DATA = [
+  { id: "sadza-beef", name: "Sadza Beef", price: 3.00, category: "meals" },
+  { id: "sadza-chicken", name: "Sadza Chicken", price: 3.00, category: "meals" },
+  { id: "chicken-bones", name: "Chicken Bones", price: 1.00, category: "chicken-meals" },
+  { id: "chicken-fillet", name: "Chicken Fillet", price: 3.00, category: "chicken-meals" },
+  { id: "bamboo-chicken-chips", name: "Bamboo Chicken with Small Chips", price: 2.50, category: "signature-meals" },
+  { id: "chicken-more-1-piecer", name: "1 Piecer", price: 2.50, category: "chicken-meals" },
+  { id: "chicken-pieces-1-piecer", name: "1 Piecer", price: 2.50, category: "chicken-meals" },
+  { id: "chicken-pieces-2-piecer", name: "2 Piecer", price: 3.50, category: "chicken-pieces" },
+  { id: "chicken-pieces-3-piecer", name: "3 Piecer", price: 4.50, category: "chicken-pieces" },
+  { id: "chicken-pieces-8-piece-bucket", name: "8 Piece Bucket", price: 9.00, category: "chicken-pieces" },
+  { id: "coca-cola-300ml", name: "Coca-Cola — 300ml", price: 0.50, category: "drinks-and-extras" },
+  { id: "fanta-300ml", name: "Fanta — 300ml", price: 0.50, category: "drinks-and-extras" },
+  { id: "sprite-300ml", name: "Sprite — 300ml", price: 0.50, category: "drinks-and-extras" },
+  { id: "select-ice-tea", name: "Select Ice Tea", price: 3.00, category: "drinks-and-extras" }
+];
+
+// Active Customer Menu Database (Bamboo Chicken Select - Dumplings First)
 const MENU_DATA = [
-  // ⭐ SIGNATURE MEALS
+  // 🥟 A. DUMPLINGS
+  {
+    id: "chicken-dumplings",
+    category: "dumplings",
+    name: "Chicken Dumplings",
+    price: 5.00,
+    unit: "per pack of 5",
+    description: "Steamed chicken dumplings.",
+    comboIncludes: ["Steamed Chicken Dumplings (5 Pack)"],
+    image: "https://media.eatbamboochicken.com/Bamboo%20Chicken%20Main/Bamboo-Chicken-Cooked-Chicken-Dumplings.webp",
+    details: "Steamed chicken dumplings served with dipping sauce.",
+    freeBadge: "🥟 Cooked • Pack of 5"
+  },
+  {
+    id: "beef-dumplings",
+    category: "dumplings",
+    name: "Beef Dumplings",
+    price: 5.00,
+    unit: "per pack of 5",
+    description: "Steamed beef dumplings.",
+    comboIncludes: ["Steamed Beef Dumplings (5 Pack)"],
+    image: "https://media.eatbamboochicken.com/Bamboo%20Chicken%20Main/Bamboo-Chicken-Cooked-Beef-Dumplings.webp",
+    details: "Steamed beef dumplings served with dipping sauce.",
+    freeBadge: "🥟 Cooked • Pack of 5"
+  },
+  {
+    id: "finish-at-home-chicken-dumpling-box",
+    category: "dumplings",
+    name: "Finish-at-Home Chicken Dumpling Box",
+    price: 10.00,
+    unit: "per box of 10",
+    description: "Ready to cook chicken dumplings at home.",
+    comboIncludes: ["Chicken Dumplings (Box of 10)"],
+    image: "https://media.eatbamboochicken.com/Bamboo%20Chicken%20Main/Bamboo-Chicken-Half-Cooked-Chicken-Dumplings.webp",
+    details: "Ready to cook chicken dumplings at home.",
+    freeBadge: "📦 Half-Cooked • Box of 10"
+  },
+  {
+    id: "finish-at-home-beef-dumpling-box",
+    category: "dumplings",
+    name: "Finish-at-Home Beef Dumpling Box",
+    price: 10.00,
+    unit: "per box of 10",
+    description: "Ready to cook beef dumplings at home.",
+    comboIncludes: ["Beef Dumplings (Box of 10)"],
+    image: "https://media.eatbamboochicken.com/Bamboo%20Chicken%20Main/Bamboo-Chicken-Half-Cooked-Beef-Dumplings.webp",
+    details: "Ready to cook beef dumplings at home.",
+    freeBadge: "📦 Half-Cooked • Box of 10"
+  },
+
+  // ⭐ B. SIGNATURE MEALS
   {
     id: "bamboo-chicken",
     category: "signature-meals",
@@ -19,6 +87,16 @@ const MENU_DATA = [
     comboIncludes: ["Grilled Bamboo Chicken Stick"],
     image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Bamboo%20chicken.jpg",
     details: "Chicken served on a bamboo stick."
+  },
+  {
+    id: "bamboo-chicken-mega-chips",
+    category: "signature-meals",
+    name: "Bamboo Chicken + Mega Chips",
+    price: 5.00,
+    description: "Grilled Bamboo Chicken stick served with a large portion of golden crispy mega chips.",
+    comboIncludes: ["Grilled Bamboo Chicken Stick", "Large Mega Chips"],
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Bamboo%20chicken.jpg",
+    details: "Grilled Bamboo Chicken stick served with a large portion of golden crispy mega chips."
   },
   {
     id: "bamboo-pie",
@@ -32,61 +110,53 @@ const MENU_DATA = [
     details: "A savoury baked pie filled with chicken and mushroom."
   },
 
-  // 🍗 CHICKEN & MORE
+  // 🍗 C. CHICKEN MEALS
+  {
+    id: "1-piecer",
+    category: "chicken-meals",
+    name: "1-Piecer",
+    price: 3.00,
+    description: "1 piece of crispy fried chicken served with chips.",
+    comboIncludes: ["1 Piece Crispy Fried Chicken", "Chips"],
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/1%20piecer.jpg",
+    details: "1 piece of crispy fried chicken served with chips."
+  },
+  {
+    id: "2-piecer",
+    category: "chicken-meals",
+    name: "2-Piecer",
+    price: 4.00,
+    description: "2 pieces of crispy fried chicken served with chips.",
+    comboIncludes: ["2 Pieces Crispy Fried Chicken", "Chips"],
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/2%20piecer.jpg",
+    details: "2 pieces of crispy fried chicken served with chips."
+  },
+  {
+    id: "3-piecer",
+    category: "chicken-meals",
+    name: "3-Piecer",
+    price: 5.00,
+    description: "3 pieces of crispy fried chicken served with chips.",
+    comboIncludes: ["3 Pieces Crispy Fried Chicken", "Chips"],
+    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/3%20piecer.jpg",
+    details: "3 pieces of crispy fried chicken served with chips."
+  },
   {
     id: "chicken-nuggets",
-    category: "chicken-and-more",
+    category: "chicken-meals",
     name: "Chicken Nuggets",
     price: 3.00,
-    unit: "per 100g portion",
-    description: "Crispy chicken nuggets.",
-    comboIncludes: ["Crispy Chicken Nuggets (100g portion)"],
-    image: "https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=600&q=80",
-    details: "Crispy golden chicken nuggets."
+    unit: "per 150g portion",
+    description: "Crispy golden chicken nuggets (150g portion).",
+    comboIncludes: ["Crispy Chicken Nuggets (150g portion)"],
+    image: "https://media.eatbamboochicken.com/Bamboo%20Chicken%20Main/Majority%20App/Bamboo-Chicken-Chicken-Nuggets.webp",
+    details: "Crispy golden chicken nuggets (150g portion)."
   },
-  {
-    id: "bamboo-chicken-chips",
-    category: "chicken-and-more",
-    name: "Bamboo Chicken with Small Chips",
-    price: 2.50,
-    description: "Bamboo Chicken stick served with a portion of small crispy chips.",
-    comboIncludes: ["Grilled Bamboo Chicken Stick", "Small Crispy Chips"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Bamboo%20chicken.jpg",
-    details: "Bamboo Chicken stick served with a portion of small crispy chips."
-  },
-  {
-    id: "chicken-more-1-piecer",
-    category: "chicken-and-more",
-    name: "1 Piecer",
-    price: 2.50,
-    description: "1 piece of fried chicken served with chips.",
-    comboIncludes: ["1 Piece Fried Chicken", "Small Chips"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/1%20piecer.jpg",
-    details: "1 piece of fried chicken served with chips."
-  },
-  {
-    id: "chicken-bones",
-    category: "chicken-and-more",
-    name: "Chicken Bones",
-    price: 1.00,
-    description: "Seasoned chicken wing pieces and riblets.",
-    comboIncludes: ["Seasoned Wing Pieces & Riblets"],
-    image: "https://images.unsplash.com/photo-1585325701165-351af916e5ec?auto=format&fit=crop&w=600&q=80",
-    details: "Seasoned chicken wing pieces and riblets."
-  },
-  {
-    id: "chicken-fillet",
-    category: "chicken-and-more",
-    name: "Chicken Fillet",
-    price: 3.00,
-    description: "Chicken breast fillet.",
-    comboIncludes: ["Grilled Chicken Breast Fillet"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Chicken%20fillet.jpg",
-    details: "Chicken breast fillet."
-  },
+
+  // 🍔 D. WRAPS & BURGERS
   {
     id: "chicken-wrap",
-    category: "chicken-and-more",
+    category: "wraps-and-burgers",
     name: "Chicken Wrap",
     price: 3.00,
     description: "Chicken strips, lettuce, tomatoes and dressing wrapped in a tortilla.",
@@ -96,7 +166,7 @@ const MENU_DATA = [
   },
   {
     id: "shawarma",
-    category: "chicken-and-more",
+    category: "wraps-and-burgers",
     name: "Shawarma",
     price: 3.00,
     description: "Sliced chicken wrapped in pita bread with garlic sauce.",
@@ -106,7 +176,7 @@ const MENU_DATA = [
   },
   {
     id: "chicken-burger",
-    category: "chicken-and-more",
+    category: "wraps-and-burgers",
     name: "Chicken Burger",
     price: 3.00,
     description: "Chicken patty with lettuce and mayonnaise on a bun.",
@@ -116,7 +186,7 @@ const MENU_DATA = [
   },
   {
     id: "boss-burger",
-    category: "chicken-and-more",
+    category: "wraps-and-burgers",
     name: "Boss Burger",
     price: 5.50,
     description: "Double chicken fillet burger with cheese, lettuce and sauce.",
@@ -125,164 +195,20 @@ const MENU_DATA = [
     details: "Double chicken fillet burger with cheese, lettuce and sauce."
   },
 
-  // 🥟 COOKED DUMPLINGS
-  {
-    id: "chicken-dumplings",
-    category: "cooked-dumplings",
-    name: "Chicken Dumplings",
-    price: 5.00,
-    unit: "per pack of 5",
-    description: "Steamed chicken dumplings.",
-    comboIncludes: ["Steamed Chicken Dumplings (5 Pack)"],
-    image: "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?auto=format&fit=crop&w=600&q=80",
-    details: "Steamed chicken dumplings served with dipping sauce."
-  },
-  {
-    id: "beef-dumplings",
-    category: "cooked-dumplings",
-    name: "Beef Dumplings",
-    price: 5.00,
-    unit: "per pack of 5",
-    description: "Steamed beef dumplings.",
-    comboIncludes: ["Steamed Beef Dumplings (5 Pack)"],
-    image: "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&w=600&q=80",
-    details: "Steamed beef dumplings served with dipping sauce."
-  },
-
-  // 📦 FINISH-AT-HOME
-  {
-    id: "finish-at-home-chicken-dumpling-box",
-    category: "finish-at-home",
-    name: "Finish-at-Home Chicken Dumpling Box",
-    price: 10.00,
-    unit: "per box of 10",
-    description: "Ready to cook chicken dumplings at home.",
-    comboIncludes: ["Chicken Dumplings (Box of 10)"],
-    image: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=600&q=80",
-    details: "Ready to cook chicken dumplings at home."
-  },
-  {
-    id: "finish-at-home-beef-dumpling-box",
-    category: "finish-at-home",
-    name: "Finish-at-Home Beef Dumpling Box",
-    price: 10.00,
-    unit: "per box of 10",
-    description: "Ready to cook beef dumplings at home.",
-    comboIncludes: ["Beef Dumplings (Box of 10)"],
-    image: "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&w=600&q=80",
-    details: "Ready to cook beef dumplings at home."
-  },
-
-  // 🍱 MEALS
-  {
-    id: "sadza-beef",
-    category: "meals",
-    name: "Sadza Beef",
-    price: 3.00,
-    description: "Sadza served with beef stew and fresh vegetables.",
-    comboIncludes: ["Hot Fluffy Sadza", "Beef Stew", "Fresh Vegetables"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/bamboo_sadza_beef.webp",
-    details: "Sadza served with beef stew and fresh vegetables."
-  },
-  {
-    id: "sadza-chicken",
-    category: "meals",
-    name: "Sadza Chicken",
-    price: 3.00,
-    description: "Sadza served with chicken stew and fresh vegetables.",
-    comboIncludes: ["Hot Fluffy Sadza", "Chicken Stew", "Fresh Vegetables"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Sadza%20and%20chicken.jpg",
-    details: "Sadza served with chicken stew and fresh vegetables."
-  },
+  // 🍟 E. RICE & SIDES
   {
     id: "fried-rice",
-    category: "meals",
+    category: "rice-and-sides",
     name: "Fried Rice",
     price: 3.00,
-    description: "Seasoned fried rice served with chicken and coleslaw.",
-    comboIncludes: ["Seasoned Fried Rice", "Chicken", "Coleslaw"],
+    description: "Fried Rice served with Chicken Nuggets and Coleslaw.",
+    comboIncludes: ["Seasoned Fried Rice", "Crispy Chicken Nuggets", "Creamy Coleslaw"],
     image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Fried%20rice.jpg",
-    details: "Seasoned fried rice served with chicken and coleslaw."
+    details: "Fried Rice served with Chicken Nuggets and Coleslaw."
   },
-
-  // 🍗 CHICKEN PIECES
-  {
-    id: "chicken-pieces-1-piecer",
-    category: "chicken-pieces",
-    name: "1 Piecer",
-    price: 2.50,
-    description: "1 piece of fried chicken served with chips.",
-    comboIncludes: ["1 Piece Fried Chicken", "Small Chips"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/1%20piecer.jpg",
-    details: "1 piece of fried chicken served with chips."
-  },
-  {
-    id: "chicken-pieces-2-piecer",
-    category: "chicken-pieces",
-    name: "2 Piecer",
-    price: 3.50,
-    description: "2 pieces of fried chicken served with chips.",
-    comboIncludes: ["2 Pieces Fried Chicken", "Small Chips"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/2%20piecer.jpg",
-    details: "2 pieces of fried chicken served with chips."
-  },
-  {
-    id: "chicken-pieces-3-piecer",
-    category: "chicken-pieces",
-    name: "3 Piecer",
-    price: 4.50,
-    description: "3 pieces of fried chicken served with chips.",
-    comboIncludes: ["3 Pieces Fried Chicken", "Chips"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/3%20piecer.jpg",
-    details: "3 pieces of fried chicken served with chips."
-  },
-  {
-    id: "chicken-pieces-8-piece-bucket",
-    category: "chicken-pieces",
-    name: "8 Piece Bucket",
-    price: 9.00,
-    description: "8 pieces of fried chicken. Chicken only.",
-    comboIncludes: ["8 Pieces Fried Chicken"],
-    image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/8%20piecer%20bucket.jpg",
-    details: "8 pieces of fried chicken. Chicken only."
-  },
-
-  // 🥗 SALADS
-  {
-    id: "garden-salad",
-    category: "salads",
-    name: "Garden Salad",
-    price: 1.50,
-    description: "Mixed greens, cucumbers and tomatoes with dressing.",
-    comboIncludes: ["Mixed Greens", "Cucumbers & Tomatoes", "Salad Dressing"],
-    image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80",
-    details: "Mixed greens, cucumbers and tomatoes with dressing."
-  },
-  {
-    id: "coleslaw",
-    category: "salads",
-    name: "Coleslaw",
-    price: 0.50,
-    description: "Fresh shredded cabbage and carrots in creamy dressing.",
-    comboIncludes: ["Shredded Cabbage & Carrots", "Creamy Dressing"],
-    image: "https://images.unsplash.com/photo-1625944525533-473f1a3d54e7?auto=format&fit=crop&w=600&q=80",
-    details: "Fresh shredded cabbage and carrots in creamy dressing."
-  },
-  {
-    id: "chicken-salad",
-    category: "salads",
-    name: "Chicken Salad",
-    price: 3.00,
-    description: "Tender chicken strips served on a bed of fresh garden salad.",
-    comboIncludes: ["Tender Chicken Strips", "Fresh Garden Greens", "Salad Dressing"],
-    image: "https://images.unsplash.com/photo-1546793665-c74683f339c1?auto=format&fit=crop&w=600&q=80",
-    details: "Tender chicken strips served on a bed of fresh garden salad."
-  },
-
-  // 🍟 SIDES
   {
     id: "plain-chips-small",
-    category: "sides",
+    category: "rice-and-sides",
     name: "Plain Chips (Small)",
     price: 1.00,
     description: "A small portion of golden seasoned potato chips.",
@@ -292,7 +218,7 @@ const MENU_DATA = [
   },
   {
     id: "mega-chips",
-    category: "sides",
+    category: "rice-and-sides",
     name: "Mega Chips",
     price: 2.00,
     description: "A large portion of golden seasoned potato chips.",
@@ -300,18 +226,59 @@ const MENU_DATA = [
     image: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/assets/images/menu/Mega%20chips.jpeg",
     details: "A large portion of golden seasoned potato chips."
   },
-
-  // 🥤 DRINKS & EXTRAS
   {
-    id: "select-ice-tea",
+    id: "garden-salad",
+    category: "rice-and-sides",
+    name: "Garden Salad",
+    price: 2.00,
+    description: "Mixed greens, cucumbers and tomatoes with dressing.",
+    comboIncludes: ["Mixed Greens", "Cucumbers & Tomatoes", "Salad Dressing"],
+    image: "https://media.eatbamboochicken.com/Bamboo%20Chicken%20Main/Majority%20App/Bamboo-Chicken-Garden-Salad.webp",
+    details: "Mixed greens, cucumbers and tomatoes with dressing."
+  },
+  {
+    id: "coleslaw",
+    category: "rice-and-sides",
+    name: "Coleslaw",
+    price: 1.00,
+    description: "Fresh shredded cabbage and carrots in creamy dressing.",
+    comboIncludes: ["Shredded Cabbage & Carrots", "Creamy Dressing"],
+    image: "https://media.eatbamboochicken.com/Bamboo%20Chicken%20Main/Majority%20App/Bamboo-Chicken-Coleslaw.webp",
+    details: "Fresh shredded cabbage and carrots in creamy dressing."
+  },
+  {
+    id: "chicken-salad",
+    category: "rice-and-sides",
+    name: "Chicken Salad",
+    price: 3.00,
+    description: "Tender chicken strips served on a bed of fresh garden salad.",
+    comboIncludes: ["Tender Chicken Strips", "Fresh Garden Greens", "Salad Dressing"],
+    image: "https://media.eatbamboochicken.com/Bamboo%20Chicken%20Main/Majority%20App/Bamboo-Chicken-Chicken-Salad.webp",
+    details: "Tender chicken strips served on a bed of fresh garden salad."
+  },
+
+  // 🥤 F. DRINKS & EXTRAS
+  {
+    id: "ice-tea",
     category: "drinks-and-extras",
-    name: "Select Ice Tea",
+    name: "Ice Tea",
     price: 3.00,
     unit: "per bottle",
-    description: "Refreshing Select Ice Tea.",
-    comboIncludes: ["Chilled Select Ice Tea"],
+    description: "Refreshing chilled Ice Tea.",
+    comboIncludes: ["Chilled Ice Tea"],
     image: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=600&q=80",
-    details: "Refreshing Select Ice Tea."
+    details: "Refreshing chilled Ice Tea."
+  },
+  {
+    id: "milk-tea",
+    category: "drinks-and-extras",
+    name: "Milk Tea",
+    price: 5.00,
+    unit: "per cup",
+    description: "Rich, creamy chilled milk tea brewed fresh.",
+    comboIncludes: ["Chilled Fresh Milk Tea"],
+    image: "https://media.eatbamboochicken.com/Bamboo%20Chicken%20Main/Majority%20App/Bamboo-Chicken-Milk-Tea.webp",
+    details: "Rich, creamy chilled milk tea brewed fresh."
   },
   {
     id: "soy-sauce",
@@ -321,18 +288,8 @@ const MENU_DATA = [
     unit: "per full bottle",
     description: "Full bottle of dipping soy sauce.",
     comboIncludes: ["Soy Sauce (Full Bottle)"],
-    image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80",
+    image: "https://media.eatbamboochicken.com/Bamboo%20Chicken%20Main/Soy%20source.jpg",
     details: "Full bottle of dipping soy sauce."
-  },
-  {
-    id: "coca-cola-300ml",
-    category: "drinks-and-extras",
-    name: "Coca-Cola — 300ml",
-    price: 0.50,
-    description: "Chilled Coca-Cola 300ml bottle.",
-    comboIncludes: ["Coca-Cola 300ml"],
-    image: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80",
-    details: "Chilled Coca-Cola 300ml bottle."
   },
   {
     id: "coca-cola-500ml",
@@ -345,16 +302,6 @@ const MENU_DATA = [
     details: "Chilled Coca-Cola 500ml bottle."
   },
   {
-    id: "fanta-300ml",
-    category: "drinks-and-extras",
-    name: "Fanta — 300ml",
-    price: 0.50,
-    description: "Chilled Fanta Orange 300ml bottle.",
-    comboIncludes: ["Fanta Orange 300ml"],
-    image: "https://images.unsplash.com/photo-1624517452488-04869289c4ca?auto=format&fit=crop&w=600&q=80",
-    details: "Chilled Fanta Orange 300ml bottle."
-  },
-  {
     id: "fanta-500ml",
     category: "drinks-and-extras",
     name: "Fanta — 500ml",
@@ -363,16 +310,6 @@ const MENU_DATA = [
     comboIncludes: ["Fanta Orange 500ml"],
     image: "https://images.unsplash.com/photo-1624517452488-04869289c4ca?auto=format&fit=crop&w=600&q=80",
     details: "Chilled Fanta Orange 500ml bottle."
-  },
-  {
-    id: "sprite-300ml",
-    category: "drinks-and-extras",
-    name: "Sprite — 300ml",
-    price: 0.50,
-    description: "Chilled Sprite 300ml bottle.",
-    comboIncludes: ["Sprite 300ml"],
-    image: "https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?auto=format&fit=crop&w=600&q=80",
-    details: "Chilled Sprite 300ml bottle."
   },
   {
     id: "sprite-500ml",
@@ -388,44 +325,44 @@ const MENU_DATA = [
     id: "fruit-yogurt",
     category: "drinks-and-extras",
     name: "Fruit Yogurt",
-    price: 2.50,
+    price: 3.00,
     description: "Chilled, creamy fruit yogurt.",
     comboIncludes: ["Chilled Fruit Yogurt"],
-    image: "https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=600&q=80",
+    image: "https://media.eatbamboochicken.com/Bamboo%20Chicken%20Main/Majority%20App/Bamboo-Chicken-Fruit-Yogurt.webp",
     details: "Chilled, creamy fruit yogurt drink."
   },
   {
     id: "aloe-vera",
     category: "drinks-and-extras",
-    name: "Aloe Vera",
-    price: 2.50,
+    name: "Aloe Vera Drink",
+    price: 3.00,
     description: "Refreshing Aloe Vera drink with natural pulp.",
     comboIncludes: ["Refreshing Aloe Vera"],
-    image: "https://images.unsplash.com/photo-1556881286-fc6915169721?auto=format&fit=crop&w=600&q=80",
+    image: "https://media.eatbamboochicken.com/Bamboo%20Chicken%20Main/Majority%20App/Bamboo-Chicken-Aloe-Vera-Drink.webp",
     details: "Refreshing Aloe Vera drink with natural pulp."
   },
   {
     id: "minute-maid-delight",
     category: "drinks-and-extras",
-    name: "Minute Maid Delight",
+    name: "Minute Maid",
     price: 1.00,
     description: "Refreshing Minute Maid fruit juice.",
     comboIncludes: ["Minute Maid Fruit Drink"],
-    image: "https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=600&q=80",
+    image: "https://media.eatbamboochicken.com/Bamboo%20Chicken%20Main/Majority%20App/Bamboo-Chicken-Minute-Maid.webp",
     details: "Refreshing Minute Maid fruit juice."
   }
 ];
 
 // Active State Managers
-let currentCategory = "all";
+let currentCategory = "dumplings";
 let searchQuery = "";
 let cart = JSON.parse(localStorage.getItem("bamboo_cart")) || [];
-// Clean obsolete items from cart if any exist
+// Clean obsolete/removed items from cart if any exist
 if (Array.isArray(cart)) {
   const validIds = new Set(MENU_DATA.map(m => m.id));
   cart = cart.filter(item => {
     const baseId = item.id ? item.id.split('-')[0] : '';
-    return validIds.has(item.id) || MENU_DATA.some(m => m.id.startsWith(baseId));
+    return validIds.has(item.id) || MENU_DATA.some(m => m.id === baseId);
   });
 }
 let selectedProduct = null;
@@ -572,18 +509,30 @@ function setupNavbarScroll() {
 
 // Generate the horizontal scrollable Category Pill buttons
 function generateCategoryPills() {
-  const categories = [
-    { id: "all", name: "All Menu", icon: "✨" },
+  const allCategories = [
+    { id: "dumplings", name: "Dumplings", icon: "🥟" },
     { id: "signature-meals", name: "Signature Meals", icon: "⭐" },
-    { id: "chicken-and-more", name: "Chicken & More", icon: "🍗" },
-    { id: "cooked-dumplings", name: "Cooked Dumplings", icon: "🥟" },
-    { id: "finish-at-home", name: "Finish-at-Home", icon: "📦" },
-    { id: "meals", name: "Meals", icon: "🍱" },
-    { id: "chicken-pieces", name: "Chicken Pieces", icon: "🍗" },
-    { id: "salads", name: "Salads", icon: "🥗" },
-    { id: "sides", name: "Sides", icon: "🍟" },
-    { id: "drinks-and-extras", name: "Drinks & Extras", icon: "🥤" }
+    { id: "chicken-meals", name: "Chicken Meals", icon: "🍗" },
+    { id: "wraps-and-burgers", name: "Wraps & Burgers", icon: "🍔" },
+    { id: "rice-and-sides", name: "Rice & Sides", icon: "🍟" },
+    { id: "drinks-and-extras", name: "Drinks & Extras", icon: "🥤" },
+    { id: "all", name: "All", icon: "✨" }
   ];
+
+  // Filter out any empty categories from navigation
+  const categories = allCategories.filter(cat => {
+    if (cat.id === "all") return MENU_DATA.length > 0;
+    if (cat.id === "dumplings") {
+      return MENU_DATA.some(i => i.category === "dumplings" || i.category === "cooked-dumplings" || i.category === "finish-at-home");
+    }
+    if (cat.id === "chicken-meals") {
+      return MENU_DATA.some(i => i.category === "chicken-meals" || i.category === "chicken-and-more");
+    }
+    if (cat.id === "drinks-and-extras") {
+      return MENU_DATA.some(i => i.category === "drinks-and-extras" || i.category === "drinks");
+    }
+    return MENU_DATA.some(i => i.category === cat.id);
+  });
 
   categoryContainer.innerHTML = "";
   categories.forEach(cat => {
@@ -632,15 +581,33 @@ function renderMenu() {
   // Clear Grid
   menuGrid.innerHTML = "";
 
-  // Filter Data by availability and category
+  // Filter Data by availability, search query and category
+  const query = (searchQuery || "").trim().toLowerCase();
   const filteredData = MENU_DATA.filter(item => {
     // Hide out-of-stock items if ingredients are 0
     if (unavailableMenuItems.includes(item.name.toLowerCase())) {
       return false;
     }
 
-    // Category check: "all" displays all authoritative menu items
+    // Search query check (matches name, description, category, details)
+    if (query !== "") {
+      const matchName = item.name.toLowerCase().includes(query);
+      const matchDesc = (item.description || "").toLowerCase().includes(query);
+      const matchCat = (item.category || "").toLowerCase().includes(query);
+      const matchDetails = (item.details || "").toLowerCase().includes(query);
+      if (!matchName && !matchDesc && !matchCat && !matchDetails) {
+        return false;
+      }
+    }
+
+    // Category check
     if (currentCategory === "all") return true;
+    if (currentCategory === "dumplings") {
+      return item.category === "dumplings" || item.category === "cooked-dumplings" || item.category === "finish-at-home";
+    }
+    if (currentCategory === "chicken-meals") {
+      return item.category === "chicken-meals" || item.category === "chicken-and-more";
+    }
     if (currentCategory === "drinks-and-extras") {
       return item.category === "drinks-and-extras" || item.category === "drinks";
     }
@@ -735,17 +702,8 @@ window.toggleCardOption = function(itemId, isChecked) {
   }
 };
 
-// Interactive choice for Sadza on Main Card (shows custom action feedback)
-window.changeSadzaMeatChoice = function(itemId, value) {
-  const item = MENU_DATA.find(i => i.id === itemId);
-  if (item && item.optionImages && item.optionImages[value]) {
-    const cardImg = document.querySelector(`#menu-card-${itemId} .menu-card-image`);
-    if (cardImg) {
-      cardImg.src = item.optionImages[value];
-    }
-  }
-  showToast(`🍗 Choice saved: Sadza Meal with ${value}!`);
-};
+// Backward compatibility placeholder
+window.changeSadzaMeatChoice = function() {};
 
 // Search Logic
 function handleSearch(query) {
@@ -940,7 +898,7 @@ window.openDetailsModal = function(productId) {
     modalFloatingPriceEl.innerHTML = `$${product.price.toFixed(2)}${product.unit ? ` <span style="font-size: 0.8rem; font-weight: 600; opacity: 0.85; margin-left: 3px;">${product.unit}</span>` : ''}`;
   }
   if (modalCategoryEl) {
-    modalCategoryEl.textContent = getCategoryPill(product.category);
+    modalCategoryEl.textContent = getCategoryPill(product.category, product);
   }
   if (modalTitleEl) {
     modalTitleEl.textContent = product.name;
@@ -1031,16 +989,18 @@ window.confirmModalAddToCart = function() {
   closeDetailsModal();
 };
 
-function getCategoryPill(category) {
+function getCategoryPill(category, item) {
+  if (item && item.id && item.id.includes("finish-at-home")) return "📦 FINISH-AT-HOME";
+  if (item && item.id && item.id.includes("dumpling")) return "🥟 COOKED DUMPLINGS";
   switch (category) {
-    case "signature-meals": return "⭐ SIGNATURE MEALS";
-    case "chicken-and-more": return "🍗 CHICKEN & MORE";
+    case "dumplings": return "🥟 DUMPLINGS";
     case "cooked-dumplings": return "🥟 COOKED DUMPLINGS";
     case "finish-at-home": return "📦 FINISH-AT-HOME";
-    case "meals": return "🍱 MEALS";
-    case "chicken-pieces": return "🍗 CHICKEN PIECES";
-    case "salads": return "🥗 SALADS";
-    case "sides": return "🍟 SIDES";
+    case "signature-meals": return "⭐ SIGNATURE MEALS";
+    case "chicken-meals":
+    case "chicken-and-more": return "🍗 CHICKEN MEALS";
+    case "wraps-and-burgers": return "🍔 WRAPS & BURGERS";
+    case "rice-and-sides": return "🍟 RICE & SIDES";
     case "drinks-and-extras":
     case "drinks": return "🥤 DRINKS & EXTRAS";
     default: return `✨ ${category.toUpperCase().replace(/-/g, " ")}`;
@@ -1052,7 +1012,8 @@ function getItemEmoji(name) {
   if (n.includes("dumpling")) return "🥟";
   if (n.includes("nugget")) return "🍗";
   if (n.includes("sauce") || n.includes("soy")) return "🍶";
-  if (n.includes("tea")) return "🧋";
+  if (n.includes("milk tea")) return "🧋";
+  if (n.includes("ice tea") || n.includes("tea")) return "🧋";
   if (n.includes("bamboo chicken") || n.includes("bamboo stick")) return "🍢";
   if (n.includes("bamboo pie") || n.includes("pie")) return "🥟";
   if (n.includes("burger")) return "🍔";
@@ -4809,23 +4770,164 @@ window.lookupOrderByIdOrPhone = window.executeManualOrderLookup;
 
 /* ==========================================================================
    Promotional Feed Data & Component System
-   Reusable architecture for official Bamboo Chicken promotional posts
+   Dumplings Preparation Video Guide & Official Bamboo Chicken Promotions
    ========================================================================== */
 
 const PROMOTIONAL_POSTS = [
   {
-    id: "promo-post-breakfast-special",
+    id: "promo-post-dumplings-video",
+    type: "video",
     publisher: "Bamboo Chicken",
-    publisherBadge: "Official Promotion",
-    imageUrl: "https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/Bamboo%20Chicken%20Main/Majority%20App/IMG-20260925-WA0003(1).jpg",
-    altText: "Bamboo Chicken Breakfast Special Promotion",
-    caption: "", // Artwork self-contains promotional details
-    actionLabel: "Explore on Menu",
-    actionCategory: "chicken-and-more"
+    publisherBadge: "Half-Cooked Dumplings",
+    tag: "Half-Cooked Dumplings",
+    title: "How to Prepare Dumplings",
+    videoUrl: "https://media.eatbamboochicken.com/Bamboo%20Chicken%20Main/How%20to%20prepare%20half%20cooked%20dumplingsat%20home.mp4",
+    posterUrl: "https://media.eatbamboochicken.com/Bamboo%20Chicken%20Main/Bamboo-Chicken-Half-Cooked-Chicken-Dumplings.webp",
+    actionLabel: "Explore Dumplings",
+    actionCategory: "dumplings"
   }
 ];
 
 window.PROMOTIONAL_POSTS = PROMOTIONAL_POSTS;
+
+window.initDumplingVideoPlayer = function() {
+  const video = document.getElementById("dumpling-prep-video");
+  const playOverlay = document.getElementById("promo-video-play-overlay");
+  const playBtn = document.getElementById("promo-video-play-btn");
+  const fullscreenBtn = document.getElementById("promo-video-fullscreen-btn");
+  const loadingEl = document.getElementById("promo-video-loading");
+  const errorEl = document.getElementById("promo-video-error");
+  const retryBtn = document.getElementById("promo-video-retry-btn");
+
+  if (!video) return;
+
+  const handlePlay = () => {
+    if (errorEl) errorEl.style.display = "none";
+    if (playOverlay) playOverlay.style.display = "none";
+    video.play().catch(err => {
+      console.warn("Video playback blocked or interrupted:", err);
+      if (playOverlay) playOverlay.style.display = "flex";
+    });
+  };
+
+  window.playDumplingVideo = handlePlay;
+
+  if (playOverlay) {
+    playOverlay.onclick = handlePlay;
+  }
+  if (playBtn) {
+    playBtn.onclick = (e) => {
+      e.stopPropagation();
+      handlePlay();
+    };
+  }
+
+  video.addEventListener("play", () => {
+    if (playOverlay) playOverlay.style.display = "none";
+    if (errorEl) errorEl.style.display = "none";
+  });
+
+  video.addEventListener("pause", () => {
+    if (video.currentTime < video.duration && !video.seeking) {
+      if (playOverlay) playOverlay.style.display = "flex";
+    }
+  });
+
+  video.addEventListener("ended", () => {
+    if (playOverlay) playOverlay.style.display = "flex";
+  });
+
+  video.addEventListener("waiting", () => {
+    if (loadingEl) loadingEl.style.display = "flex";
+  });
+
+  video.addEventListener("playing", () => {
+    if (loadingEl) loadingEl.style.display = "none";
+    if (errorEl) errorEl.style.display = "none";
+  });
+
+  video.addEventListener("canplay", () => {
+    if (loadingEl) loadingEl.style.display = "none";
+  });
+
+  video.addEventListener("error", () => {
+    if (loadingEl) loadingEl.style.display = "none";
+    if (errorEl) errorEl.style.display = "flex";
+  });
+
+  if (retryBtn) {
+    retryBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (errorEl) errorEl.style.display = "none";
+      if (loadingEl) loadingEl.style.display = "flex";
+      video.load();
+      video.play().catch(() => {});
+    };
+  }
+
+  if (fullscreenBtn) {
+    fullscreenBtn.onclick = (e) => {
+      e.stopPropagation();
+      window.openDumplingVideoTheater();
+    };
+  }
+};
+
+window.openDumplingVideoTheater = function() {
+  const modal = document.getElementById("video-theater-modal");
+  const screen = document.getElementById("video-theater-screen");
+  const mainVideo = document.getElementById("dumpling-prep-video");
+  if (!modal || !screen) return;
+
+  let currentTime = 0;
+  if (mainVideo) {
+    currentTime = mainVideo.currentTime;
+    mainVideo.pause();
+  }
+
+  screen.innerHTML = `
+    <video 
+      id="theater-dumpling-video" 
+      src="https://media.eatbamboochicken.com/Bamboo%20Chicken%20Main/How%20to%20prepare%20half%20cooked%20dumplingsat%20home.mp4" 
+      poster="https://media.eatbamboochicken.com/Bamboo%20Chicken%20Main/Bamboo-Chicken-Half-Cooked-Chicken-Dumplings.webp"
+      controls 
+      playsinline 
+      webkit-playsinline
+      autoplay
+      style="width: 100%; height: 100%; object-fit: contain; background: #000;"
+    ></video>
+  `;
+
+  modal.style.display = "flex";
+  document.body.style.overflow = "hidden";
+
+  const theaterVideo = document.getElementById("theater-dumpling-video");
+  if (theaterVideo) {
+    theaterVideo.currentTime = currentTime;
+    theaterVideo.play().catch(() => {});
+  }
+};
+
+window.closeDumplingVideoTheater = function() {
+  const modal = document.getElementById("video-theater-modal");
+  const screen = document.getElementById("video-theater-screen");
+  const theaterVideo = document.getElementById("theater-dumpling-video");
+  const mainVideo = document.getElementById("dumpling-prep-video");
+
+  let currentTime = 0;
+  if (theaterVideo) {
+    currentTime = theaterVideo.currentTime;
+    theaterVideo.pause();
+  }
+
+  if (screen) screen.innerHTML = "";
+  if (modal) modal.style.display = "none";
+  document.body.style.overflow = "";
+
+  if (mainVideo) {
+    mainVideo.currentTime = currentTime;
+  }
+};
 
 window.renderPromotionalFeed = function() {
   const container = document.getElementById("promo-feed-container");
@@ -4841,6 +4943,83 @@ window.renderPromotionalFeed = function() {
   }
 
   container.innerHTML = PROMOTIONAL_POSTS.map(post => {
+    if (post.type === "video") {
+      return `
+        <article class="promo-post-card promo-video-card" id="${post.id}">
+          <header class="promo-post-header">
+            <div class="promo-publisher-info">
+              <div class="promo-publisher-avatar" aria-hidden="true">
+                <span class="promo-avatar-text">BC</span>
+              </div>
+              <div class="promo-publisher-details">
+                <span class="promo-publisher-name">${post.publisher || "Bamboo Chicken"}</span>
+                <span class="promo-category-label">${post.tag || "Half-Cooked Dumplings"}</span>
+              </div>
+            </div>
+            <button type="button" class="promo-card-fullscreen-btn" id="promo-video-fullscreen-btn" onclick="window.openDumplingVideoTheater()" title="Watch full screen" aria-label="Expand video full screen">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 3 21 3 21 9"/>
+                <polyline points="9 21 3 21 3 15"/>
+                <line x1="21" y1="3" x2="14" y2="10"/>
+                <line x1="3" y1="21" x2="10" y2="14"/>
+              </svg>
+              <span>Full Screen</span>
+            </button>
+          </header>
+
+          <div class="promo-post-artwork promo-video-wrapper" id="promo-video-wrapper">
+            <video 
+              id="dumpling-prep-video" 
+              class="promo-video-element"
+              src="${post.videoUrl}" 
+              poster="${post.posterUrl}"
+              preload="metadata"
+              playsinline
+              webkit-playsinline
+              controls
+              tabindex="0"
+              aria-label="${post.title || "How to Prepare Dumplings"}"
+            >
+              Your browser does not support the video tag.
+            </video>
+
+            <div class="promo-video-play-overlay" id="promo-video-play-overlay">
+              <button type="button" class="promo-video-play-btn" id="promo-video-play-btn" aria-label="Play preparation video">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="1.5">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+              </button>
+            </div>
+
+            <div class="promo-video-loading" id="promo-video-loading" style="display: none;" aria-live="polite">
+              <div class="promo-video-spinner"></div>
+              <span>Loading video...</span>
+            </div>
+
+            <div class="promo-video-error" id="promo-video-error" style="display: none;" role="alert">
+              <span>Unable to load video. Please check connection.</span>
+              <button type="button" class="promo-video-retry-btn" id="promo-video-retry-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+                Retry
+              </button>
+            </div>
+          </div>
+
+          <footer class="promo-post-footer">
+            <div class="promo-video-text-content">
+              <h3 class="promo-video-title">${post.title || "How to Prepare Dumplings"}</h3>
+            </div>
+            <button type="button" class="promo-post-action-btn" onclick="switchTabToCategory('${post.actionCategory || 'dumplings'}')">
+              <span>${post.actionLabel || "Explore Dumplings"}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m9 18 6-6-6-6"/>
+              </svg>
+            </button>
+          </footer>
+        </article>
+      `;
+    }
+
     const hasCaption = post.caption && post.caption.trim() !== "";
     const hasAction = post.actionLabel && post.actionLabel.trim() !== "";
     const actionOnClick = post.actionCategory 
@@ -4849,7 +5028,6 @@ window.renderPromotionalFeed = function() {
 
     return `
       <article class="promo-post-card" id="${post.id}">
-        <!-- Post Publisher Identity Header -->
         <header class="promo-post-header">
           <div class="promo-publisher-info">
             <div class="promo-publisher-avatar" aria-hidden="true">
@@ -4863,7 +5041,6 @@ window.renderPromotionalFeed = function() {
           ${post.validity ? `<span class="promo-validity-tag">${post.validity}</span>` : ""}
         </header>
 
-        <!-- Complete Uncropped Poster Artwork -->
         <div class="promo-post-artwork">
           <img 
             src="${post.imageUrl}" 
@@ -4875,7 +5052,6 @@ window.renderPromotionalFeed = function() {
           >
         </div>
 
-        <!-- Restrained Action Area & Optional Caption -->
         <footer class="promo-post-footer">
           ${hasCaption ? `<p class="promo-post-caption">${post.caption}</p>` : ""}
           ${hasAction ? `
@@ -4890,6 +5066,8 @@ window.renderPromotionalFeed = function() {
       </article>
     `;
   }).join("");
+
+  window.initDumplingVideoPlayer();
 };
 
 const CURRENT_APP_VERSION = "3.5.0";

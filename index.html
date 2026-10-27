@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bamboo Chicken - Crispy & Juicy, Taste the Bamboo Magic!</title>
-  <meta name="description" content="Order delicious food online from Bamboo Chicken. Savor our crispy golden spiced chicken, traditional sadza meals, flame-grilled burgers, and signature specials. Fast delivery and pickup across Zimbabwe.">
+  <meta name="description" content="Order delicious food online from Bamboo Chicken. Savor our signature dumplings, crispy golden spiced chicken, flame-grilled burgers, and finish-at-home meal packs. Fast delivery and pickup across Zimbabwe.">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -103,9 +103,9 @@
             <div class="promo-light-floor-wash"></div>
           </div>
 
-          <!-- First Official Promotional Post: Breakfast Special -->
-          <article class="promo-post-card" id="promo-post-breakfast-special">
-            <!-- Publisher Identity Header -->
+          <!-- Official Promotional Guide: Dumplings Preparation Video -->
+          <article class="promo-post-card promo-video-card" id="promo-post-dumplings-video">
+            <!-- Header with Category Label and Fullscreen Control -->
             <header class="promo-post-header">
               <div class="promo-publisher-info">
                 <div class="promo-publisher-avatar" aria-hidden="true">
@@ -113,27 +113,69 @@
                 </div>
                 <div class="promo-publisher-details">
                   <span class="promo-publisher-name">Bamboo Chicken</span>
-                  <span class="promo-publisher-badge">Official Promotion</span>
+                  <span class="promo-category-label">Half-Cooked Dumplings</span>
                 </div>
               </div>
+              <button type="button" class="promo-card-fullscreen-btn" id="promo-video-fullscreen-btn" onclick="window.openDumplingVideoTheater()" title="Watch full screen" aria-label="Expand video full screen">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 3 21 3 21 9"/>
+                  <polyline points="9 21 3 21 3 15"/>
+                  <line x1="21" y1="3" x2="14" y2="10"/>
+                  <line x1="3" y1="21" x2="10" y2="14"/>
+                </svg>
+                <span>Full Screen</span>
+              </button>
             </header>
 
-            <!-- Complete Uncropped Poster Artwork -->
-            <div class="promo-post-artwork">
-              <img 
-                src="https://pub-1d12d1bcd0c54b5282f7b9e9eec3ba59.r2.dev/Bamboo%20Chicken%20Main/Majority%20App/IMG-20260925-WA0003(1).jpg" 
-                alt="Bamboo Chicken Breakfast Special Promotion" 
-                class="promo-post-img"
-                loading="eager"
-                decoding="async"
-                referrerpolicy="no-referrer"
+            <!-- Video Stage Media Area - Clean Preview, Unobstructed -->
+            <div class="promo-post-artwork promo-video-wrapper" id="promo-video-wrapper">
+              <video 
+                id="dumpling-prep-video" 
+                class="promo-video-element"
+                src="https://media.eatbamboochicken.com/Bamboo%20Chicken%20Main/How%20to%20prepare%20half%20cooked%20dumplingsat%20home.mp4" 
+                poster="https://media.eatbamboochicken.com/Bamboo%20Chicken%20Main/Bamboo-Chicken-Half-Cooked-Chicken-Dumplings.webp"
+                preload="metadata"
+                playsinline
+                webkit-playsinline
+                controls
+                tabindex="0"
+                aria-label="How to Prepare Dumplings"
               >
+                Your browser does not support the video tag.
+              </video>
+
+              <!-- Prominent Play Overlay (Clean Play Button, No Text Overlay) -->
+              <div class="promo-video-play-overlay" id="promo-video-play-overlay" onclick="window.playDumplingVideo ? window.playDumplingVideo() : (document.getElementById('dumpling-prep-video') && document.getElementById('dumpling-prep-video').play())">
+                <button type="button" class="promo-video-play-btn" id="promo-video-play-btn" aria-label="Play preparation video">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="1.5">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Buffering / Loading State -->
+              <div class="promo-video-loading" id="promo-video-loading" style="display: none;" aria-live="polite">
+                <div class="promo-video-spinner"></div>
+                <span>Loading video...</span>
+              </div>
+
+              <!-- Error State -->
+              <div class="promo-video-error" id="promo-video-error" style="display: none;" role="alert">
+                <span>Unable to load video. Please check connection.</span>
+                <button type="button" class="promo-video-retry-btn" id="promo-video-retry-btn" onclick="document.getElementById('dumpling-prep-video') && document.getElementById('dumpling-prep-video').load()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+                  Retry
+                </button>
+              </div>
             </div>
 
-            <!-- Restrained Action Area -->
+            <!-- Footer: Short Title and Button labelled Explore Dumplings -->
             <footer class="promo-post-footer">
-              <button type="button" class="promo-post-action-btn" onclick="switchTabToCategory('chicken-and-more')">
-                <span>Explore on Menu</span>
+              <div class="promo-video-text-content">
+                <h3 class="promo-video-title">How to Prepare Dumplings</h3>
+              </div>
+              <button type="button" class="promo-post-action-btn" onclick="switchTabToCategory('dumplings')">
+                <span>Explore Dumplings</span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
                   <path d="m9 18 6-6-6-6"/>
                 </svg>
@@ -1450,6 +1492,33 @@
           <span>Close</span>
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- Dedicated Dumplings Video Theater Modal -->
+  <div class="video-theater-modal" id="video-theater-modal" aria-hidden="true" role="dialog" aria-labelledby="video-theater-title">
+    <div class="video-theater-backdrop" onclick="window.closeDumplingVideoTheater()"></div>
+    <div class="video-theater-dialog">
+      <header class="video-theater-header">
+        <div class="video-theater-header-left">
+          <span class="video-theater-tag">Half-Cooked Dumplings</span>
+          <h4 class="video-theater-title" id="video-theater-title">How to Prepare Dumplings</h4>
+        </div>
+        <button type="button" class="video-theater-close-btn" onclick="window.closeDumplingVideoTheater()" aria-label="Return to app">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+          </svg>
+          <span>Back to App</span>
+        </button>
+      </header>
+      <div class="video-theater-screen" id="video-theater-screen"></div>
+      <footer class="video-theater-footer">
+        <span class="video-theater-sub">Half-Cooked Dumplings (Boxes of 10) • $10.00</span>
+        <button type="button" class="btn-theater-order" onclick="window.closeDumplingVideoTheater(); switchTabToCategory('dumplings');">
+          <span>Explore Dumplings</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </footer>
     </div>
   </div>
 
